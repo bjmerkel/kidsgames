@@ -381,11 +381,13 @@ function staticSpine(): SpineDraft {
 }
 
 function driftSpine(stoneVx: number, sinkAfterMs: number, blinkPeriodMs: number): SpineDraft {
+  const center = WORLD_W / 2;
+  const sway = 36;
   return {
     stoneR: 36,
     stoneVx,
-    stoneMinX: 70,
-    stoneMaxX: 410,
+    stoneMinX: center - sway,
+    stoneMaxX: center + sway,
     sinkAfterMs,
     holdR: 36,
     holdVx: 0,

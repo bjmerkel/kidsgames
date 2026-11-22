@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CRAB_R, HOP, HOP_MS, TUTORIAL_DELAY_SEC, WORLD_W } from "../src/game/constants";
-import { seatPosition } from "../src/game/hazards";
+import { seatPosition, stepStone } from "../src/game/hazards";
 import {
   LEVELS,
   allCars,
@@ -49,6 +49,28 @@ describe("five levels", () => {
       new Set([9100]),
       new Set([8900]),
     ]);
+  });
+
+  it("keeps a backyard stone under the middle long after three seconds", () => {
+    const stone = structuredClone(allStones(LEVELS[1]).find((item) => item.vx !== 0)!);
+    let coveredMs = 0;
+    let gapMs = 0;
+    let longestGapMs = 0;
+    for (let ms = 0; ms < 12000; ms += 16) {
+      stepStone(stone, 16, null);
+      const dx = stone.x - WORLD_W / 2;
+      const underMiddle = dx * dx <= (stone.r + CRAB_R) ** 2;
+      if (underMiddle) {
+        coveredMs += 16;
+        longestGapMs = Math.max(longestGapMs, gapMs);
+        gapMs = 0;
+      } else {
+        gapMs += 16;
+      }
+    }
+    longestGapMs = Math.max(longestGapMs, gapMs);
+    expect(coveredMs).toBeGreaterThan(3000);
+    expect(longestGapMs).toBe(0);
   });
 
   it("keeps level 1 cars off the spine when a straight hop would cross them", () => {
