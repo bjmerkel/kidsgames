@@ -37,16 +37,23 @@
         Capy Swing
         <small>Swing the vines. 5 levels.</small>
       </button>
-      <button type="button" id="play-waddle" class="game-card">
+<button type="button" id="play-waddle" class="game-card">
         Ice Waddle
         <small>Eat the fish. Dodge the seals. 5 mazes.</small>
+      </button>
+      <button type="button" id="open-settings" class="game-card">
+        Level settings
+        <small>Change the timer, stones, holds, cars, and swings for each level.</small>
       </button>
     </section>
     <section id="crab" hidden>
       <header>
         <p class="emery">Emery is awesome</p>
         <h1>Hermit Crab Crossing</h1>
-        <button type="button" id="crab-games">Games</button>
+        <div class="head-actions">
+          <button type="button" id="crab-settings">Settings</button>
+          <button type="button" id="crab-games">Games</button>
+        </div>
       </header>
       <div id="board">
         <div id="stage">
@@ -162,7 +169,7 @@
         </div>
       </div>
     </section>
-    <section id="waddle" hidden>
+<section id="waddle" hidden>
       <header class="slim-head">
         <button type="button" id="waddle-games">Games</button>
         <p id="waddle-heading">Ice Waddle</p>
@@ -180,6 +187,18 @@
           <button type="button" id="waddle-next" hidden>Next level</button>
         </div>
       </div>
+    </section>
+    <section id="settings" hidden>
+      <header>
+        <p class="emery">Emery is awesome</p>
+        <h1>Level settings</h1>
+        <div class="head-actions">
+          <button type="button" id="settings-play">Play</button>
+          <button type="button" id="settings-games">Games</button>
+        </div>
+      </header>
+      <div id="tune-tabs" class="level-tabs" role="tablist" aria-label="Levels"></div>
+      <div id="tune-form"></div>
     </section>
     <script type="module" src="/src/main.ts"></script>
   </body>

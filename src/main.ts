@@ -2,8 +2,11 @@ import { cameraTop } from "./game/camera";
 import { STEP_MS, VIEW_H, VIEW_W } from "./game/constants";
 import { continueLabel } from "./game/copy";
 import { blankInput, buttonToInput, keyDown, mergeInput } from "./game/input";
+import { LEVELS } from "./game/levels";
 import { createGame, tick } from "./game/sim";
+import { applyTunes, defaultTunes, loadTunes, saveTunes, type LevelTune } from "./game/tune";
 import type { InputFrame } from "./game/types";
+import { mountLevelSettings } from "./settings/panel";
 import { drawFrame } from "./render/draw";
 import { CHARACTERS, characterById } from "./race/characters";
 import { drawGarage, drawRace } from "./race/draw";
@@ -43,6 +46,9 @@ const raceStage = document.querySelector<HTMLElement>("#race-stage");
 const menu = document.querySelector<HTMLElement>("#menu");
 const crabSection = document.querySelector<HTMLElement>("#crab");
 const raceSection = document.querySelector<HTMLElement>("#race");
+const settingsSection = document.querySelector<HTMLElement>("#settings");
+const tuneTabs = document.querySelector<HTMLElement>("#tune-tabs");
+const tuneForm = document.querySelector<HTMLElement>("#tune-form");
 const picker = document.querySelector<HTMLElement>("#race-picker");
 const racePad = document.querySelector<HTMLElement>("#race-pad");
 const raceHeading = document.querySelector<HTMLElement>("#race-heading");
@@ -104,14 +110,16 @@ const waddleHeading = document.querySelector<HTMLElement>("#waddle-heading");
 const waddleNext = document.querySelector<HTMLButtonElement>("#waddle-next");
 const waddlePad = document.querySelector<HTMLElement>("#waddle-pad");
 
-let state = createGame();
+const tuneStore = levelStore();
+let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
+let state = createGame(applyTunes(LEVELS, tunes));
 let pending = blankInput();
 let held = blankInput();
 let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -190,7 +198,8 @@ function show(next: Mode): void {
   if (axoSection) axoSection.hidden = next !== "axo";
   if (rascalSection) rascalSection.hidden = next !== "rascal";
   if (capySection) capySection.hidden = next !== "capy";
-  if (waddleSection) waddleSection.hidden = next !== "waddle";
+if (waddleSection) waddleSection.hidden = next !== "waddle";
+  if (settingsSection) settingsSection.hidden = next !== "settings";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
     crab: "Hermit Crab Crossing",
@@ -199,11 +208,12 @@ function show(next: Mode): void {
     axo: "Axolotl Patrol",
     rascal: "Web Rascal",
     capy: "Capy Swing",
-    waddle: "Ice Waddle",
+waddle: "Ice Waddle",
+    settings: "Level settings",
   };
   document.title = titles[next];
   if (next === "crab") {
-    state = createGame();
+    state = createGame(applyTunes(LEVELS, tunes));
     pending = blankInput();
     held = blankInput();
     cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
@@ -514,6 +524,22 @@ document.querySelector<HTMLButtonElement>("#play-waddle")?.addEventListener("poi
   event.preventDefault();
   show("waddle");
 });
+document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("settings");
+});
+document.querySelector("#crab-settings")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("settings");
+});
+document.querySelector("#settings-play")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("crab");
+});
+document.querySelector("#settings-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -580,7 +606,16 @@ waddleNext?.addEventListener("pointerdown", (event) => {
   syncWaddleChrome();
 });
 
+if (tuneTabs && tuneForm) {
+  mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
+    tunes = next;
+    saveTunes(tunes, tuneStore);
+  });
+}
+
 window.addEventListener("keydown", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
   if (mode === "waddle") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") waddleKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") waddleKeys.right = true;
@@ -1033,6 +1068,14 @@ function frame(now: number): void {
     syncWaddleChrome();
   }
   requestAnimationFrame(frame);
+}
+
+function levelStore(): Storage | null {
+  try {
+    return localStorage;
+  } catch {
+    return null;
+  }
 }
 
 syncRaceChrome();

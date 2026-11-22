@@ -151,7 +151,8 @@ button:focus-visible {
 #axo,
 #rascal,
 #capy,
-#waddle {
+#waddle,
+#settings {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -169,6 +170,7 @@ button:focus-visible {
 #rascal[hidden],
 #capy[hidden],
 #waddle[hidden],
+#settings[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
 #race-next[hidden],
@@ -468,10 +470,129 @@ button:focus-visible {
 }
 
 #crab-games,
-.slim-head button {
+.slim-head button,
+.head-actions button {
   min-height: 40px;
   width: auto;
   padding: 6px 12px;
+  touch-action: manipulation;
+}
+
+.head-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+#settings {
+  width: min(520px, 100%);
+  align-items: stretch;
+}
+
+#tune-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+#tune-tabs button {
+  min-height: 44px;
+  width: auto;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  touch-action: manipulation;
+}
+
+#tune-tabs button.is-selected {
+  background: #f2c14e;
+}
+
+#tune-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.tune-group {
+  border: 2px solid #1c1915;
+  border-radius: 14px;
+  background: #f7f1e6;
+  margin: 0;
+  padding: 8px 12px 12px;
+}
+
+.tune-group legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+.tune-help {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.tune-row {
+  display: grid;
+  grid-template-columns: 1fr 88px;
+  gap: 4px 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.tune-row span {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+
+.tune-row input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  touch-action: pan-x;
+}
+
+.tune-row input[type="number"] {
+  min-height: 44px;
+  width: 100%;
+  border: 2px solid #1c1915;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font: 700 16px/1 "Trebuchet MS", sans-serif;
+  background: #fff;
+  touch-action: manipulation;
+  user-select: text;
+}
+
+.tune-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.tune-check input {
+  width: 28px;
+  height: 28px;
+  touch-action: manipulation;
+}
+
+.tune-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tune-actions button {
+  flex: 1;
+  touch-action: manipulation;
 }
 
 @media (max-height: 700px) {
@@ -504,9 +625,10 @@ button:focus-visible {
 
   header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: baseline;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
   }
 
   .emery {

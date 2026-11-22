@@ -46,7 +46,7 @@ Each level asks for particular fish. Line the hook up with Left, Right, Up, and 
 
 ## Hermit Crab Crossing
 
-A Frogger-style crossing game. You play a hermit crab. Five backyards stand between the crab and the burrow, and every one of them ends in a tunnel.
+A Frogger-style crossing game. You play a hermit crab. Five backyards stand between the crab and the burrow, and every one of them ends in a tunnel. Level settings, on the menu and inside the crab game, change the timer, stones, holds, cars, and swings for each yard.
 
 Emery is awesome.
 
