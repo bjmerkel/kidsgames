@@ -15,7 +15,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 
 ## Controls
 
-- Arrow keys or WASD, or the on-screen pad: hop one step.
+- Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

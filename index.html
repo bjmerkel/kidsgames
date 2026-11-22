@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d7ecf3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Hermit Crab Crossing</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
@@ -11,15 +14,23 @@
       <p class="emery">Emery is awesome</p>
       <h1>Hermit Crab Crossing</h1>
     </header>
-    <canvas id="game" width="480" height="720" aria-label="Hermit Crab Crossing. Emery is awesome."></canvas>
+    <div id="board">
+    <div id="stage">
+      <canvas id="game" width="480" height="720" aria-label="Hermit Crab Crossing. Emery is awesome."></canvas>
+    </div>
     <div id="pad">
-      <button type="button" data-input="n">Up</button>
-      <button type="button" data-input="w">Left</button>
-      <button type="button" data-input="e">Right</button>
-      <button type="button" data-input="s">Down</button>
-      <button type="button" data-input="tuck">Tuck</button>
-      <button type="button" data-input="pause">Pause</button>
+      <div class="dpad" role="group" aria-label="Hop">
+        <button type="button" data-input="n">Up</button>
+        <button type="button" data-input="w">Left</button>
+        <button type="button" data-input="e">Right</button>
+        <button type="button" data-input="s">Down</button>
+      </div>
+      <div class="actions">
+        <button type="button" data-input="tuck">Tuck</button>
+        <button type="button" data-input="pause">Pause</button>
+      </div>
       <button type="button" data-input="confirm" id="continue">Play</button>
+    </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
