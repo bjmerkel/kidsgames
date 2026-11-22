@@ -148,7 +148,8 @@ button:focus-visible {
 #crab,
 #race,
 #fish,
-#axo {
+#axo,
+#rascal {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -163,6 +164,7 @@ button:focus-visible {
 #race[hidden],
 #fish[hidden],
 #axo[hidden],
+#rascal[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
 #race-next[hidden],
@@ -170,7 +172,9 @@ button:focus-visible {
 #fish-next[hidden],
 #fish-pad button[hidden],
 #axo-next[hidden],
-#axo-pad button[hidden] {
+#axo-pad button[hidden],
+#rascal-next[hidden],
+#rascal-pad button[hidden] {
   display: none !important;
 }
 
@@ -325,6 +329,48 @@ button:focus-visible {
   background: #f2c14e;
 }
 
+#rascal-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#rascal-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#rascal-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#rascal-pad button[data-rascal="jump"],
+#rascal-pad button[data-rascal="web"],
+#rascal-pad button[data-rascal="pause"],
+#rascal-next {
+  grid-column: 1 / -1;
+}
+
+#rascal-pad button[data-rascal="jump"],
+#rascal-next {
+  background: #f2c14e;
+}
+
+#rascal-pad button[data-rascal="web"] {
+  background: #d7ecf3;
+}
+
 .slim-head {
   width: min(480px, 100%);
   display: flex;
@@ -362,11 +408,12 @@ button:focus-visible {
 
 @media (max-height: 520px) {
   #menu {
-    gap: 8px;
+    gap: 4px;
   }
 
   .game-card {
-    min-height: 58px;
+    min-height: 52px;
+    padding: 4px 10px;
   }
 
   body {
@@ -473,6 +520,28 @@ button:focus-visible {
   }
 
   #axo-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #rascal-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #rascal-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #rascal-pad {
     width: min(260px, 40vw);
     align-self: flex-end;
   }

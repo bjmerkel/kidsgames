@@ -15,6 +15,9 @@ import { advancePond, blankPondInput, createPond, tickPond, type PondInput, type
 import { drawAxo } from "./axolotl/draw";
 import { AXO_LEVELS } from "./axolotl/levels";
 import { advanceAxo, blankAxoInput, createAxo, tickAxo, type AxoInput, type AxoState } from "./axolotl/sim";
+import { drawRascal } from "./rascal/draw";
+import { ROOF_LEVELS } from "./rascal/levels";
+import { advanceRascal, blankRascalInput, createRascal, tickRascal, type RascalInput, type RascalState } from "./rascal/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -61,6 +64,17 @@ const axoSection = document.querySelector<HTMLElement>("#axo");
 const axoHeading = document.querySelector<HTMLElement>("#axo-heading");
 const axoNext = document.querySelector<HTMLButtonElement>("#axo-next");
 const axoPad = document.querySelector<HTMLElement>("#axo-pad");
+const rascalCanvas = document.querySelector<HTMLCanvasElement>("#rascal-canvas");
+if (!rascalCanvas) throw new Error("missing rascal canvas");
+const rascalSurface: HTMLCanvasElement = rascalCanvas;
+const rascalContext = rascalCanvas.getContext("2d");
+if (!rascalContext) throw new Error("missing rascal context");
+const rascalGfx: CanvasRenderingContext2D = rascalContext;
+const rascalStage = document.querySelector<HTMLElement>("#rascal-stage");
+const rascalSection = document.querySelector<HTMLElement>("#rascal");
+const rascalHeading = document.querySelector<HTMLElement>("#rascal-heading");
+const rascalNext = document.querySelector<HTMLButtonElement>("#rascal-next");
+const rascalPad = document.querySelector<HTMLElement>("#rascal-pad");
 
 let state = createGame();
 let pending = blankInput();
@@ -69,7 +83,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -85,6 +99,10 @@ let axoState: AxoState | null = null;
 let axoAcc = 0;
 const axoKeys = { left: false, right: false, fire: false };
 let axoEdge = blankAxoInput();
+let rascalState: RascalState | null = null;
+let rascalAcc = 0;
+const rascalKeys = { left: false, right: false, jump: false };
+let rascalEdge = blankRascalInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -110,6 +128,7 @@ function fit(): void {
   fitBox(raceStage, raceSurface);
   fitBox(fishStage, fishSurface);
   fitBox(axoStage, axoSurface);
+  fitBox(rascalStage, rascalSurface);
 }
 
 fit();
@@ -120,6 +139,7 @@ if (stage) new ResizeObserver(() => fitBox(stage, gameCanvas)).observe(stage);
 if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceSurface)).observe(raceStage);
 if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(fishStage);
 if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axoStage);
+if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).observe(rascalStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -128,12 +148,14 @@ function show(next: Mode): void {
   if (raceSection) raceSection.hidden = next !== "race";
   if (fishSection) fishSection.hidden = next !== "fish";
   if (axoSection) axoSection.hidden = next !== "axo";
+  if (rascalSection) rascalSection.hidden = next !== "rascal";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
     crab: "Hermit Crab Crossing",
     race: "Woodland Grand Prix",
     fish: "Pond Fishing",
     axo: "Axolotl Patrol",
+    rascal: "Web Rascal",
   };
   document.title = titles[next];
   if (next === "crab") {
@@ -145,6 +167,7 @@ function show(next: Mode): void {
   if (next === "race") openGarage();
   if (next === "fish") openPond();
   if (next === "axo") openAxo();
+  if (next === "rascal") openRascal();
   requestAnimationFrame(() => fit());
 }
 
@@ -240,6 +263,41 @@ function axoInput(): AxoInput {
   };
 }
 
+function openRascal(): void {
+  rascalState = createRascal(0);
+  rascalAcc = 0;
+  rascalEdge = blankRascalInput();
+  rascalKeys.left = false;
+  rascalKeys.right = false;
+  rascalKeys.jump = false;
+  syncRascalChrome();
+}
+
+function syncRascalChrome(): void {
+  if (!rascalState) return;
+  const level = ROOF_LEVELS[rascalState.levelIndex];
+  if (rascalHeading) rascalHeading.textContent = rascalState.phase === "done" ? "Web Rascal" : level.name;
+  const live = rascalState.phase === "playing" || rascalState.phase === "paused";
+  rascalPad?.querySelectorAll<HTMLButtonElement>("button[data-rascal]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (rascalNext) {
+    rascalNext.hidden = live;
+    rascalNext.textContent = rascalState.phase === "done" ? "Play again" : rascalState.phase === "retry" ? "Try again" : rascalState.levelIndex >= ROOF_LEVELS.length - 1 ? "The nest" : "Next level";
+  }
+}
+
+function rascalInput(): RascalInput {
+  return {
+    dx: (rascalKeys.right ? 1 : 0) - (rascalKeys.left ? 1 : 0),
+    jump: rascalEdge.jump,
+    jumpHeld: rascalKeys.jump,
+    web: rascalEdge.web,
+    pause: rascalEdge.pause,
+    confirm: rascalEdge.confirm,
+  };
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -330,6 +388,10 @@ document.querySelector<HTMLButtonElement>("#play-axo")?.addEventListener("pointe
   event.preventDefault();
   show("axo");
 });
+document.querySelector<HTMLButtonElement>("#play-rascal")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("rascal");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -343,6 +405,10 @@ document.querySelector("#fish-games")?.addEventListener("pointerdown", (event) =
   show("menu");
 });
 document.querySelector("#axo-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#rascal-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -365,8 +431,25 @@ axoNext?.addEventListener("pointerdown", (event) => {
   axoState = advanceAxo(axoState);
   syncAxoChrome();
 });
+rascalNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!rascalState) return;
+  rascalState = advanceRascal(rascalState);
+  syncRascalChrome();
+});
 
 window.addEventListener("keydown", (event) => {
+  if (mode === "rascal") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") rascalKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") rascalKeys.right = true;
+    if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") rascalKeys.jump = true;
+    if (!event.repeat && (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW")) rascalEdge = { ...rascalEdge, jump: true };
+    if (!event.repeat && (event.code === "KeyF" || event.code === "ShiftLeft" || event.code === "ShiftRight")) rascalEdge = { ...rascalEdge, web: true };
+    if (event.code === "Escape") rascalEdge = { ...rascalEdge, pause: true };
+    if (event.code === "Enter") rascalEdge = { ...rascalEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "KeyA", "KeyD", "KeyW", "Space", "KeyF"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "axo") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") axoKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") axoKeys.right = true;
@@ -410,12 +493,15 @@ window.addEventListener("keyup", (event) => {
     raceKeys.left = false;
     fishKeys.left = false;
     axoKeys.left = false;
+    rascalKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
     fishKeys.right = false;
     axoKeys.right = false;
+    rascalKeys.right = false;
   }
+  if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") rascalKeys.jump = false;
   if (event.code === "Space") axoKeys.fire = false;
   if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
   if (event.code === "ArrowDown" || event.code === "KeyS") {
@@ -442,6 +528,36 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-rascal]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.rascal ?? "";
+    if (name === "left") rascalKeys.left = true;
+    if (name === "right") rascalKeys.right = true;
+    if (name === "jump") {
+      rascalKeys.jump = true;
+      rascalEdge = { ...rascalEdge, jump: true };
+    }
+    if (name === "web") rascalEdge = { ...rascalEdge, web: true };
+    if (name === "pause") rascalEdge = { ...rascalEdge, pause: true };
+    if (name === "left" || name === "right" || name === "jump") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.rascal ?? "";
+    if (name === "left") rascalKeys.left = false;
+    if (name === "right") rascalKeys.right = false;
+    if (name === "jump") rascalKeys.jump = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -517,6 +633,14 @@ document.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((butto
 
 canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
+});
+
+rascalSurface.addEventListener("pointerdown", () => {
+  if (mode !== "rascal" || !rascalState) return;
+  if (rascalState.phase === "clear" || rascalState.phase === "retry" || rascalState.phase === "done") {
+    rascalState = advanceRascal(rascalState);
+    syncRascalChrome();
+  }
 });
 
 axoSurface.addEventListener("pointerdown", () => {
@@ -621,6 +745,20 @@ function frame(now: number): void {
     }
     drawAxo(axoGfx, axoState, now);
     syncAxoChrome();
+  }
+  if (mode === "rascal" && rascalState) {
+    rascalAcc += delta;
+    let steps = 0;
+    while (rascalAcc >= STEP_MS && steps < 5) {
+      const input = rascalInput();
+      if (input.confirm && (rascalState.phase === "clear" || rascalState.phase === "retry" || rascalState.phase === "done")) rascalState = advanceRascal(rascalState);
+      else rascalState = tickRascal(rascalState, input, STEP_MS);
+      rascalEdge = blankRascalInput();
+      rascalAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawRascal(rascalGfx, rascalState, now);
+    syncRascalChrome();
   }
   requestAnimationFrame(frame);
 }

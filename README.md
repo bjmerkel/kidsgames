@@ -1,6 +1,6 @@
 # Kids Games
 
-Four games live here. From the first screen, pick one.
+Five games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Web Rascal
+
+A side-scrolling rooftop game. You play a raccoon in a red shirt and blue pants. Hold Right to run and Jump to hop. A short gap is a running jump. A wide gap needs a web: jump toward the white web mark, then tap Web, and jump again when you arrive. Bounce on a bug from above. Touching one from the side, or falling off the roof, costs a life. You have 3 lives. The score carries, and lives come back at the next roof.
+
+The five roofs are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. The nest at the end of each roof finishes the level.
 
 ## Axolotl Patrol
 
@@ -43,6 +49,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
 - In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
 - In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
+- In Web Rascal, Left and Right run. Space or Jump hops. F or Web shoots a web at a white web mark.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

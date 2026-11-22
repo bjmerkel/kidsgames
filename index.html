@@ -29,6 +29,10 @@
         Axolotl Patrol
         <small>Pop the diving bugs. 5 levels.</small>
       </button>
+      <button type="button" id="play-rascal" class="game-card">
+        Web Rascal
+        <small>Run, jump, and swing. 5 levels.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
@@ -110,6 +114,25 @@
           <button type="button" data-axo="fire">Bubble</button>
           <button type="button" data-axo="pause">Pause</button>
           <button type="button" id="axo-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="rascal" hidden>
+      <header class="slim-head">
+        <button type="button" id="rascal-games">Games</button>
+        <p id="rascal-heading">Web Rascal</p>
+      </header>
+      <div id="rascal-board">
+        <div id="rascal-stage">
+          <canvas id="rascal-canvas" width="480" height="720" aria-label="Web Rascal"></canvas>
+        </div>
+        <div id="rascal-pad">
+          <button type="button" data-rascal="left">Left</button>
+          <button type="button" data-rascal="right">Right</button>
+          <button type="button" data-rascal="jump">Jump</button>
+          <button type="button" data-rascal="web">Web</button>
+          <button type="button" data-rascal="pause">Pause</button>
+          <button type="button" id="rascal-next" hidden>Next level</button>
         </div>
       </div>
     </section>
