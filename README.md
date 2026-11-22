@@ -1,6 +1,6 @@
 # Kids Games
 
-Two games live here. From the first screen, pick one.
+Six games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,30 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Capy Swing
+
+A jungle trail in the style of a classic pit runner. You play a capybara. Hold Right to run and Jump to hop. A short gap is a running jump. A wide river has a vine: jump into the vine and it swings you to the far bank. Jump over the rolling logs. On Driftwood, hop across the logs in the water. Mangoes add points. The pool at the end of the trail finishes the level.
+
+You have 3 lives. Falling in the river or touching a rolling log says try again and sends you back to the last safe bank. The score carries, and lives come back on the next trail.
+
+The five trails are River Bend, Two Vines, Log Run, Driftwood, and Deep Jungle.
+
+## Web Rascal
+
+A side-scrolling rooftop game. You play a raccoon in a red shirt and blue pants. Hold Right to run and Jump to hop. A short gap is a running jump. A wide gap needs a web: jump toward the white web mark, then tap Web, and jump again when you arrive. Bounce on a bug from above. Touching one from the side, or falling off the roof, costs a life. You have 3 lives. The score carries, and lives come back at the next roof.
+
+The five roofs are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. The nest at the end of each roof finishes the level.
+
+## Axolotl Patrol
+
+An arcade shooter. You play a pink axolotl at the bottom of the tank. Bugs line up, then peel off and dive. Hold Left or Right to slide. Hold Bubble to shoot. Only two bubbles can be in the air at once. Pop every bug to finish the level. Dragonflies and the king beetle drop water, so slide out of the way. You have 3 lives. A hit says try again, and losing the last life restarts that level.
+
+The five levels are Skimmer School, Beetle Rows, Dragonfly Dive, Mixed Swarm, and King Beetle. The king takes six bubbles. The score carries from level to level.
+
+## Pond Fishing
+
+Each level asks for particular fish. Line the hook up with Left, Right, Up, and Down, then tap Catch. A fish that is not on the list swims away. Catch every fish the level names and the banner says you finished the level. The five ponds are Sunny Shore, Sunfish Bend, Bass Hole, Shady Bank, and Full Creel.
 
 ## Hermit Crab Crossing
 
@@ -31,6 +55,10 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 
 - Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
 - In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
+- In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
+- In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
+- In Web Rascal, Left and Right run. Space or Jump hops. F or Web shoots a web at a white web mark.
+- In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

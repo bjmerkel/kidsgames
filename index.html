@@ -21,6 +21,22 @@
         Woodland Grand Prix
         <small>10 racers, including a wood duck. 5 tracks.</small>
       </button>
+      <button type="button" id="play-fish" class="game-card">
+        Pond Fishing
+        <small>Catch the fish each level asks for. 5 levels.</small>
+      </button>
+      <button type="button" id="play-axo" class="game-card">
+        Axolotl Patrol
+        <small>Pop the diving bugs. 5 levels.</small>
+      </button>
+      <button type="button" id="play-rascal" class="game-card">
+        Web Rascal
+        <small>Run, jump, and swing. 5 levels.</small>
+      </button>
+      <button type="button" id="play-capy" class="game-card">
+        Capy Swing
+        <small>Swing the vines. 5 levels.</small>
+      </button>
       <button type="button" id="open-settings" class="game-card">
         Level settings
         <small>Change the timer, stones, holds, cars, and swings for each level.</small>
@@ -71,6 +87,81 @@
           <button type="button" data-race="use">Use</button>
           <button type="button" data-race="pause">Pause</button>
           <button type="button" id="race-next">Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="fish" hidden>
+      <header class="slim-head">
+        <button type="button" id="fish-games">Games</button>
+        <p id="fish-heading">Pond Fishing</p>
+      </header>
+      <div id="fish-board">
+        <div id="fish-stage">
+          <canvas id="fish-canvas" width="480" height="720" aria-label="Pond Fishing"></canvas>
+        </div>
+        <div id="fish-pad">
+          <button type="button" data-fish="left">Left</button>
+          <button type="button" data-fish="right">Right</button>
+          <button type="button" data-fish="up">Up</button>
+          <button type="button" data-fish="down">Down</button>
+          <button type="button" data-fish="catch">Catch</button>
+          <button type="button" data-fish="pause">Pause</button>
+          <button type="button" id="fish-next">Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="axo" hidden>
+      <header class="slim-head">
+        <button type="button" id="axo-games">Games</button>
+        <p id="axo-heading">Axolotl Patrol</p>
+      </header>
+      <div id="axo-board">
+        <div id="axo-stage">
+          <canvas id="axo-canvas" width="480" height="720" aria-label="Axolotl Patrol"></canvas>
+        </div>
+        <div id="axo-pad">
+          <button type="button" data-axo="left">Left</button>
+          <button type="button" data-axo="right">Right</button>
+          <button type="button" data-axo="fire">Bubble</button>
+          <button type="button" data-axo="pause">Pause</button>
+          <button type="button" id="axo-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="rascal" hidden>
+      <header class="slim-head">
+        <button type="button" id="rascal-games">Games</button>
+        <p id="rascal-heading">Web Rascal</p>
+      </header>
+      <div id="rascal-board">
+        <div id="rascal-stage">
+          <canvas id="rascal-canvas" width="480" height="720" aria-label="Web Rascal"></canvas>
+        </div>
+        <div id="rascal-pad">
+          <button type="button" data-rascal="left">Left</button>
+          <button type="button" data-rascal="right">Right</button>
+          <button type="button" data-rascal="jump">Jump</button>
+          <button type="button" data-rascal="web">Web</button>
+          <button type="button" data-rascal="pause">Pause</button>
+          <button type="button" id="rascal-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="capy" hidden>
+      <header class="slim-head">
+        <button type="button" id="capy-games">Games</button>
+        <p id="capy-heading">Capy Swing</p>
+      </header>
+      <div id="capy-board">
+        <div id="capy-stage">
+          <canvas id="capy-canvas" width="480" height="720" aria-label="Capy Swing"></canvas>
+        </div>
+        <div id="capy-pad">
+          <button type="button" data-capy="left">Left</button>
+          <button type="button" data-capy="right">Right</button>
+          <button type="button" data-capy="jump">Jump</button>
+          <button type="button" data-capy="pause">Pause</button>
+          <button type="button" id="capy-next" hidden>Next level</button>
         </div>
       </div>
     </section>

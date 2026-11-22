@@ -147,6 +147,10 @@ button:focus-visible {
 #menu,
 #crab,
 #race,
+#fish,
+#axo,
+#rascal,
+#capy,
 #settings {
   flex: 1 1 auto;
   width: 100%;
@@ -160,18 +164,30 @@ button:focus-visible {
 #menu[hidden],
 #crab[hidden],
 #race[hidden],
+#fish[hidden],
+#axo[hidden],
+#rascal[hidden],
+#capy[hidden],
 #settings[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
 #race-next[hidden],
-#race-pad button[hidden] {
+#race-pad button[hidden],
+#fish-next[hidden],
+#fish-pad button[hidden],
+#axo-next[hidden],
+#axo-pad button[hidden],
+#rascal-next[hidden],
+#rascal-pad button[hidden],
+#capy-next[hidden],
+#capy-pad button[hidden] {
   display: none !important;
 }
 
 #menu {
   justify-content: safe center;
   gap: 16px;
-  overflow-y: auto;
+  overflow: auto;
   touch-action: pan-y;
 }
 
@@ -243,6 +259,159 @@ button:focus-visible {
 
 #race-pad button[data-race="use"] {
   background: #7ed37a;
+}
+
+#fish-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#fish-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#fish-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#fish-pad button[data-fish="catch"],
+#fish-pad button[data-fish="pause"],
+#fish-next {
+  grid-column: 1 / -1;
+}
+
+#fish-pad button[data-fish="catch"],
+#fish-next {
+  background: #f2c14e;
+}
+
+#axo-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#axo-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#axo-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#axo-pad button[data-axo="fire"],
+#axo-pad button[data-axo="pause"],
+#axo-next {
+  grid-column: 1 / -1;
+}
+
+#axo-pad button[data-axo="fire"],
+#axo-next {
+  background: #f2c14e;
+}
+
+#rascal-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#rascal-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#rascal-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#rascal-pad button[data-rascal="jump"],
+#rascal-pad button[data-rascal="web"],
+#rascal-pad button[data-rascal="pause"],
+#rascal-next {
+  grid-column: 1 / -1;
+}
+
+#rascal-pad button[data-rascal="jump"],
+#rascal-next {
+  background: #f2c14e;
+}
+
+#rascal-pad button[data-rascal="web"] {
+  background: #d7ecf3;
+}
+
+#capy-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#capy-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#capy-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#capy-pad button[data-capy="jump"],
+#capy-pad button[data-capy="pause"],
+#capy-next {
+  grid-column: 1 / -1;
+}
+
+#capy-pad button[data-capy="jump"],
+#capy-next {
+  background: #f2c14e;
 }
 
 .slim-head {
@@ -386,6 +555,10 @@ button:focus-visible {
 }
 
 @media (max-height: 700px) {
+  .game-card {
+    min-height: 72px;
+  }
+
   body {
     gap: 6px;
   }
@@ -396,6 +569,15 @@ button:focus-visible {
 }
 
 @media (max-height: 520px) {
+  #menu {
+    gap: 3px;
+  }
+
+  .game-card {
+    min-height: 46px;
+    padding: 2px 10px;
+  }
+
   body {
     gap: 6px;
   }
@@ -461,13 +643,97 @@ button:focus-visible {
     align-self: flex-end;
   }
 
+  #fish-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #fish-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #fish-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #axo-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #axo-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #axo-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #rascal-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #rascal-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #rascal-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #capy-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #capy-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #capy-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
   button {
     min-height: 44px;
     border-radius: 10px;
     font-size: 15px;
-  }
-
-  .game-card {
-    min-height: 64px;
   }
 }
