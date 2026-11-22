@@ -1,6 +1,6 @@
 # Kids Games
 
-Ten games live here. From the first screen, pick one.
+Eleven games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Ollie Cat
+
+A side-view skate park with a white cat. Hold Push or Right to build speed. Brake slows the board. Ollie jumps, and another press in the air does a kickflip, then a grab. Crouch to fit through tunnels and to jump higher. Yellow marks are speed ramps. Red marks launch you. Grind a rail by landing on it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
+
+The score carries from park to park. The five parks are Milk Street, Alley Rail, Tunnel Run, Gap Park, and Night Bowl.
 
 ## Word Hunt
 
@@ -89,6 +95,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. H or Hint glows a starting letter.
+- In Ollie Cat, Right or Push builds speed and Left or Brake slows down. Ollie jumps, and pressing it again in the air does a kickflip, then a grab. Hold Crouch or Down in tunnels.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.
