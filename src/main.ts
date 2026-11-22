@@ -17,7 +17,7 @@ import { AXO_LEVELS } from "./axolotl/levels";
 import { advanceAxo, blankAxoInput, createAxo, tickAxo, type AxoInput, type AxoState } from "./axolotl/sim";
 import { drawRascal } from "./rascal/draw";
 import { ROOF_LEVELS } from "./rascal/levels";
-import { advanceRascal, blankRascalInput, createRascal, tickRascal, type RascalInput, type RascalState } from "./rascal/sim";
+import { advanceRascal, blankRascalInput, createRascal, hookAtPoint, rascalCameraX, tickRascal, type RascalInput, type RascalState } from "./rascal/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -547,7 +547,7 @@ document.querySelectorAll<HTMLButtonElement>("button[data-rascal]").forEach((but
     }
     if (name === "web") rascalEdge = { ...rascalEdge, web: true };
     if (name === "pause") rascalEdge = { ...rascalEdge, pause: true };
-    if (name === "left" || name === "right" || name === "jump") {
+    if (name === "left" || name === "right" || name === "jump" || name === "web") {
       button.classList.add("is-held");
       if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
     }
@@ -635,11 +635,20 @@ canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
 });
 
-rascalSurface.addEventListener("pointerdown", () => {
+rascalSurface.addEventListener("pointerdown", (event) => {
   if (mode !== "rascal" || !rascalState) return;
   if (rascalState.phase === "clear" || rascalState.phase === "retry" || rascalState.phase === "done") {
     rascalState = advanceRascal(rascalState);
     syncRascalChrome();
+    return;
+  }
+  if (rascalState.phase !== "playing") return;
+  const rect = rascalSurface.getBoundingClientRect();
+  if (rect.width < 1 || rect.height < 1) return;
+  const viewX = ((event.clientX - rect.left) / rect.width) * VIEW_W;
+  const viewY = ((event.clientY - rect.top) / rect.height) * VIEW_H;
+  if (hookAtPoint(rascalState, viewX + rascalCameraX(rascalState), viewY)) {
+    rascalEdge = { ...rascalEdge, web: true };
   }
 });
 

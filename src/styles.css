@@ -368,7 +368,14 @@ button:focus-visible {
 }
 
 #rascal-pad button[data-rascal="web"] {
-  background: #d7ecf3;
+  background: #1f6f8f;
+  color: #f7f1e6;
+}
+
+#rascal-pad button[data-rascal="web"].is-held,
+#rascal-pad button[data-rascal="web"]:active {
+  background: #14485c;
+  color: #f7f1e6;
 }
 
 .slim-head {

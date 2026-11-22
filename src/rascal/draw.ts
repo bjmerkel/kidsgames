@@ -1,10 +1,10 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
 import { roofLevel } from "./levels";
-import type { RascalBug, RascalState } from "./sim";
+import { rascalCameraX, type RascalBug, type RascalState } from "./sim";
 
 export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, nowMs: number): void {
   const level = roofLevel(state.levelIndex);
-  const camX = Math.max(0, Math.min(level.width - VIEW_W, state.player.x - 170));
+  const camX = rascalCameraX(state);
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
   const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
   if (level.night) {
@@ -54,12 +54,19 @@ export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, no
   }
   drawNest(ctx, level.goal.x + level.goal.w / 2, level.goal.y + 20, nowMs);
 
-  if (state.zip) {
-    ctx.strokeStyle = "rgba(247,241,230,0.95)";
-    ctx.lineWidth = 2;
+  const webX = state.zip?.hookX ?? (state.perchMs > 0 ? state.perchX : null);
+  const webY = state.zip?.hookY ?? (state.perchMs > 0 ? state.perchY : null);
+  if (webX != null && webY != null) {
+    const fromX = state.player.x + state.player.w / 2;
+    const fromY = state.player.y + 8;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#1c1915";
     ctx.beginPath();
-    ctx.moveTo(state.player.x + state.player.w / 2, state.player.y + 8);
-    ctx.lineTo(state.zip.hookX, state.zip.hookY);
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(webX, webY);
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#f7f1e6";
     ctx.stroke();
   }
 
@@ -109,14 +116,19 @@ function drawPlat(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
 function drawHook(ctx: CanvasRenderingContext2D, x: number, y: number, nowMs: number): void {
   ctx.save();
   ctx.translate(x, y);
-  ctx.strokeStyle = "rgba(247,241,230,0.9)";
-  ctx.lineWidth = 1.5;
+  const pulse = Math.sin(nowMs / 180) * 1;
+  ctx.fillStyle = "#f7f1e6";
+  ctx.strokeStyle = "#1c1915";
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(0, 0, 8 + Math.sin(nowMs / 180) * 1, 0, Math.PI * 2);
-  ctx.moveTo(-8, 0);
-  ctx.lineTo(8, 0);
-  ctx.moveTo(0, -8);
-  ctx.lineTo(0, 8);
+  ctx.arc(0, 0, 12 + pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-7, 0);
+  ctx.lineTo(7, 0);
+  ctx.moveTo(0, -7);
+  ctx.lineTo(0, 7);
   ctx.stroke();
   ctx.restore();
 }

@@ -1,3 +1,4 @@
+import { VIEW_W } from "../game/constants";
 import { RASCAL_H, RASCAL_W, ROOF_LEVELS, roofLevel, type Mover, type Plat } from "./levels";
 
 export type RascalPhase = "playing" | "paused" | "clear" | "retry" | "done";
@@ -50,6 +51,10 @@ export type RascalState = {
   support: number | null;
   supportX: number;
   zip: Zip | null;
+  perchMs: number;
+  perchX: number;
+  perchY: number;
+  webMs: number;
   bugs: RascalBug[];
   coinsGot: boolean[];
   spawnX: number;
@@ -62,7 +67,9 @@ const GRAVITY = 2400;
 const JUMP = -720;
 const RUN = 230;
 const MAX_FALL = 980;
-const WEB_RANGE = 220;
+const WEB_RANGE = 460;
+const WEB_BUFFER_MS = 400;
+const PERCH_MS = 1000;
 const ZIP_MS = 160;
 const LIVES = 3;
 const INVULN_MS = 1100;
@@ -91,6 +98,10 @@ export function createRascal(levelIndex = 0, score = 0): RascalState {
     support: null,
     supportX: 0,
     zip: null,
+    perchMs: 0,
+    perchX: 0,
+    perchY: 0,
+    webMs: 0,
     bugs: level.bugs.map((bug) => ({
       x: bug.x,
       y: bug.y,
@@ -130,10 +141,20 @@ function solidsAt(levelIndex: number, elapsedMs: number): Body[] {
   return [...platforms, ...movers];
 }
 
+export function rascalCameraX(state: RascalState): number {
+  const level = roofLevel(state.levelIndex);
+  return Math.max(0, Math.min(Math.max(0, level.width - VIEW_W), state.player.x - 170));
+}
+
+export function hookAtPoint(state: RascalState, worldX: number, worldY: number, radius = 64): boolean {
+  const level = roofLevel(state.levelIndex);
+  return level.webs.some((hook) => Math.hypot(hook.x - worldX, hook.y - worldY) <= radius);
+}
+
 function nearestWeb(state: RascalState): { x: number; y: number } | null {
   const level = roofLevel(state.levelIndex);
   const cx = state.player.x + state.player.w / 2;
-  const cy = state.player.y + 12;
+  const cy = state.player.y + state.player.h / 2;
   let best: { x: number; y: number } | null = null;
   let bestDist = WEB_RANGE;
   for (const hook of level.webs) {
@@ -141,12 +162,33 @@ function nearestWeb(state: RascalState): { x: number; y: number } | null {
     const dx = hook.x - cx;
     const dy = hook.y - cy;
     const dist = Math.hypot(dx, dy);
-    if (dist < bestDist) {
+    if (dist <= bestDist) {
       best = hook;
       bestDist = dist;
     }
   }
   return best;
+}
+
+function beginZip(state: RascalState, hook: { x: number; y: number }): void {
+  state.zip = {
+    fromX: state.player.x,
+    fromY: state.player.y,
+    toX: hook.x - state.player.w / 2,
+    toY: hook.y + 18,
+    hookX: hook.x,
+    hookY: hook.y,
+    t: 0,
+  };
+  state.grounded = false;
+  state.support = null;
+  state.vy = 0;
+  state.perchMs = 0;
+  state.webMs = 0;
+  if (state.toast === "Jump closer to the web mark.") {
+    state.toast = "";
+    state.toastMs = 0;
+  }
 }
 
 function hurt(state: RascalState, respawn: boolean): void {
@@ -156,6 +198,7 @@ function hurt(state: RascalState, respawn: boolean): void {
   state.toast = "Try again.";
   state.toastMs = state.lives > 0 ? 1000 : 0;
   state.zip = null;
+  state.perchMs = 0;
   if (state.lives <= 0) {
     state.phase = "retry";
     return;
@@ -201,13 +244,24 @@ export function tickRascal(state: RascalState, input: RascalInput, dtMs: number)
 
   const dx = Math.max(-1, Math.min(1, input.dx));
   if (dx !== 0) next.face = dx;
-  if (!next.zip) {
+  if (!next.zip && next.perchMs <= 0) {
     next.player.x += dx * RUN * dt;
     next.player.x = Math.max(0, Math.min(level.width - next.player.w, next.player.x));
     for (const plat of solids) {
       if (!overlaps(next.player, plat)) continue;
       if (dx > 0) next.player.x = plat.x - next.player.w;
       else if (dx < 0) next.player.x = plat.x + plat.w;
+    }
+  }
+
+  if (next.perchMs > 0) {
+    next.perchMs = Math.max(0, next.perchMs - step);
+    if (next.perchMs > 0) {
+      next.coyoteMs = next.perchMs;
+      next.vy = 0;
+      next.grounded = false;
+      next.support = null;
+      if (input.jumpHeld) next.jumpBufferMs = 120;
     }
   }
 
@@ -220,32 +274,20 @@ export function tickRascal(state: RascalState, input: RascalInput, dtMs: number)
     next.coyoteMs = 0;
     next.jumpBufferMs = 0;
     next.support = null;
+    next.perchMs = 0;
   }
   if (!input.jumpHeld && next.vy < -260) next.vy = -260;
 
-  if (input.web && !next.zip) {
+  if (input.web) next.webMs = WEB_BUFFER_MS;
+  if (next.webMs > 0 && !next.zip && next.perchMs <= 0) {
     const hook = nearestWeb(next);
-    if (hook) {
-      next.zip = {
-        fromX: next.player.x,
-        fromY: next.player.y,
-        toX: hook.x - next.player.w / 2,
-        toY: hook.y + 18,
-        hookX: hook.x,
-        hookY: hook.y,
-        t: 0,
-      };
-      next.grounded = false;
-      next.support = null;
-      next.vy = 0;
+    if (hook) beginZip(next, hook);
+    else if (input.web) {
+      next.toast = level.webs.length === 0 ? "No web mark on this roof." : "Jump closer to the web mark.";
+      next.toastMs = 1200;
     }
   }
-
-  if (next.zip && input.jump && !jumping) {
-    next.zip = null;
-    next.vy = JUMP;
-    next.coyoteMs = 0;
-  }
+  if (!input.web) next.webMs = Math.max(0, next.webMs - step);
 
   if (next.zip) {
     next.zip.t += step;
@@ -258,9 +300,17 @@ export function tickRascal(state: RascalState, input: RascalInput, dtMs: number)
     if (next.zip.t >= ZIP_MS) {
       next.player.x = next.zip.toX;
       next.player.y = next.zip.toY;
+      next.perchX = next.zip.hookX;
+      next.perchY = next.zip.hookY;
       next.zip = null;
-      next.coyoteMs = 110;
+      next.perchMs = PERCH_MS;
+      next.coyoteMs = PERCH_MS;
+      next.vy = 0;
+      next.grounded = false;
     }
+  } else if (next.perchMs > 0) {
+    next.vy = 0;
+    next.grounded = false;
   } else {
     next.vy = Math.min(MAX_FALL, next.vy + GRAVITY * dt);
     const prevBottom = next.player.y + next.player.h;
