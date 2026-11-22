@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hermit Crab Crossing</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header>
+      <p class="emery">Emery is awesome</p>
+      <h1>Hermit Crab Crossing</h1>
+    </header>
+    <canvas id="game" width="480" height="720" aria-label="Hermit Crab Crossing. Emery is awesome."></canvas>
+    <div id="pad">
+      <button type="button" data-input="n">Up</button>
+      <button type="button" data-input="w">Left</button>
+      <button type="button" data-input="e">Right</button>
+      <button type="button" data-input="s">Down</button>
+      <button type="button" data-input="tuck">Tuck</button>
+      <button type="button" data-input="pause">Pause</button>
+      <button type="button" data-input="confirm" id="continue">Play</button>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
