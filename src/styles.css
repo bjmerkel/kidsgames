@@ -150,7 +150,8 @@ button:focus-visible {
 #fish,
 #axo,
 #rascal,
-#capy {
+#capy,
+#waddle {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -167,6 +168,7 @@ button:focus-visible {
 #axo[hidden],
 #rascal[hidden],
 #capy[hidden],
+#waddle[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
 #race-next[hidden],
@@ -178,24 +180,26 @@ button:focus-visible {
 #rascal-next[hidden],
 #rascal-pad button[hidden],
 #capy-next[hidden],
-#capy-pad button[hidden] {
+#capy-pad button[hidden],
+#waddle-next[hidden],
+#waddle-pad button[hidden] {
   display: none !important;
 }
 
 #menu {
   justify-content: safe center;
-  gap: 16px;
+  gap: 10px;
   overflow: auto;
   touch-action: pan-y;
 }
 
 .game-card {
   width: min(420px, 100%);
-  min-height: 92px;
+  min-height: 76px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .game-card small,
@@ -412,6 +416,43 @@ button:focus-visible {
   background: #f2c14e;
 }
 
+#waddle-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#waddle-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#waddle-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#waddle-pad button[data-waddle="up"],
+#waddle-pad button[data-waddle="down"],
+#waddle-pad button[data-waddle="pause"],
+#waddle-next {
+  grid-column: 1 / -1;
+}
+
+#waddle-next {
+  background: #f2c14e;
+}
+
 .slim-head {
   width: min(480px, 100%);
   display: flex;
@@ -449,11 +490,11 @@ button:focus-visible {
 
 @media (max-height: 520px) {
   #menu {
-    gap: 3px;
+    gap: 2px;
   }
 
   .game-card {
-    min-height: 46px;
+    min-height: 40px;
     padding: 2px 10px;
   }
 
@@ -605,6 +646,28 @@ button:focus-visible {
   }
 
   #capy-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #waddle-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #waddle-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #waddle-pad {
     width: min(260px, 40vw);
     align-self: flex-end;
   }

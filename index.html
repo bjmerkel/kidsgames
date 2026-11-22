@@ -37,6 +37,10 @@
         Capy Swing
         <small>Swing the vines. 5 levels.</small>
       </button>
+      <button type="button" id="play-waddle" class="game-card">
+        Ice Waddle
+        <small>Eat the fish. Dodge the seals. 5 mazes.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
@@ -155,6 +159,25 @@
           <button type="button" data-capy="jump">Jump</button>
           <button type="button" data-capy="pause">Pause</button>
           <button type="button" id="capy-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="waddle" hidden>
+      <header class="slim-head">
+        <button type="button" id="waddle-games">Games</button>
+        <p id="waddle-heading">Ice Waddle</p>
+      </header>
+      <div id="waddle-board">
+        <div id="waddle-stage">
+          <canvas id="waddle-canvas" width="480" height="720" aria-label="Ice Waddle"></canvas>
+        </div>
+        <div id="waddle-pad">
+          <button type="button" data-waddle="up">Up</button>
+          <button type="button" data-waddle="left">Left</button>
+          <button type="button" data-waddle="right">Right</button>
+          <button type="button" data-waddle="down">Down</button>
+          <button type="button" data-waddle="pause">Pause</button>
+          <button type="button" id="waddle-next" hidden>Next level</button>
         </div>
       </div>
     </section>

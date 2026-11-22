@@ -21,6 +21,9 @@ import { advanceRascal, blankRascalInput, createRascal, tickRascal, type RascalI
 import { drawCapy } from "./capy/draw";
 import { JUNGLE_LEVELS } from "./capy/levels";
 import { advanceCapy, blankCapyInput, createCapy, tickCapy, type CapyInput, type CapyState } from "./capy/sim";
+import { drawWaddle } from "./waddle/draw";
+import { ICE_LEVELS } from "./waddle/mazes";
+import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -89,6 +92,17 @@ const capySection = document.querySelector<HTMLElement>("#capy");
 const capyHeading = document.querySelector<HTMLElement>("#capy-heading");
 const capyNext = document.querySelector<HTMLButtonElement>("#capy-next");
 const capyPad = document.querySelector<HTMLElement>("#capy-pad");
+const waddleCanvas = document.querySelector<HTMLCanvasElement>("#waddle-canvas");
+if (!waddleCanvas) throw new Error("missing waddle canvas");
+const waddleSurface: HTMLCanvasElement = waddleCanvas;
+const waddleContext = waddleCanvas.getContext("2d");
+if (!waddleContext) throw new Error("missing waddle context");
+const waddleGfx: CanvasRenderingContext2D = waddleContext;
+const waddleStage = document.querySelector<HTMLElement>("#waddle-stage");
+const waddleSection = document.querySelector<HTMLElement>("#waddle");
+const waddleHeading = document.querySelector<HTMLElement>("#waddle-heading");
+const waddleNext = document.querySelector<HTMLButtonElement>("#waddle-next");
+const waddlePad = document.querySelector<HTMLElement>("#waddle-pad");
 
 let state = createGame();
 let pending = blankInput();
@@ -97,7 +111,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -121,6 +135,10 @@ let capyState: CapyState | null = null;
 let capyAcc = 0;
 const capyKeys = { left: false, right: false, jump: false };
 let capyEdge = blankCapyInput();
+let waddleState: WaddleState | null = null;
+let waddleAcc = 0;
+const waddleKeys = { left: false, right: false, up: false, down: false };
+let waddleEdge = blankWaddleInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -148,6 +166,7 @@ function fit(): void {
   fitBox(axoStage, axoSurface);
   fitBox(rascalStage, rascalSurface);
   fitBox(capyStage, capySurface);
+  fitBox(waddleStage, waddleSurface);
 }
 
 fit();
@@ -160,6 +179,7 @@ if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(
 if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axoStage);
 if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).observe(rascalStage);
 if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(capyStage);
+if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -170,6 +190,7 @@ function show(next: Mode): void {
   if (axoSection) axoSection.hidden = next !== "axo";
   if (rascalSection) rascalSection.hidden = next !== "rascal";
   if (capySection) capySection.hidden = next !== "capy";
+  if (waddleSection) waddleSection.hidden = next !== "waddle";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
     crab: "Hermit Crab Crossing",
@@ -178,6 +199,7 @@ function show(next: Mode): void {
     axo: "Axolotl Patrol",
     rascal: "Web Rascal",
     capy: "Capy Swing",
+    waddle: "Ice Waddle",
   };
   document.title = titles[next];
   if (next === "crab") {
@@ -191,6 +213,7 @@ function show(next: Mode): void {
   if (next === "axo") openAxo();
   if (next === "rascal") openRascal();
   if (next === "capy") openCapy();
+  if (next === "waddle") openWaddle();
   requestAnimationFrame(() => fit());
 }
 
@@ -355,6 +378,40 @@ function capyInput(): CapyInput {
   };
 }
 
+function openWaddle(): void {
+  waddleState = createWaddle(0);
+  waddleAcc = 0;
+  waddleEdge = blankWaddleInput();
+  waddleKeys.left = false;
+  waddleKeys.right = false;
+  waddleKeys.up = false;
+  waddleKeys.down = false;
+  syncWaddleChrome();
+}
+
+function syncWaddleChrome(): void {
+  if (!waddleState) return;
+  const level = ICE_LEVELS[waddleState.levelIndex];
+  if (waddleHeading) waddleHeading.textContent = waddleState.phase === "done" ? "Ice Waddle" : level.name;
+  const live = waddleState.phase === "playing" || waddleState.phase === "paused";
+  waddlePad?.querySelectorAll<HTMLButtonElement>("button[data-waddle]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (waddleNext) {
+    waddleNext.hidden = live;
+    waddleNext.textContent = waddleState.phase === "done" ? "Play again" : waddleState.phase === "retry" ? "Try again" : waddleState.levelIndex >= ICE_LEVELS.length - 1 ? "The ice" : "Next level";
+  }
+}
+
+function waddleInput(): WaddleInput {
+  return {
+    dx: (waddleKeys.right ? 1 : 0) - (waddleKeys.left ? 1 : 0),
+    dy: (waddleKeys.down ? 1 : 0) - (waddleKeys.up ? 1 : 0),
+    pause: waddleEdge.pause,
+    confirm: waddleEdge.confirm,
+  };
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -453,6 +510,10 @@ document.querySelector<HTMLButtonElement>("#play-capy")?.addEventListener("point
   event.preventDefault();
   show("capy");
 });
+document.querySelector<HTMLButtonElement>("#play-waddle")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("waddle");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -474,6 +535,10 @@ document.querySelector("#rascal-games")?.addEventListener("pointerdown", (event)
   show("menu");
 });
 document.querySelector("#capy-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#waddle-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -508,8 +573,24 @@ capyNext?.addEventListener("pointerdown", (event) => {
   capyState = advanceCapy(capyState);
   syncCapyChrome();
 });
+waddleNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!waddleState) return;
+  waddleState = advanceWaddle(waddleState);
+  syncWaddleChrome();
+});
 
 window.addEventListener("keydown", (event) => {
+  if (mode === "waddle") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") waddleKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") waddleKeys.right = true;
+    if (event.code === "ArrowUp" || event.code === "KeyW") waddleKeys.up = true;
+    if (event.code === "ArrowDown" || event.code === "KeyS") waddleKeys.down = true;
+    if (event.code === "Escape") waddleEdge = { ...waddleEdge, pause: true };
+    if (event.code === "Enter") waddleEdge = { ...waddleEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "capy") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") capyKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") capyKeys.right = true;
@@ -576,6 +657,7 @@ window.addEventListener("keyup", (event) => {
     axoKeys.left = false;
     rascalKeys.left = false;
     capyKeys.left = false;
+    waddleKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
@@ -583,7 +665,10 @@ window.addEventListener("keyup", (event) => {
     axoKeys.right = false;
     rascalKeys.right = false;
     capyKeys.right = false;
+    waddleKeys.right = false;
   }
+  if (event.code === "ArrowUp" || event.code === "KeyW") waddleKeys.up = false;
+  if (event.code === "ArrowDown" || event.code === "KeyS") waddleKeys.down = false;
   if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
     rascalKeys.jump = false;
     capyKeys.jump = false;
@@ -614,6 +699,34 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-waddle]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.waddle ?? "";
+    if (name === "left") waddleKeys.left = true;
+    if (name === "right") waddleKeys.right = true;
+    if (name === "up") waddleKeys.up = true;
+    if (name === "down") waddleKeys.down = true;
+    if (name === "pause") waddleEdge = { ...waddleEdge, pause: true };
+    if (name !== "pause") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.waddle ?? "";
+    if (name === "left") waddleKeys.left = false;
+    if (name === "right") waddleKeys.right = false;
+    if (name === "up") waddleKeys.up = false;
+    if (name === "down") waddleKeys.down = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -748,6 +861,14 @@ document.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((butto
 
 canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
+});
+
+waddleSurface.addEventListener("pointerdown", () => {
+  if (mode !== "waddle" || !waddleState) return;
+  if (waddleState.phase === "clear" || waddleState.phase === "retry" || waddleState.phase === "done") {
+    waddleState = advanceWaddle(waddleState);
+    syncWaddleChrome();
+  }
 });
 
 capySurface.addEventListener("pointerdown", () => {
@@ -896,6 +1017,20 @@ function frame(now: number): void {
     }
     drawCapy(capyGfx, capyState, now);
     syncCapyChrome();
+  }
+  if (mode === "waddle" && waddleState) {
+    waddleAcc += delta;
+    let steps = 0;
+    while (waddleAcc >= STEP_MS && steps < 5) {
+      const input = waddleInput();
+      if (input.confirm && (waddleState.phase === "clear" || waddleState.phase === "retry" || waddleState.phase === "done")) waddleState = advanceWaddle(waddleState);
+      else waddleState = tickWaddle(waddleState, input, STEP_MS);
+      waddleEdge = blankWaddleInput();
+      waddleAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawWaddle(waddleGfx, waddleState, now);
+    syncWaddleChrome();
   }
   requestAnimationFrame(frame);
 }
