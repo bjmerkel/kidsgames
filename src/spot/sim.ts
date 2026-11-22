@@ -123,7 +123,7 @@ export function advanceSpot(state: SpotState): SpotState {
   if (state.levelIndex >= SPOT_LEVELS.length - 1) {
     const done = structuredClone(state);
     done.phase = "done";
-    done.toast = "You finished all 5 levels.";
+    done.toast = `You finished all ${SPOT_LEVELS.length} levels.`;
     done.toastMs = 0;
     return done;
   }

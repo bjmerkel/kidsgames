@@ -9,16 +9,38 @@ function tap(state: ReturnType<typeof createSpot>, x: number, y: number) {
 }
 
 describe("silk spot", () => {
-  it("has five pictures and separated changes", () => {
+  it("has twenty pictures and separated changes", () => {
     expect(SPOT_LEVELS.map((level) => level.name)).toEqual([
       "Rooftop Morning",
       "Park Swing",
       "Night Windows",
       "Snack Alley",
       "Moon Nest",
+      "Chimney Puff",
+      "Kite Roof",
+      "Bakery Dusk",
+      "Star Porch",
+      "Puddle Lane",
+      "Lantern Row",
+      "Owl Windows",
+      "Flower Boxes",
+      "Flag Parade",
+      "Cat Nap",
+      "Balloon Bunch",
+      "Web Corner",
+      "Moonlit Steps",
+      "Snack Window",
+      "Nest Party",
     ]);
-    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6]);
-    expect(SPOT_LEVELS.filter((level) => level.sky === "night").map((level) => level.name)).toEqual(["Night Windows", "Moon Nest"]);
+    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7]);
+    expect(SPOT_LEVELS.filter((level) => level.sky === "night").map((level) => level.name)).toEqual([
+      "Night Windows",
+      "Moon Nest",
+      "Star Porch",
+      "Owl Windows",
+      "Moonlit Steps",
+      "Nest Party",
+    ]);
     for (const level of SPOT_LEVELS) {
       expect(level.blurb).toBe(`Find ${level.diffs.length} changes.`);
       const ids = level.diffs.map((diff) => diff.id);
@@ -95,12 +117,13 @@ describe("silk spot", () => {
     expect(state.phase).toBe("playing");
     expect(state.diffs.every((diff) => !diff.found)).toBe(true);
 
-    state = createSpot(4, 80);
+    const last = SPOT_LEVELS.length - 1;
+    state = createSpot(last, 80);
     for (const diff of [...state.diffs]) state = tap(state, PANEL_X + diff.x, PANEL_TOP + diff.y);
-    expect(state.score).toBe(80 + 600 + 250);
+    expect(state.score).toBe(80 + SPOT_LEVELS[last].diffs.length * 100 + 250);
     state = advanceSpot(state);
     expect(state.phase).toBe("done");
-    expect(state.toast).toBe("You finished all 5 levels.");
+    expect(state.toast).toBe(`You finished all ${SPOT_LEVELS.length} levels.`);
     state = advanceSpot(state);
     expect(state.levelIndex).toBe(0);
     expect(state.score).toBe(0);

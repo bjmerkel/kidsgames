@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, spotLevel } from "./scenes";
+import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, spotLevel } from "./scenes";
 import type { SpotState } from "./sim";
 
 export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs: number): void {
@@ -17,7 +17,7 @@ export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs:
   ctx.font = "700 20px Georgia, serif";
   ctx.fillText(level.name, 16, 28);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Level ${state.levelIndex + 1} of 5`, 16, 50);
+  ctx.fillText(`Level ${state.levelIndex + 1} of ${SPOT_LEVELS.length}`, 16, 50);
   ctx.fillText(`Score ${state.score}`, 16, 70);
   const left = state.diffs.filter((diff) => !diff.found).length;
   ctx.textAlign = "right";
@@ -37,7 +37,7 @@ export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs:
   }
   if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to look again.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "You found every change.");
-  if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every picture is solved.");
+  if (state.phase === "done") banner(ctx, `You finished all ${SPOT_LEVELS.length} levels.`, "Every picture is solved.");
 }
 
 function drawPanel(
@@ -118,22 +118,27 @@ function buildings(ctx: CanvasRenderingContext2D, x: number, y: number, kind: "d
 }
 
 function drawChange(ctx: CanvasRenderingContext2D, id: string, changed: boolean, x: number, y: number): void {
-  if (id === "balloon") balloon(ctx, x, y, changed ? "#f2c14e" : "#d64545");
-  else if (id === "web") {
-    if (!changed) web(ctx, x, y);
-  } else if (id === "bird" || id === "star" || id === "star2" || id === "cat" || id === "puddle") {
+  const kind = id.replace(/\d+$/, "");
+  if (kind === "balloon") balloon(ctx, x, y, changed ? "#f2c14e" : "#d64545");
+  else if (kind === "kite") kite(ctx, x, y, changed ? "#5aa7e0" : "#d64545");
+  else if (kind === "web" || kind === "bird" || kind === "star" || kind === "cat" || kind === "puddle" || kind === "cloud" || kind === "butterfly" || kind === "acorn") {
     if (!changed) {
-      if (id === "bird") bird(ctx, x, y);
-      if (id.startsWith("star")) star(ctx, x, y);
-      if (id === "cat") cat(ctx, x, y);
-      if (id === "puddle") puddle(ctx, x, y);
+      if (kind === "web") web(ctx, x, y);
+      if (kind === "bird") bird(ctx, x, y);
+      if (kind === "star") star(ctx, x, y);
+      if (kind === "cat") cat(ctx, x, y);
+      if (kind === "puddle") puddle(ctx, x, y);
+      if (kind === "cloud") cloud(ctx, x, y);
+      if (kind === "butterfly") butterfly(ctx, x, y);
+      if (kind === "acorn") acorn(ctx, x, y);
     }
-  } else if (id === "flower") flower(ctx, x, y, !changed);
-  else if (id === "window") windowLit(ctx, x, y, changed);
-  else if (id === "moon") moon(ctx, x, y, changed);
-  else if (id === "snack") snack(ctx, x, y, changed);
-  else if (id === "lantern") lantern(ctx, x, y, !changed);
-  else if (id === "flag") flag(ctx, x, y, changed ? "#24357a" : "#d64545");
+  } else if (kind === "flower") flower(ctx, x, y, !changed);
+  else if (kind === "window") windowLit(ctx, x, y, changed);
+  else if (kind === "moon") moon(ctx, x, y, changed);
+  else if (kind === "snack") snack(ctx, x, y, changed);
+  else if (kind === "lantern") lantern(ctx, x, y, !changed);
+  else if (kind === "flag") flag(ctx, x, y, changed ? "#24357a" : "#d64545");
+  else if (kind === "smoke" && changed) smoke(ctx, x, y);
 }
 
 function balloon(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
@@ -315,6 +320,69 @@ function puddle(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   ctx.fillStyle = "#6eb5d0";
   ctx.beginPath();
   ctx.ellipse(x, y, 22, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function kite(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 16);
+  ctx.lineTo(x + 12, y);
+  ctx.lineTo(x, y + 16);
+  ctx.lineTo(x - 12, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1c1915";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y + 16);
+  ctx.quadraticCurveTo(x + 10, y + 24, x + 4, y + 30);
+  ctx.stroke();
+}
+
+function cloud(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "#f7f1e6";
+  ctx.beginPath();
+  ctx.arc(x - 10, y + 2, 8, 0, Math.PI * 2);
+  ctx.arc(x, y - 4, 10, 0, Math.PI * 2);
+  ctx.arc(x + 12, y + 2, 8, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function butterfly(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "#e07ad4";
+  ctx.beginPath();
+  ctx.ellipse(x - 8, y - 4, 8, 6, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(x + 8, y - 4, 8, 6, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(x - 7, y + 6, 6, 5, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(x + 7, y + 6, 6, 5, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#1c1915";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 10);
+  ctx.lineTo(x, y + 10);
+  ctx.stroke();
+}
+
+function acorn(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "#8a5a32";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 4, 8, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c47b4a";
+  ctx.beginPath();
+  ctx.ellipse(x, y - 6, 9, 5, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+}
+
+function smoke(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "rgba(247, 241, 230, 0.85)";
+  ctx.beginPath();
+  ctx.arc(x, y + 8, 6, 0, Math.PI * 2);
+  ctx.arc(x + 8, y - 2, 8, 0, Math.PI * 2);
+  ctx.arc(x - 2, y - 12, 7, 0, Math.PI * 2);
   ctx.fill();
 }
 
