@@ -30,7 +30,7 @@ The five trails are River Bend, Two Vines, Log Run, Driftwood, and Deep Jungle.
 
 ## Web Rascal
 
-A side-scrolling rooftop game. You play a raccoon in a red shirt and blue pants. Hold Right to run and Jump to hop. A short gap is a running jump. A wide gap needs a web: jump toward the white web mark, then tap Web, and jump again when you arrive. Bounce on a bug from above. Touching one from the side, or falling off the roof, costs a life. You have 3 lives. The score carries, and lives come back at the next roof.
+A side-scrolling rooftop game. You play a raccoon in a red shirt and blue pants. Hold Right to run and Jump to hop. A short gap is a running jump. A wide gap needs a web: jump toward the web mark, then tap Web or the mark itself. You hang there long enough to jump again. Bounce on a bug from above. Touching one from the side, or falling off the roof, costs a life. You have 3 lives. The score carries, and lives come back at the next roof.
 
 The five roofs are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. The nest at the end of each roof finishes the level.
 
@@ -65,7 +65,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
 - In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
 - In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
-- In Web Rascal, Left and Right run. Space or Jump hops. F or Web shoots a web at a white web mark.
+- In Web Rascal, Left and Right run. Space or Jump hops. F, Web, or a tap on the web mark shoots a web. You hang on it, then jump.
 - In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.

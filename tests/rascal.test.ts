@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GROUND_Y, ROOF_LEVELS } from "../src/rascal/levels";
-import { advanceRascal, blankRascalInput, createRascal, tickRascal, type RascalInput } from "../src/rascal/sim";
+import { advanceRascal, blankRascalInput, createRascal, hookAtPoint, rascalCameraX, tickRascal, type RascalInput } from "../src/rascal/sim";
 
 const STEP = 1000 / 60;
 
@@ -186,5 +186,68 @@ describe("web rascal", () => {
     finale = advanceRascal(finale);
     expect(finale.levelIndex).toBe(0);
     expect(finale.score).toBe(0);
+  });
+
+  it("grabs a web mark that is on screen and hangs long enough to jump", () => {
+    const hook = ROOF_LEVELS[1].webs[0];
+    const approach = createRascal(1);
+    approach.player.x = hook.x - 300;
+    approach.player.y = GROUND_Y - approach.player.h;
+    const screenX = hook.x - rascalCameraX(approach);
+    expect(screenX).toBeGreaterThanOrEqual(0);
+    expect(screenX).toBeLessThanOrEqual(480);
+    expect(hookAtPoint(approach, hook.x, hook.y)).toBe(true);
+    expect(hookAtPoint(approach, hook.x + 200, hook.y)).toBe(false);
+
+    let state = tickRascal(approach, { ...blankRascalInput(), web: true }, STEP);
+    expect(state.zip?.hookX).toBe(hook.x);
+    for (let i = 0; i < 40 && state.zip; i += 1) state = tickRascal(state, blankRascalInput(), STEP);
+    expect(state.zip).toBeNull();
+    expect(state.perchMs).toBeGreaterThan(500);
+    const hangX = state.player.x;
+    const hangY = state.player.y;
+    for (let i = 0; i < 20; i += 1) state = tickRascal(state, blankRascalInput(), STEP);
+    expect(state.player.x).toBeCloseTo(hangX, 0);
+    expect(state.player.y).toBeCloseTo(hangY, 0);
+    expect(state.lives).toBe(3);
+    state = tickRascal(state, { ...blankRascalInput(), jump: true, jumpHeld: true, dx: 1 }, STEP);
+    expect(state.vy).toBeLessThan(0);
+    for (let i = 0; i < 120 && !(state.grounded && state.player.x > 740); i += 1) {
+      state = tickRascal(state, { ...blankRascalInput(), jumpHeld: true, dx: 1 }, STEP);
+    }
+    expect(state.grounded).toBe(true);
+    expect(state.lives).toBe(3);
+    expect(state.player.x).toBeGreaterThan(740);
+  });
+
+  it("keeps a web tap that happens on the same frame as jump", () => {
+    const hook = ROOF_LEVELS[1].webs[0];
+    const state = createRascal(1);
+    state.player.x = hook.x - 80;
+    state.player.y = hook.y + 90;
+    state.grounded = false;
+    state.coyoteMs = 0;
+    state.vy = 80;
+    const swung = tickRascal(state, { ...blankRascalInput(), web: true, jump: true }, STEP);
+    expect(swung.zip).not.toBeNull();
+  });
+
+  it("remembers a web tap until the mark is close", () => {
+    const hook = ROOF_LEVELS[1].webs[0];
+    let state = createRascal(1);
+    state.player.x = 48;
+    state = tickRascal(state, { ...blankRascalInput(), web: true }, STEP);
+    expect(state.zip).toBeNull();
+    expect(state.toast).toBe("Jump closer to the web mark.");
+    state.player.x = hook.x - 70;
+    state.player.y = hook.y + 80;
+    state = tickRascal(state, blankRascalInput(), STEP);
+    expect(state.zip?.hookX).toBe(hook.x);
+    expect(state.toast).toBe("");
+
+    const first = tickRascal(createRascal(0), { ...blankRascalInput(), web: true }, STEP);
+    expect(first.zip).toBeNull();
+    expect(first.toast).toBe("No web mark on this roof.");
+    expect(first.player.y).toBe(createRascal(0).player.y);
   });
 });
