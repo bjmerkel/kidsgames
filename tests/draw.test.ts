@@ -7,25 +7,63 @@ import { startPlaying } from "./helpers";
 
 describe("renderer", () => {
   it("draws the title, the play field, and the level-clear banner", () => {
-    const ctx = fakeCtx();
+    const { ctx, fillTexts, clearTexts } = fakeCtx();
     expect(() => drawFrame(ctx, createGame(), 0, 0)).not.toThrow();
+    expect(painted(fillTexts, COPY.title)).toBe(true);
+    expect(painted(fillTexts, COPY.emery)).toBe(true);
+
+    clearTexts();
     let state = startPlaying();
     state.crab.y = 10;
     state = tick(state, blankInput(), 16);
     expect(state.bannerTitle).toBe(COPY.finishedLevel);
     expect(() => drawFrame(ctx, state, 0, 1200)).not.toThrow();
+    expect(painted(fillTexts, COPY.finishedLevel)).toBe(true);
+    expect(painted(fillTexts, COPY.emery)).toBe(true);
+  });
+
+  it("paints the HUD and tunnel sign while playing level 1", () => {
+    const { ctx, fillTexts } = fakeCtx();
+    const state = startPlaying();
+    expect(() => drawFrame(ctx, state, 0, 0)).not.toThrow();
+    expect(painted(fillTexts, COPY.emery)).toBe(true);
+    expect(painted(fillTexts, COPY.tunnel)).toBe(true);
+  });
+
+  it("paints time-up and try-again toasts with the Emery line", () => {
+    for (const toast of [COPY.timeUp, COPY.tryAgain] as const) {
+      const { ctx, fillTexts, clearTexts } = fakeCtx();
+      const state = { ...startPlaying(), toast, toastMs: 2_000 };
+      expect(() => drawFrame(ctx, state, 0, 0)).not.toThrow();
+      expect(painted(fillTexts, toast)).toBe(true);
+      expect(painted(fillTexts, COPY.emery)).toBe(true);
+      clearTexts();
+    }
   });
 });
 
-function fakeCtx(): CanvasRenderingContext2D {
+function painted(fillTexts: string[], phrase: string): boolean {
+  if (fillTexts.some((chunk) => chunk.includes(phrase))) return true;
+  return fillTexts.join(" ").includes(phrase);
+}
+
+function fakeCtx(): {
+  ctx: CanvasRenderingContext2D;
+  fillTexts: string[];
+  clearTexts: () => void;
+} {
+  const fillTexts: string[] = [];
   const gradient = { addColorStop: () => undefined };
   const target: Record<string, unknown> = {
     canvas: { width: 480, height: 720 },
     measureText: () => ({ width: 80 }),
     createLinearGradient: () => gradient,
     createRadialGradient: () => gradient,
+    fillText: (text: string) => {
+      fillTexts.push(text);
+    },
   };
-  return new Proxy(target, {
+  const ctx = new Proxy(target, {
     get(obj, prop: string) {
       if (prop in obj) return obj[prop];
       const fn = () => undefined;
@@ -37,4 +75,11 @@ function fakeCtx(): CanvasRenderingContext2D {
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
+  return {
+    ctx,
+    fillTexts,
+    clearTexts: () => {
+      fillTexts.length = 0;
+    },
+  };
 }
