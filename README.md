@@ -28,7 +28,7 @@ The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shu
 
 A garden match. Tap a berry, then tap one next to it to swap. Three or more in a line pop. Four in a line makes a striped berry that clears a row or a column. A wrapped berry clears the berries around it, and a white-centered berry clears every berry of that color. Pink jelly clears when a berry pops on it.
 
-You have a set number of moves. The score carries from garden to garden. Running out of moves lets you try that garden again. The five gardens are Sunny Patch, Berry Basket, Lemon Lane, Jelly Middles, and Orchard Goal.
+You have a set number of moves. The score carries from garden to garden. Running out of moves lets you try that garden again. The fifteen gardens are Sunny Patch, Berry Basket, Lemon Lane, Jelly Middles, Orchard Goal, Leaf Rows, Orange Grove, Twin Baskets, Jelly Frame, Corner Patch, High Score, Color Trio, Jelly Rows, Busy Garden, and Night Harvest. The later gardens ask for more points, more than one color, and bigger patches of jelly.
 
 ## Silk Spot
 

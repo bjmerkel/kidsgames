@@ -431,8 +431,11 @@ function reshuffle(state: BurstState): void {
     }
     if (findGroups(state.board).length === 0 && hasMove(state.board)) return;
   }
-  for (let y = 0; y < ROWS; y += 1) {
-    for (let x = 0; x < COLS; x += 1) writeTile(state.board[y][x], pickKind(state, state.board, x, y), "none", y);
+  for (let extra = 0; extra < 8; extra += 1) {
+    for (let y = 0; y < ROWS; y += 1) {
+      for (let x = 0; x < COLS; x += 1) writeTile(state.board[y][x], pickKind(state, state.board, x, y), "none", y);
+    }
+    if (findGroups(state.board).length === 0 && hasMove(state.board)) return;
   }
 }
 
@@ -514,7 +517,7 @@ export function advanceBurst(state: BurstState): BurstState {
   if (state.levelIndex >= BURST_LEVELS.length - 1) {
     const done = structuredClone(state);
     done.phase = "done";
-    done.toast = "You finished all 5 levels.";
+    done.toast = `You finished all ${BURST_LEVELS.length} levels.`;
     done.toastMs = 0;
     return done;
   }

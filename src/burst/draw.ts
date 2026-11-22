@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { COLS, GRID_X, GRID_Y, ROWS, TILE, burstLevel } from "./levels";
+import { BURST_LEVELS, COLS, GRID_X, GRID_Y, ROWS, TILE, burstLevel } from "./levels";
 import { goalLine, type BurstState, type Tile } from "./sim";
 
 const FALL_MS = 160;
@@ -8,9 +8,10 @@ const COLORS = ["#d64545", "#f2c14e", "#7a4ea3", "#3d8b4a", "#f28c28"];
 export function drawBurst(ctx: CanvasRenderingContext2D, state: BurstState, nowMs: number): void {
   const level = burstLevel(state.levelIndex);
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  const skyName = level.sky ?? "day";
   const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-  sky.addColorStop(0, "#d7f3c8");
-  sky.addColorStop(1, "#8ecae6");
+  sky.addColorStop(0, skyName === "night" ? "#1d3b4a" : skyName === "dusk" ? "#f3c98b" : "#d7f3c8");
+  sky.addColorStop(1, skyName === "night" ? "#3d6b4f" : skyName === "dusk" ? "#f08a5d" : "#8ecae6");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
@@ -48,7 +49,7 @@ export function drawBurst(ctx: CanvasRenderingContext2D, state: BurstState, nowM
   ctx.font = "700 22px Georgia, serif";
   ctx.fillText(level.name, 16, 30);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Level ${state.levelIndex + 1} of 5`, 16, 54);
+  ctx.fillText(`Level ${state.levelIndex + 1} of ${BURST_LEVELS.length}`, 16, 54);
   ctx.fillText(`Score ${state.score}`, 16, 76);
   ctx.textAlign = "right";
   ctx.fillText(`${state.movesLeft} moves`, VIEW_W - 16, 54);
@@ -68,7 +69,7 @@ export function drawBurst(ctx: CanvasRenderingContext2D, state: BurstState, nowM
   if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to match again.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "The garden is happy.");
   if (state.phase === "retry") banner(ctx, "Try again.", "The moves ran out.");
-  if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every garden is picked.");
+  if (state.phase === "done") banner(ctx, `You finished all ${BURST_LEVELS.length} levels.`, "Every garden is picked.");
 }
 
 function place(tile: Tile, x: number, y: number, state: BurstState): { x: number; y: number } {
