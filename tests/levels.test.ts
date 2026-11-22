@@ -42,6 +42,13 @@ describe("five levels", () => {
     const tunnelH = (level: LevelDef) => level.segments.find((segment) => segment.kind === "tunnel")?.h ?? 0;
     expect(tunnelH(LEVELS[4])).toBeGreaterThan(tunnelH(LEVELS[0]));
     expect(LEVELS.map((level) => level.timeLimitMs)).toEqual([90000, 80000, 70000, 60000, 85000]);
+    expect(allStones(LEVELS[0]).every((stone) => stone.sinkAfterMs === null)).toBe(true);
+    expect(LEVELS.slice(1).map((level) => new Set(allStones(level).map((stone) => stone.sinkAfterMs)))).toEqual([
+      new Set([3600]),
+      new Set([3300]),
+      new Set([3100]),
+      new Set([2900]),
+    ]);
   });
 
   it("keeps level 1 cars off the spine when a straight hop would cross them", () => {
