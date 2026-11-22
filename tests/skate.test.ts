@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { courseWidth, SKATE_LEVELS } from "../src/skate/levels";
+import { courseWidth, pieceAt, SKATE_LEVELS, surfaceAt } from "../src/skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "../src/skate/sim";
 
 const STEP = 1000 / 60;
@@ -11,9 +11,38 @@ function hold(state: SkateState, frames: number, input: Partial<SkateInput> = {}
   return next;
 }
 
+function ridePark(index: number): SkateState {
+  const level = SKATE_LEVELS[index];
+  let state = createSkate(index);
+  for (let i = 0; i < 7000 && state.phase === "playing"; i += 1) {
+    const here = surfaceAt(level, state.x);
+    const soon = pieceAt(level, state.x + 28);
+    const crouch = here.kind === "tunnel" || soon?.piece.kind === "tunnel";
+    const jump = state.grounded && !crouch && soon?.piece.kind === "gap";
+    state = tickSkate(state, { ...blankSkateInput(), dx: 1, crouch, jump }, STEP);
+  }
+  return state;
+}
+
 describe("ollie cat", () => {
-  it("has five parks with ramps, tunnels, and a finish", () => {
-    expect(SKATE_LEVELS.map((level) => level.name)).toEqual(["Milk Street", "Alley Rail", "Tunnel Run", "Gap Park", "Night Bowl"]);
+  it("has fifteen parks, with ten harder courses after Night Bowl", () => {
+    expect(SKATE_LEVELS.map((level) => level.name)).toEqual([
+      "Milk Street",
+      "Alley Rail",
+      "Tunnel Run",
+      "Gap Park",
+      "Night Bowl",
+      "Switchback",
+      "Jump Gap",
+      "Double Gap",
+      "Low Roof",
+      "Stair Drop",
+      "Overpass",
+      "Wide Canyon",
+      "Pipe Run",
+      "Sky Rail",
+      "Midnight Final",
+    ]);
     for (const level of SKATE_LEVELS) {
       expect(level.pieces.some((piece) => piece.kind === "ramp")).toBe(true);
       expect(level.pieces.some((piece) => piece.kind === "tunnel")).toBe(true);
@@ -22,8 +51,20 @@ describe("ollie cat", () => {
     }
     expect(SKATE_LEVELS[1].pieces.some((piece) => piece.kind === "rail")).toBe(true);
     expect(SKATE_LEVELS[3].pieces.some((piece) => piece.kind === "gap")).toBe(true);
-    expect(SKATE_LEVELS[4].pieces.some((piece) => piece.kind === "rail")).toBe(true);
-    expect(SKATE_LEVELS[4].pieces.some((piece) => piece.kind === "gap")).toBe(true);
+    expect(SKATE_LEVELS[4].sky).toBe("night");
+    const nightBowl = courseWidth(SKATE_LEVELS[4]);
+    const harder = SKATE_LEVELS.slice(5);
+    expect(harder).toHaveLength(10);
+    for (const level of harder) {
+      expect(level.pieces.some((piece) => piece.kind === "gap")).toBe(true);
+      expect(level.pieces.some((piece) => piece.kind === "rail")).toBe(true);
+      expect(courseWidth(level)).toBeGreaterThan(nightBowl);
+    }
+    expect(harder.some((level) => level.pieces.filter((piece) => piece.kind === "gap").length >= 2)).toBe(true);
+    expect(harder.some((level) => level.pieces.some((piece) => piece.kind === "gap" && piece.w >= 240))).toBe(true);
+    expect(harder.some((level) => level.pieces.some((piece) => piece.kind === "tunnel" && piece.w >= 480))).toBe(true);
+    expect(harder.some((level) => level.sky === "dusk")).toBe(true);
+    expect(harder.some((level) => level.sky === "night")).toBe(true);
   });
 
   it("pushes up to speed and brakes", () => {
@@ -90,6 +131,17 @@ describe("ollie cat", () => {
     expect(grind.score).toBeGreaterThan(0);
   });
 
+  it("falls into a gap when the board rolls off the edge", () => {
+    let state = createSkate(3);
+    state.x = 630;
+    state.y = surfaceAt(SKATE_LEVELS[3], state.x).ground ?? state.y;
+    state.vx = 80;
+    state.grounded = true;
+    state = hold(state, 90);
+    expect(state.toast).toBe("Missed the landing.");
+    expect(state.bails).toBe(1);
+  });
+
   it("misses a gap and retries after three wipeouts", () => {
     let state = createSkate(3);
     state.x = 700;
@@ -128,15 +180,24 @@ describe("ollie cat", () => {
     expect(state.levelIndex).toBe(1);
     expect(state.score).toBe(carried);
 
-    state = createSkate(4, 10);
-    state = hold(state, 1200, { dx: 1, crouch: true });
+    state = createSkate(SKATE_LEVELS.length - 1, 10);
+    state = ridePark(SKATE_LEVELS.length - 1);
     expect(state.phase).toBe("clear");
+    expect(state.bails).toBe(0);
     state = advanceSkate(state);
     expect(state.phase).toBe("done");
-    expect(state.toast).toBe("You finished all 5 levels.");
+    expect(state.toast).toBe("You finished all 15 levels.");
     state = advanceSkate(state);
     expect(state.levelIndex).toBe(0);
     expect(state.score).toBe(0);
+  });
+
+  it("clears every harder park by pushing, crouching, and ollieing gaps", () => {
+    for (let index = 5; index < SKATE_LEVELS.length; index += 1) {
+      const done = ridePark(index);
+      expect(done.phase, SKATE_LEVELS[index].name).toBe("clear");
+      expect(done.bails, SKATE_LEVELS[index].name).toBe(0);
+    }
   });
 
   it("pauses without rolling", () => {

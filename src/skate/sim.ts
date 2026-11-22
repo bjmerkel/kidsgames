@@ -195,6 +195,12 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
   const here = surfaceAt(level, next.x);
   const height = catHeight(next.crouched);
 
+  if ((here.kind === "gap" || here.kind === "none") && (next.grounded || next.grinding)) {
+    next.grounded = false;
+    next.grinding = false;
+    next.grindMs = 0;
+  }
+
   if (here.kind === "tunnel") {
     if (next.tunnelIndex !== here.index) {
       next.tunnelIndex = here.index;

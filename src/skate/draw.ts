@@ -38,13 +38,14 @@ export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, nowM
   const width = courseWidth(level);
   const cam = cameraX(state, width);
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  const skyName = level.sky ?? "day";
   const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-  sky.addColorStop(0, level.name === "Night Bowl" ? "#1c2a4a" : "#9fd4ee");
-  sky.addColorStop(1, level.name === "Night Bowl" ? "#3d4d73" : "#e7f6d8");
+  sky.addColorStop(0, skyName === "night" ? "#1c2a4a" : skyName === "dusk" ? "#f0a06a" : "#9fd4ee");
+  sky.addColorStop(1, skyName === "night" ? "#3d4d73" : skyName === "dusk" ? "#f6d7a8" : "#e7f6d8");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
-  ctx.fillStyle = level.name === "Night Bowl" ? "#243044" : "#b7d39a";
+  ctx.fillStyle = skyName === "night" ? "#243044" : skyName === "dusk" ? "#c48b62" : "#b7d39a";
   ctx.beginPath();
   ctx.moveTo(0, 470);
   for (let x = 0; x <= VIEW_W; x += 40) ctx.lineTo(x, 450 + Math.sin((x + cam) / 80) * 16);
