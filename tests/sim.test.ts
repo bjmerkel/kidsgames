@@ -61,6 +61,57 @@ describe("simulation", () => {
     expect(tucked.crab.lives).toBe(state.crab.lives);
   });
 
+  it("keeps a tucked crab on a stone edge without losing support", () => {
+    const level = buildLevel(tiny({
+      bands: [
+        { kind: "curb", h: 200 },
+        {
+          kind: "pond",
+          h: 120,
+          stones: [{ x: 240, localY: 60, r: 36, vx: 0, minX: 240, maxX: 240, sinkAfterMs: 800 }],
+        },
+      ],
+    }));
+    let state = startPlaying(createGame([level]));
+    const stone = state.level.segments[1].stones[0];
+    state.crab.x = stone.x + 48;
+    state.crab.y = stone.y;
+    const livesBefore = state.crab.lives;
+    state = idle(state, 32);
+    expect(state.crab.supportId).toBe(stone.id);
+    const occupiedBefore = state.level.segments[1].stones[0].occupiedMs;
+    state = tick(state, { ...blankInput(), tuck: true }, 16);
+    expect(state.crab.mode).toBe("tucked");
+    expect(state.lastFail).toBeNull();
+    expect(state.crab.lives).toBe(livesBefore);
+    expect(state.crab.supportId).toBe(stone.id);
+    state = tick(state, blankInput(), 16);
+    expect(state.crab.supportId).toBe(stone.id);
+    expect(state.level.segments[1].stones[0].occupiedMs).toBeGreaterThan(occupiedBefore);
+  });
+
+  it("does not save pond bottoms as checkpoints", () => {
+    const level = buildLevel(tiny({
+      bands: [
+        { kind: "curb", h: 200 },
+        {
+          kind: "pond",
+          h: 120,
+          stones: [{ x: 240, localY: 60, r: 36, vx: 0, minX: 240, maxX: 240, sinkAfterMs: 800 }],
+        },
+      ],
+    }));
+    let state = startPlaying(createGame([level]));
+    const stone = state.level.segments[1].stones[0];
+    state.crab.x = stone.x;
+    state.crab.y = stone.y;
+    state = idle(state, 48);
+    expect(state.phase).toBe("playing");
+    expect(state.crab.lives).toBe(4);
+    const checkpoint = state.level.segments.find((s) => s.id === state.checkpointSegmentId);
+    expect(checkpoint?.kind).toBe("curb");
+  });
+
   it("keeps a tucked crab on its stone and the sink timer", () => {
     const level = buildLevel(tiny({
       bands: [

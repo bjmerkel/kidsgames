@@ -1,3 +1,4 @@
+import { CRAB_R } from "./constants";
 import { crabRadius } from "./crab";
 import { circlesOverlap, circleHitsAabb } from "./geometry";
 import { seatPosition } from "./hazards";
@@ -64,18 +65,19 @@ export function zoneAt(level: LevelDef, y: number): Zone {
 export function detectHit(level: LevelDef, crab: Crab, timeSec: number): HazardHit | null {
   const zone = zoneAt(level, crab.y);
   const radius = crabRadius(crab);
+  const footing = crab.mode === "tucked" ? CRAB_R : radius;
   if (zone.tag === "ground" || zone.tag === "burrow" || zone.tag === "mouth") return null;
   if (zone.tag === "road") return carsHit(zone.cars, crab, radius) ? "car" : null;
-  if (zone.tag === "water") return supportedByStone(zone.stones, crab, radius) ? null : "water";
+  if (zone.tag === "water") return supportedByStone(zone.stones, crab, footing) ? null : "water";
   if (zone.tag === "swings") return swingsHit(zone.swings, crab, radius, timeSec) ? "swing" : null;
   if (zone.tag === "climb") {
     if (zone.ledge) return null;
-    return supportedByHold(zone.holds, crab, radius) ? null : "fall";
+    return supportedByHold(zone.holds, crab, footing) ? null : "fall";
   }
   if (carsHit(zone.cars, crab, radius)) return "car";
   if (swingsHit(zone.swings, crab, radius, timeSec)) return "swing";
   if (zone.ledge) return null;
-  if (!supportedByStone(zone.stones, crab, radius) && !supportedByHold(zone.holds, crab, radius)) {
+  if (!supportedByStone(zone.stones, crab, footing) && !supportedByHold(zone.holds, crab, footing)) {
     return "water";
   }
   return null;
@@ -84,6 +86,7 @@ export function detectHit(level: LevelDef, crab: Crab, timeSec: number): HazardH
 export function pickSupport(level: LevelDef, crab: Crab): Support {
   const zone = zoneAt(level, crab.y);
   const radius = crabRadius(crab);
+  const footing = crab.mode === "tucked" ? CRAB_R : radius;
   if (
     zone.tag === "ground" ||
     zone.tag === "road" ||
@@ -94,18 +97,18 @@ export function pickSupport(level: LevelDef, crab: Crab): Support {
     return { kind: "ground" };
   }
   if (zone.tag === "water") {
-    const stone = nearestStone(zone.stones, crab, radius);
+    const stone = nearestStone(zone.stones, crab, footing);
     return stone ? { kind: "stone", id: stone.id, x: stone.x, y: stone.y } : { kind: "none" };
   }
   if (zone.tag === "climb") {
     if (zone.ledge) return { kind: "ground" };
-    const hold = nearestHold(zone.holds, crab, radius);
+    const hold = nearestHold(zone.holds, crab, footing);
     return hold ? { kind: "hold", id: hold.id, x: hold.x, y: hold.y } : { kind: "none" };
   }
   if (zone.ledge) return { kind: "ground" };
-  const stone = nearestStone(zone.stones, crab, radius);
+  const stone = nearestStone(zone.stones, crab, footing);
   if (stone) return { kind: "stone", id: stone.id, x: stone.x, y: stone.y };
-  const hold = nearestHold(zone.holds, crab, radius);
+  const hold = nearestHold(zone.holds, crab, footing);
   if (hold) return { kind: "hold", id: hold.id, x: hold.x, y: hold.y };
   return { kind: "none" };
 }

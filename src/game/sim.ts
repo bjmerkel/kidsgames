@@ -151,7 +151,7 @@ function applyHit(state: GameState, reason: FailReason): GameState {
 
 function updateCheckpoint(state: GameState): void {
   const segment = segmentAt(state.level, state.crab.y);
-  if (!segment) return;
+  if (!segment || segment.kind === "pond") return;
   const previous = state.level.segments.find((item) => item.id === state.checkpointSegmentId);
   if (!previous || segment.id === previous.id || segment.y >= previous.y) return;
   const x = state.level.width / 2;
