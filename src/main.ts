@@ -27,6 +27,9 @@ import { advanceCapy, blankCapyInput, createCapy, tickCapy, type CapyInput, type
 import { drawWaddle } from "./waddle/draw";
 import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
+import { drawSpot } from "./spot/draw";
+import { SPOT_LEVELS } from "./spot/scenes";
+import { advanceSpot, blankSpotInput, createSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -109,6 +112,17 @@ const waddleSection = document.querySelector<HTMLElement>("#waddle");
 const waddleHeading = document.querySelector<HTMLElement>("#waddle-heading");
 const waddleNext = document.querySelector<HTMLButtonElement>("#waddle-next");
 const waddlePad = document.querySelector<HTMLElement>("#waddle-pad");
+const spotCanvas = document.querySelector<HTMLCanvasElement>("#spot-canvas");
+if (!spotCanvas) throw new Error("missing spot canvas");
+const spotSurface: HTMLCanvasElement = spotCanvas;
+const spotContext = spotCanvas.getContext("2d");
+if (!spotContext) throw new Error("missing spot context");
+const spotGfx: CanvasRenderingContext2D = spotContext;
+const spotStage = document.querySelector<HTMLElement>("#spot-stage");
+const spotSection = document.querySelector<HTMLElement>("#spot");
+const spotHeading = document.querySelector<HTMLElement>("#spot-heading");
+const spotNext = document.querySelector<HTMLButtonElement>("#spot-next");
+const spotPad = document.querySelector<HTMLElement>("#spot-pad");
 
 const tuneStore = levelStore();
 let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
@@ -119,7 +133,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -147,6 +161,9 @@ let waddleState: WaddleState | null = null;
 let waddleAcc = 0;
 const waddleKeys = { left: false, right: false, up: false, down: false };
 let waddleEdge = blankWaddleInput();
+let spotState: SpotState | null = null;
+let spotAcc = 0;
+let spotEdge = blankSpotInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -175,6 +192,7 @@ function fit(): void {
   fitBox(rascalStage, rascalSurface);
   fitBox(capyStage, capySurface);
   fitBox(waddleStage, waddleSurface);
+  fitBox(spotStage, spotSurface);
 }
 
 fit();
@@ -188,6 +206,7 @@ if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axo
 if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).observe(rascalStage);
 if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(capyStage);
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
+if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -198,7 +217,8 @@ function show(next: Mode): void {
   if (axoSection) axoSection.hidden = next !== "axo";
   if (rascalSection) rascalSection.hidden = next !== "rascal";
   if (capySection) capySection.hidden = next !== "capy";
-if (waddleSection) waddleSection.hidden = next !== "waddle";
+  if (waddleSection) waddleSection.hidden = next !== "waddle";
+  if (spotSection) spotSection.hidden = next !== "spot";
   if (settingsSection) settingsSection.hidden = next !== "settings";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
@@ -208,7 +228,8 @@ if (waddleSection) waddleSection.hidden = next !== "waddle";
     axo: "Axolotl Patrol",
     rascal: "Web Rascal",
     capy: "Capy Swing",
-waddle: "Ice Waddle",
+    waddle: "Ice Waddle",
+    spot: "Silk Spot",
     settings: "Level settings",
   };
   document.title = titles[next];
@@ -224,6 +245,7 @@ waddle: "Ice Waddle",
   if (next === "rascal") openRascal();
   if (next === "capy") openCapy();
   if (next === "waddle") openWaddle();
+  if (next === "spot") openSpot();
   requestAnimationFrame(() => fit());
 }
 
@@ -422,6 +444,31 @@ function waddleInput(): WaddleInput {
   };
 }
 
+function openSpot(): void {
+  spotState = createSpot(0);
+  spotAcc = 0;
+  spotEdge = blankSpotInput();
+  syncSpotChrome();
+}
+
+function syncSpotChrome(): void {
+  if (!spotState) return;
+  const level = SPOT_LEVELS[spotState.levelIndex];
+  if (spotHeading) spotHeading.textContent = spotState.phase === "done" ? "Silk Spot" : level.name;
+  const live = spotState.phase === "playing" || spotState.phase === "paused";
+  spotPad?.querySelectorAll<HTMLButtonElement>("button[data-spot]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (spotNext) {
+    spotNext.hidden = live;
+    spotNext.textContent = spotState.phase === "done" ? "Play again" : spotState.levelIndex >= SPOT_LEVELS.length - 1 ? "The last picture" : "Next picture";
+  }
+}
+
+function spotInput(): SpotInput {
+  return spotEdge;
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -524,6 +571,10 @@ document.querySelector<HTMLButtonElement>("#play-waddle")?.addEventListener("poi
   event.preventDefault();
   show("waddle");
 });
+document.querySelector<HTMLButtonElement>("#play-spot")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("spot");
+});
 document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("settings");
@@ -568,6 +619,10 @@ document.querySelector("#waddle-games")?.addEventListener("pointerdown", (event)
   event.preventDefault();
   show("menu");
 });
+document.querySelector("#spot-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 raceNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!raceState) return;
@@ -605,6 +660,12 @@ waddleNext?.addEventListener("pointerdown", (event) => {
   waddleState = advanceWaddle(waddleState);
   syncWaddleChrome();
 });
+spotNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!spotState) return;
+  spotState = advanceSpot(spotState);
+  syncSpotChrome();
+});
 
 if (tuneTabs && tuneForm) {
   mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
@@ -616,6 +677,13 @@ if (tuneTabs && tuneForm) {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+  if (mode === "spot") {
+    if (event.code === "KeyH") spotEdge = { ...spotEdge, hint: true };
+    if (event.code === "Escape") spotEdge = { ...spotEdge, pause: true };
+    if (event.code === "Enter") spotEdge = { ...spotEdge, confirm: true };
+    if (event.code === "KeyH") event.preventDefault();
+    return;
+  }
   if (mode === "waddle") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") waddleKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") waddleKeys.right = true;
@@ -738,6 +806,16 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
   };
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-spot]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.spot ?? "";
+    if (name === "hint") spotEdge = { ...spotEdge, hint: true };
+    if (name === "pause") spotEdge = { ...spotEdge, pause: true };
+  });
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 
@@ -904,6 +982,22 @@ waddleSurface.addEventListener("pointerdown", () => {
     waddleState = advanceWaddle(waddleState);
     syncWaddleChrome();
   }
+});
+
+spotSurface.addEventListener("pointerdown", (event) => {
+  if (mode !== "spot" || !spotState) return;
+  if (spotState.phase === "clear" || spotState.phase === "done") {
+    spotState = advanceSpot(spotState);
+    syncSpotChrome();
+    return;
+  }
+  const rect = spotSurface.getBoundingClientRect();
+  spotEdge = {
+    ...spotEdge,
+    tap: true,
+    x: ((event.clientX - rect.left) * spotSurface.width) / rect.width,
+    y: ((event.clientY - rect.top) * spotSurface.height) / rect.height,
+  };
 });
 
 capySurface.addEventListener("pointerdown", () => {
@@ -1075,6 +1169,20 @@ function frame(now: number): void {
     }
     drawWaddle(waddleGfx, waddleState, now);
     syncWaddleChrome();
+  }
+  if (mode === "spot" && spotState) {
+    spotAcc += delta;
+    let steps = 0;
+    while (spotAcc >= STEP_MS && steps < 5) {
+      const input = spotInput();
+      if (input.confirm && (spotState.phase === "clear" || spotState.phase === "done")) spotState = advanceSpot(spotState);
+      else spotState = tickSpot(spotState, input, STEP_MS);
+      spotEdge = blankSpotInput();
+      spotAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawSpot(spotGfx, spotState, now);
+    syncSpotChrome();
   }
   requestAnimationFrame(frame);
 }

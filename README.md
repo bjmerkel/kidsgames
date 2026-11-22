@@ -1,6 +1,6 @@
 # Kids Games
 
-Seven games live here. From the first screen, pick one.
+Eight games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Silk Spot
+
+Two pictures of the same rooftop. Web Rascal, the raccoon in the red shirt and blue pants, is in both. Tap a change in either picture. A ring shows what you found. A wrong tap says to look again, and three wrong taps (or the Hint button) circles one change you have not found yet. There is no way to lose.
+
+The score carries from picture to picture. The five pictures are Rooftop Morning, Park Swing, Night Windows, Snack Alley, and Moon Nest.
 
 ## Ice Waddle
 
@@ -68,6 +74,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Web Rascal, Left and Right run. Space or Jump hops. F, Web, or a tap on the web mark shoots a web. You hang on it, then jump.
 - In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
+- In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.
