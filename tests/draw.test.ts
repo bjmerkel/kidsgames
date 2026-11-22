@@ -40,6 +40,48 @@ describe("renderer", () => {
       clearTexts();
     }
   });
+
+  it("paints intro, pause, retry, and campaign-clear banner copy via tick", () => {
+    const { ctx, fillTexts, clearTexts } = fakeCtx();
+
+    let state = createGame();
+    state = tick(state, { ...blankInput(), start: true }, 16);
+    expect(state.phase).toBe("intro");
+    drawFrame(ctx, state, 0, 0);
+    expect(painted(fillTexts, state.level.intro)).toBe(true);
+    expect(painted(fillTexts, state.level.name)).toBe(true);
+    clearTexts();
+
+    state = startPlaying();
+    state = tick(state, { ...blankInput(), pause: true }, 16);
+    expect(state.phase).toBe("paused");
+    drawFrame(ctx, state, 0, 0);
+    expect(painted(fillTexts, COPY.paused)).toBe(true);
+    expect(painted(fillTexts, `${COPY.emery}.`)).toBe(true);
+    clearTexts();
+
+    state = startPlaying();
+    state.crab.lives = 1;
+    const pond = state.level.segments.find((segment) => segment.kind === "pond");
+    state.crab.x = 30;
+    state.crab.y = (pond?.y ?? 0) + 20;
+    state.crab.mode = "idle";
+    state.crab.supportId = null;
+    state = tick(state, blankInput(), 16);
+    expect(state.phase).toBe("retry");
+    drawFrame(ctx, state, 0, 0);
+    expect(painted(fillTexts, COPY.tryLevel)).toBe(true);
+    expect(painted(fillTexts, `${COPY.emery}.`)).toBe(true);
+    clearTexts();
+
+    state = startPlaying();
+    state.levelIndex = 4;
+    state.crab.y = 10;
+    state = tick(state, blankInput(), 16);
+    expect(state.phase).toBe("campaign-clear");
+    drawFrame(ctx, state, 0, 1200);
+    expect(painted(fillTexts, COPY.finishedAll)).toBe(true);
+  });
 });
 
 function painted(fillTexts: string[], phrase: string): boolean {
