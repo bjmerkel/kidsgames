@@ -35,6 +35,9 @@ import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput,
 import { drawHunt } from "./hunt/draw";
 import { metrics as huntMetrics } from "./hunt/puzzles";
 import { advanceHunt, blankHuntInput, startHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
+import { drawSkate } from "./skate/draw";
+import { SKATE_LEVELS } from "./skate/levels";
+import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "./skate/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -150,6 +153,17 @@ const huntSection = document.querySelector<HTMLElement>("#hunt");
 const huntHeading = document.querySelector<HTMLElement>("#hunt-heading");
 const huntNext = document.querySelector<HTMLButtonElement>("#hunt-next");
 const huntPad = document.querySelector<HTMLElement>("#hunt-pad");
+const skateCanvas = document.querySelector<HTMLCanvasElement>("#skate-canvas");
+if (!skateCanvas) throw new Error("missing skate canvas");
+const skateSurface: HTMLCanvasElement = skateCanvas;
+const skateContext = skateCanvas.getContext("2d");
+if (!skateContext) throw new Error("missing skate context");
+const skateGfx: CanvasRenderingContext2D = skateContext;
+const skateStage = document.querySelector<HTMLElement>("#skate-stage");
+const skateSection = document.querySelector<HTMLElement>("#skate");
+const skateHeading = document.querySelector<HTMLElement>("#skate-heading");
+const skateNext = document.querySelector<HTMLButtonElement>("#skate-next");
+const skatePad = document.querySelector<HTMLElement>("#skate-pad");
 
 const tuneStore = levelStore();
 let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
@@ -160,7 +174,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -198,6 +212,10 @@ let huntState: HuntState | null = null;
 let huntAcc = 0;
 let huntEdge = blankHuntInput();
 let huntDrag: { x: number; y: number; x2: number; y2: number; pointer: number } | null = null;
+let skateState: SkateState | null = null;
+let skateAcc = 0;
+const skateKeys = { left: false, right: false, crouch: false, jump: false };
+let skateEdge = blankSkateInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -229,6 +247,7 @@ function fit(): void {
   fitBox(spotStage, spotSurface);
   fitBox(burstStage, burstSurface);
   fitBox(huntStage, huntSurface);
+  fitBox(skateStage, skateSurface);
 }
 
 fit();
@@ -245,6 +264,7 @@ if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).ob
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
+if (skateStage) new ResizeObserver(() => fitBox(skateStage, skateSurface)).observe(skateStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -259,6 +279,7 @@ function show(next: Mode): void {
   if (spotSection) spotSection.hidden = next !== "spot";
   if (burstSection) burstSection.hidden = next !== "burst";
   if (huntSection) huntSection.hidden = next !== "hunt";
+  if (skateSection) skateSection.hidden = next !== "skate";
   if (settingsSection) settingsSection.hidden = next !== "settings";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
@@ -272,6 +293,7 @@ function show(next: Mode): void {
     spot: "Silk Spot",
     burst: "Berry Burst",
     hunt: "Word Hunt",
+    skate: "Ollie Cat",
     settings: "Level settings",
   };
   document.title = titles[next];
@@ -290,6 +312,7 @@ function show(next: Mode): void {
   if (next === "spot") openSpot();
   if (next === "burst") openBurst();
   if (next === "hunt") openHunt();
+  if (next === "skate") openSkate();
   requestAnimationFrame(() => fit());
 }
 
@@ -560,6 +583,41 @@ function syncHuntChrome(): void {
   }
 }
 
+function openSkate(): void {
+  skateState = createSkate(0);
+  skateAcc = 0;
+  skateEdge = blankSkateInput();
+  skateKeys.left = false;
+  skateKeys.right = false;
+  skateKeys.crouch = false;
+  skateKeys.jump = false;
+  syncSkateChrome();
+}
+
+function syncSkateChrome(): void {
+  if (!skateState) return;
+  const level = SKATE_LEVELS[skateState.levelIndex];
+  if (skateHeading) skateHeading.textContent = skateState.phase === "done" ? "Ollie Cat" : level.name;
+  const live = skateState.phase === "playing" || skateState.phase === "paused";
+  skatePad?.querySelectorAll<HTMLButtonElement>("button[data-skate]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (skateNext) {
+    skateNext.hidden = live;
+    skateNext.textContent = skateState.phase === "done" ? "Play again" : skateState.phase === "retry" ? "Try again" : skateState.levelIndex >= SKATE_LEVELS.length - 1 ? "The park" : "Next level";
+  }
+}
+
+function skateInput(): SkateInput {
+  return {
+    dx: (skateKeys.right ? 1 : 0) - (skateKeys.left ? 1 : 0),
+    crouch: skateKeys.crouch,
+    jump: skateEdge.jump,
+    pause: skateEdge.pause,
+    confirm: skateEdge.confirm,
+  };
+}
+
 function huntInput(): HuntInput {
   if (!huntDrag) return huntEdge;
   return { ...huntEdge, tracking: true, x: huntDrag.x, y: huntDrag.y, x2: huntDrag.x2, y2: huntDrag.y2 };
@@ -687,6 +745,10 @@ document.querySelector<HTMLButtonElement>("#play-hunt")?.addEventListener("point
   event.preventDefault();
   show("hunt");
 });
+document.querySelector<HTMLButtonElement>("#play-skate")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("skate");
+});
 document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("settings");
@@ -740,6 +802,10 @@ document.querySelector("#burst-games")?.addEventListener("pointerdown", (event) 
   show("menu");
 });
 document.querySelector("#hunt-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#skate-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -798,6 +864,12 @@ huntNext?.addEventListener("pointerdown", (event) => {
   huntState = advanceHunt(huntState);
   syncHuntChrome();
 });
+skateNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!skateState) return;
+  skateState = advanceSkate(skateState);
+  syncSkateChrome();
+});
 
 if (tuneTabs && tuneForm) {
   mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
@@ -848,6 +920,17 @@ window.addEventListener("keydown", (event) => {
     if (event.code === "Escape") capyEdge = { ...capyEdge, pause: true };
     if (event.code === "Enter") capyEdge = { ...capyEdge, confirm: true };
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "KeyA", "KeyD", "KeyW", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
+  if (mode === "skate") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") skateKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") skateKeys.right = true;
+    if (event.code === "ArrowDown" || event.code === "KeyS") skateKeys.crouch = true;
+    if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") skateKeys.jump = true;
+    if (!event.repeat && (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW")) skateEdge = { ...skateEdge, jump: true };
+    if (event.code === "Escape") skateEdge = { ...skateEdge, pause: true };
+    if (event.code === "Enter") skateEdge = { ...skateEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS", "Space"].includes(event.code)) event.preventDefault();
     return;
   }
   if (mode === "rascal") {
@@ -907,6 +990,7 @@ window.addEventListener("keyup", (event) => {
     rascalKeys.left = false;
     capyKeys.left = false;
     waddleKeys.left = false;
+    skateKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
@@ -915,12 +999,17 @@ window.addEventListener("keyup", (event) => {
     rascalKeys.right = false;
     capyKeys.right = false;
     waddleKeys.right = false;
+    skateKeys.right = false;
   }
   if (event.code === "ArrowUp" || event.code === "KeyW") waddleKeys.up = false;
-  if (event.code === "ArrowDown" || event.code === "KeyS") waddleKeys.down = false;
+  if (event.code === "ArrowDown" || event.code === "KeyS") {
+    waddleKeys.down = false;
+    skateKeys.crouch = false;
+  }
   if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
     rascalKeys.jump = false;
     capyKeys.jump = false;
+    skateKeys.jump = false;
   }
   if (event.code === "Space") axoKeys.fire = false;
   if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
@@ -948,6 +1037,37 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-skate]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.skate ?? "";
+    if (name === "left") skateKeys.left = true;
+    if (name === "right") skateKeys.right = true;
+    if (name === "crouch") skateKeys.crouch = true;
+    if (name === "jump") {
+      skateKeys.jump = true;
+      skateEdge = { ...skateEdge, jump: true };
+    }
+    if (name === "pause") skateEdge = { ...skateEdge, pause: true };
+    if (name === "left" || name === "right" || name === "crouch" || name === "jump") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.skate ?? "";
+    if (name === "left") skateKeys.left = false;
+    if (name === "right") skateKeys.right = false;
+    if (name === "crouch") skateKeys.crouch = false;
+    if (name === "jump") skateKeys.jump = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -1425,6 +1545,20 @@ function frame(now: number): void {
     }
     drawHunt(huntGfx, huntState, now);
     syncHuntChrome();
+  }
+  if (mode === "skate" && skateState) {
+    skateAcc += delta;
+    let steps = 0;
+    while (skateAcc >= STEP_MS && steps < 5) {
+      const input = skateInput();
+      if (input.confirm && (skateState.phase === "clear" || skateState.phase === "retry" || skateState.phase === "done")) skateState = advanceSkate(skateState);
+      else skateState = tickSkate(skateState, input, STEP_MS);
+      skateEdge = blankSkateInput();
+      skateAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawSkate(skateGfx, skateState, now);
+    syncSkateChrome();
   }
   requestAnimationFrame(frame);
 }
