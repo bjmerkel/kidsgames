@@ -1,6 +1,6 @@
 # Kids Games
 
-Two games live here. From the first screen, pick one.
+Three games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,10 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Pond Fishing
+
+Each level asks for particular fish. Line the hook up with Left, Right, Up, and Down, then tap Catch. A fish that is not on the list swims away. Catch every fish the level names and the banner says you finished the level. The five ponds are Sunny Shore, Sunfish Bend, Bass Hole, Shady Bank, and Full Creel.
 
 ## Hermit Crab Crossing
 
@@ -31,6 +35,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 
 - Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
 - In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
+- In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

@@ -9,6 +9,9 @@ import { CHARACTERS, characterById } from "./race/characters";
 import { drawGarage, drawRace } from "./race/draw";
 import { advanceCup, blankRaceInput, createRace, tickRace, type RaceInput, type RaceState } from "./race/sim";
 import { TRACKS } from "./race/tracks";
+import { drawPond } from "./fish/draw";
+import { FISH_LEVELS } from "./fish/levels";
+import { advancePond, blankPondInput, createPond, tickPond, type PondInput, type PondState } from "./fish/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -33,6 +36,17 @@ const racePad = document.querySelector<HTMLElement>("#race-pad");
 const raceHeading = document.querySelector<HTMLElement>("#race-heading");
 const raceNext = document.querySelector<HTMLButtonElement>("#race-next");
 const raceUse = document.querySelector<HTMLButtonElement>("#race-pad button[data-race='use']");
+const fishCanvas = document.querySelector<HTMLCanvasElement>("#fish-canvas");
+if (!fishCanvas) throw new Error("missing fish canvas");
+const fishSurface: HTMLCanvasElement = fishCanvas;
+const fishContext = fishCanvas.getContext("2d");
+if (!fishContext) throw new Error("missing fish context");
+const fishGfx: CanvasRenderingContext2D = fishContext;
+const fishStage = document.querySelector<HTMLElement>("#fish-stage");
+const fishSection = document.querySelector<HTMLElement>("#fish");
+const fishHeading = document.querySelector<HTMLElement>("#fish-heading");
+const fishNext = document.querySelector<HTMLButtonElement>("#fish-next");
+const fishPad = document.querySelector<HTMLElement>("#fish-pad");
 
 let state = createGame();
 let pending = blankInput();
@@ -41,7 +55,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race";
+type Mode = "menu" | "crab" | "race" | "fish";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -49,6 +63,10 @@ let raceState: RaceState | null = null;
 let raceAcc = 0;
 const raceKeys = { left: false, right: false, brake: false };
 let raceEdge = blankRaceInput();
+let fishState: PondState | null = null;
+let fishAcc = 0;
+const fishKeys = { left: false, right: false, up: false, down: false };
+let fishEdge = blankPondInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -72,6 +90,7 @@ function fit(): void {
   fitShell();
   fitBox(stage, gameCanvas);
   fitBox(raceStage, raceSurface);
+  fitBox(fishStage, fishSurface);
 }
 
 fit();
@@ -80,13 +99,15 @@ window.visualViewport?.addEventListener("resize", fit);
 window.visualViewport?.addEventListener("scroll", fit);
 if (stage) new ResizeObserver(() => fitBox(stage, gameCanvas)).observe(stage);
 if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceSurface)).observe(raceStage);
+if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(fishStage);
 
 function show(next: Mode): void {
   mode = next;
   if (menu) menu.hidden = next !== "menu";
   if (crabSection) crabSection.hidden = next !== "crab";
   if (raceSection) raceSection.hidden = next !== "race";
-  document.title = next === "crab" ? "Hermit Crab Crossing" : next === "race" ? "Woodland Grand Prix" : "Kids Games";
+  if (fishSection) fishSection.hidden = next !== "fish";
+  document.title = next === "crab" ? "Hermit Crab Crossing" : next === "race" ? "Woodland Grand Prix" : next === "fish" ? "Pond Fishing" : "Kids Games";
   if (next === "crab") {
     state = createGame();
     pending = blankInput();
@@ -94,6 +115,7 @@ function show(next: Mode): void {
     cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
   }
   if (next === "race") openGarage();
+  if (next === "fish") openPond();
   requestAnimationFrame(() => fit());
 }
 
@@ -133,6 +155,37 @@ function syncRaceChrome(): void {
     const item = raceState.racers[raceState.playerIndex]?.item;
     raceUse.textContent = item === "acorn" ? "Throw acorn" : item === "leaf" ? "Use leaf" : item === "honey" ? "Drop honey" : "Use";
   }
+}
+
+function openPond(): void {
+  fishState = createPond(0);
+  fishAcc = 0;
+  fishEdge = blankPondInput();
+  syncFishChrome();
+}
+
+function syncFishChrome(): void {
+  if (!fishState) return;
+  const level = FISH_LEVELS[fishState.levelIndex];
+  if (fishHeading) fishHeading.textContent = fishState.phase === "done" ? "Pond Fishing" : level.name;
+  const live = fishState.phase === "playing" || fishState.phase === "paused";
+  fishPad?.querySelectorAll<HTMLButtonElement>("button[data-fish]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (fishNext) {
+    fishNext.hidden = live;
+    fishNext.textContent = fishState.phase === "done" ? "Play again" : fishState.levelIndex >= FISH_LEVELS.length - 1 ? "The creel" : "Next level";
+  }
+}
+
+function fishInput(): PondInput {
+  return {
+    dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
+    dy: (fishKeys.down ? 1 : 0) - (fishKeys.up ? 1 : 0),
+    catch: fishEdge.catch,
+    pause: fishEdge.pause,
+    confirm: fishEdge.confirm,
+  };
 }
 
 function startRace(): void {
@@ -207,11 +260,19 @@ document.querySelector<HTMLButtonElement>("#play-race")?.addEventListener("point
   event.preventDefault();
   show("race");
 });
+document.querySelector<HTMLButtonElement>("#play-fish")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("fish");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
 document.querySelector("#race-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#fish-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -222,8 +283,25 @@ raceNext?.addEventListener("pointerdown", (event) => {
   else raceState = advanceCup(raceState);
   syncRaceChrome();
 });
+fishNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!fishState) return;
+  fishState = advancePond(fishState);
+  syncFishChrome();
+});
 
 window.addEventListener("keydown", (event) => {
+  if (mode === "fish") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") fishKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") fishKeys.right = true;
+    if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = true;
+    if (event.code === "ArrowDown" || event.code === "KeyS") fishKeys.down = true;
+    if (event.code === "Space") fishEdge = { ...fishEdge, catch: true };
+    if (event.code === "Escape") fishEdge = { ...fishEdge, pause: true };
+    if (event.code === "Enter") fishEdge = { ...fishEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "race") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") raceKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") raceKeys.right = true;
@@ -243,9 +321,19 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("keyup", (event) => {
-  if (event.code === "ArrowLeft" || event.code === "KeyA") raceKeys.left = false;
-  if (event.code === "ArrowRight" || event.code === "KeyD") raceKeys.right = false;
-  if (event.code === "ArrowDown" || event.code === "KeyS") raceKeys.brake = false;
+  if (event.code === "ArrowLeft" || event.code === "KeyA") {
+    raceKeys.left = false;
+    fishKeys.left = false;
+  }
+  if (event.code === "ArrowRight" || event.code === "KeyD") {
+    raceKeys.right = false;
+    fishKeys.right = false;
+  }
+  if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
+  if (event.code === "ArrowDown" || event.code === "KeyS") {
+    raceKeys.brake = false;
+    fishKeys.down = false;
+  }
 });
 
 document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((button) => {
@@ -266,6 +354,35 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-fish]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.fish ?? "";
+    if (name === "left") fishKeys.left = true;
+    if (name === "right") fishKeys.right = true;
+    if (name === "up") fishKeys.up = true;
+    if (name === "down") fishKeys.down = true;
+    if (name === "catch") fishEdge = { ...fishEdge, catch: true };
+    if (name === "pause") fishEdge = { ...fishEdge, pause: true };
+    if (name === "left" || name === "right" || name === "up" || name === "down") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.fish ?? "";
+    if (name === "left") fishKeys.left = false;
+    if (name === "right") fishKeys.right = false;
+    if (name === "up") fishKeys.up = false;
+    if (name === "down") fishKeys.down = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -354,6 +471,20 @@ function frame(now: number): void {
         syncRaceChrome();
       }
     }
+  }
+  if (mode === "fish" && fishState) {
+    fishAcc += delta;
+    let steps = 0;
+    while (fishAcc >= STEP_MS && steps < 5) {
+      const input = fishInput();
+      if (input.confirm && (fishState.phase === "clear" || fishState.phase === "done")) fishState = advancePond(fishState);
+      else fishState = tickPond(fishState, input, STEP_MS);
+      fishEdge = blankPondInput();
+      fishAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawPond(fishGfx, fishState, now);
+    syncFishChrome();
   }
   requestAnimationFrame(frame);
 }

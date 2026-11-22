@@ -21,6 +21,10 @@
         Woodland Grand Prix
         <small>10 racers, including a wood duck. 5 tracks.</small>
       </button>
+      <button type="button" id="play-fish" class="game-card">
+        Pond Fishing
+        <small>Catch the fish each level asks for. 5 levels.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
@@ -64,6 +68,26 @@
           <button type="button" data-race="use">Use</button>
           <button type="button" data-race="pause">Pause</button>
           <button type="button" id="race-next">Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="fish" hidden>
+      <header class="slim-head">
+        <button type="button" id="fish-games">Games</button>
+        <p id="fish-heading">Pond Fishing</p>
+      </header>
+      <div id="fish-board">
+        <div id="fish-stage">
+          <canvas id="fish-canvas" width="480" height="720" aria-label="Pond Fishing"></canvas>
+        </div>
+        <div id="fish-pad">
+          <button type="button" data-fish="left">Left</button>
+          <button type="button" data-fish="right">Right</button>
+          <button type="button" data-fish="up">Up</button>
+          <button type="button" data-fish="down">Down</button>
+          <button type="button" data-fish="catch">Catch</button>
+          <button type="button" data-fish="pause">Pause</button>
+          <button type="button" id="fish-next">Next level</button>
         </div>
       </div>
     </section>
