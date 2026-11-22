@@ -256,6 +256,23 @@ describe("simulation", () => {
     expect(state.crab.x).toBe(240);
   });
 
+  it("finishes from the last stepping stone when the burrow hop crosses the top padding", () => {
+    let state = beginLevelIndex(startPlaying(), 2);
+    const stones = [
+      ...state.level.segments.flatMap((segment) => segment.stones),
+      ...state.level.segments.flatMap((segment) => segment.chambers.flatMap((chamber) => chamber.stones)),
+    ].sort((a, b) => a.y - b.y);
+    const last = stones[0];
+    state.crab.x = last.x;
+    state.crab.y = last.y;
+    state.crab.mode = "idle";
+    state.crab.supportId = last.id;
+    state.crab.supportKind = "stone";
+    state = hopNorth(state);
+    expect(state.phase, debugState(state)).toBe("level-clear");
+    expect(state.bannerTitle).toBe(COPY.finishedLevel);
+  });
+
   it("finishes level 1 by hopping straight up the spine", () => {
     const state = playStraight();
     expect(state.phase, debugState(state)).toBe("level-clear");

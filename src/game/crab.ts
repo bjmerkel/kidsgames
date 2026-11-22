@@ -5,7 +5,7 @@ export function crabRadius(crab: Crab): number {
   return crab.mode === "tucked" ? CRAB_R_TUCKED : CRAB_R;
 }
 
-export function beginHop(crab: Crab, dx: number, dy: number, level: LevelDef): boolean {
+export function beginHop(crab: Crab, dx: number, dy: number, level: LevelDef, minY = CRAB_R): boolean {
   if (crab.mode !== "idle") return false;
   let mx = dx;
   let my = dy;
@@ -14,7 +14,7 @@ export function beginHop(crab: Crab, dx: number, dy: number, level: LevelDef): b
   const toX = crab.x + mx * HOP;
   const toY = crab.y + my * HOP;
   if (toX < CRAB_R || toX > level.width - CRAB_R) return false;
-  if (toY < CRAB_R || toY > level.height - CRAB_R) return false;
+  if (toY < minY || toY > level.height - CRAB_R) return false;
   crab.mode = "hopping";
   crab.facing = facingFrom(mx, my);
   crab.hopFromX = crab.x;

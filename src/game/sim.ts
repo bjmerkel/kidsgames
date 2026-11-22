@@ -74,7 +74,10 @@ export function tick(state: GameState, input: InputFrame, dtMs: number): GameSta
   if (sunkStoneWater) return applyHit(next, sunkStoneWater);
   if (next.crab.mode === "hopping") advanceHop(next.crab, dt);
   advanceTuck(next.crab, dt, input.tuck);
-  if (next.crab.mode === "idle" && !input.tuck) beginHop(next.crab, input.dx, input.dy, next.level);
+  if (next.crab.mode === "idle" && !input.tuck) {
+    const hopFloor = zoneAt(next.level, 0).tag === "burrow" ? 0 : CRAB_R;
+    beginHop(next.crab, input.dx, input.dy, next.level, hopFloor);
+  }
   if (next.crab.mode === "hopping" && next.crab.hopElapsedMs === 0) advanceHop(next.crab, dt);
   attachSupport(next);
   decayFx(next, dt);
