@@ -34,8 +34,8 @@ import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
 import { drawHunt } from "./hunt/draw";
-import { HUNT_LEVELS, metrics as huntMetrics } from "./hunt/puzzles";
-import { advanceHunt, blankHuntInput, createHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
+import { metrics as huntMetrics } from "./hunt/puzzles";
+import { advanceHunt, blankHuntInput, startHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -540,7 +540,7 @@ function burstInput(): BurstInput {
 }
 
 function openHunt(): void {
-  huntState = createHunt(0);
+  huntState = startHunt();
   huntAcc = 0;
   huntEdge = blankHuntInput();
   huntDrag = null;
@@ -549,7 +549,7 @@ function openHunt(): void {
 
 function syncHuntChrome(): void {
   if (!huntState) return;
-  const level = HUNT_LEVELS[huntState.levelIndex];
+  const level = huntState.levels[huntState.levelIndex];
   if (huntHeading) huntHeading.textContent = huntState.phase === "done" ? "Word Hunt" : level.name;
   const live = huntState.phase === "playing" || huntState.phase === "paused";
   huntPad?.querySelectorAll<HTMLButtonElement>("button[data-hunt]").forEach((button) => {
@@ -557,7 +557,7 @@ function syncHuntChrome(): void {
   });
   if (huntNext) {
     huntNext.hidden = live;
-    huntNext.textContent = huntState.phase === "done" ? "Play again" : huntState.levelIndex >= HUNT_LEVELS.length - 1 ? "The last puzzle" : "Next puzzle";
+    huntNext.textContent = huntState.phase === "done" ? "Play again" : huntState.levelIndex >= huntState.levels.length - 1 ? "The last puzzle" : "Next puzzle";
   }
 }
 
@@ -1203,7 +1203,7 @@ huntSurface.addEventListener("pointermove", (event) => {
 const finishHuntDrag = (event: PointerEvent) => {
   if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt" || !huntState) return;
   const point = canvasPoint(huntSurface, event);
-  const tile = huntMetrics(HUNT_LEVELS[huntState.levelIndex].size).tile;
+  const tile = huntMetrics(huntState.levels[huntState.levelIndex].size).tile;
   const moved = Math.hypot(point.x - huntDrag.x, point.y - huntDrag.y) > tile * 0.55;
   huntEdge = moved
     ? { ...huntEdge, drag: true, x: huntDrag.x, y: huntDrag.y, x2: point.x, y2: point.y }
