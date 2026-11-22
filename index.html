@@ -45,6 +45,10 @@
         Silk Spot
         <small>Find the changes. 5 pictures.</small>
       </button>
+      <button type="button" id="play-burst" class="game-card">
+        Berry Burst
+        <small>Swap and match three. 5 gardens.</small>
+      </button>
       <button type="button" id="open-settings" class="game-card">
         Level settings
         <small>Change the timer, stones, holds, cars, and swings for each level.</small>
@@ -205,6 +209,22 @@
           <button type="button" data-spot="hint">Hint</button>
           <button type="button" data-spot="pause">Pause</button>
           <button type="button" id="spot-next" hidden>Next picture</button>
+        </div>
+      </div>
+    </section>
+    <section id="burst" hidden>
+      <header class="slim-head">
+        <button type="button" id="burst-games">Games</button>
+        <p id="burst-heading">Berry Burst</p>
+      </header>
+      <div id="burst-board">
+        <div id="burst-stage">
+          <canvas id="burst-canvas" width="480" height="720" aria-label="Berry Burst"></canvas>
+        </div>
+        <div id="burst-pad">
+          <button type="button" data-burst="hint">Hint</button>
+          <button type="button" data-burst="pause">Pause</button>
+          <button type="button" id="burst-next" hidden>Next garden</button>
         </div>
       </div>
     </section>

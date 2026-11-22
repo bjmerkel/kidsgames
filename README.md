@@ -1,6 +1,6 @@
 # Kids Games
 
-Eight games live here. From the first screen, pick one.
+Nine games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Berry Burst
+
+A garden match. Tap a berry, then tap one next to it to swap. Three or more in a line pop. Four in a line makes a striped berry that clears a row or a column. A wrapped berry clears the berries around it, and a white-centered berry clears every berry of that color. Pink jelly clears when a berry pops on it.
+
+You have a set number of moves. The score carries from garden to garden. Running out of moves lets you try that garden again. The five gardens are Sunny Patch, Berry Basket, Lemon Lane, Jelly Middles, and Orchard Goal.
 
 ## Silk Spot
 
@@ -75,6 +81,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
+- In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

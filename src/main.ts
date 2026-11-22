@@ -30,6 +30,9 @@ import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleI
 import { drawSpot } from "./spot/draw";
 import { SPOT_LEVELS } from "./spot/scenes";
 import { advanceSpot, blankSpotInput, createSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
+import { drawBurst } from "./burst/draw";
+import { BURST_LEVELS } from "./burst/levels";
+import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -123,6 +126,17 @@ const spotSection = document.querySelector<HTMLElement>("#spot");
 const spotHeading = document.querySelector<HTMLElement>("#spot-heading");
 const spotNext = document.querySelector<HTMLButtonElement>("#spot-next");
 const spotPad = document.querySelector<HTMLElement>("#spot-pad");
+const burstCanvas = document.querySelector<HTMLCanvasElement>("#burst-canvas");
+if (!burstCanvas) throw new Error("missing burst canvas");
+const burstSurface: HTMLCanvasElement = burstCanvas;
+const burstContext = burstCanvas.getContext("2d");
+if (!burstContext) throw new Error("missing burst context");
+const burstGfx: CanvasRenderingContext2D = burstContext;
+const burstStage = document.querySelector<HTMLElement>("#burst-stage");
+const burstSection = document.querySelector<HTMLElement>("#burst");
+const burstHeading = document.querySelector<HTMLElement>("#burst-heading");
+const burstNext = document.querySelector<HTMLButtonElement>("#burst-next");
+const burstPad = document.querySelector<HTMLElement>("#burst-pad");
 
 const tuneStore = levelStore();
 let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
@@ -133,7 +147,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -164,6 +178,9 @@ let waddleEdge = blankWaddleInput();
 let spotState: SpotState | null = null;
 let spotAcc = 0;
 let spotEdge = blankSpotInput();
+let burstState: BurstState | null = null;
+let burstAcc = 0;
+let burstEdge = blankBurstInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -193,6 +210,7 @@ function fit(): void {
   fitBox(capyStage, capySurface);
   fitBox(waddleStage, waddleSurface);
   fitBox(spotStage, spotSurface);
+  fitBox(burstStage, burstSurface);
 }
 
 fit();
@@ -207,6 +225,7 @@ if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).ob
 if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(capyStage);
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
+if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -219,6 +238,7 @@ function show(next: Mode): void {
   if (capySection) capySection.hidden = next !== "capy";
   if (waddleSection) waddleSection.hidden = next !== "waddle";
   if (spotSection) spotSection.hidden = next !== "spot";
+  if (burstSection) burstSection.hidden = next !== "burst";
   if (settingsSection) settingsSection.hidden = next !== "settings";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
@@ -230,6 +250,7 @@ function show(next: Mode): void {
     capy: "Capy Swing",
     waddle: "Ice Waddle",
     spot: "Silk Spot",
+    burst: "Berry Burst",
     settings: "Level settings",
   };
   document.title = titles[next];
@@ -246,6 +267,7 @@ function show(next: Mode): void {
   if (next === "capy") openCapy();
   if (next === "waddle") openWaddle();
   if (next === "spot") openSpot();
+  if (next === "burst") openBurst();
   requestAnimationFrame(() => fit());
 }
 
@@ -469,6 +491,31 @@ function spotInput(): SpotInput {
   return spotEdge;
 }
 
+function openBurst(): void {
+  burstState = createBurst(0);
+  burstAcc = 0;
+  burstEdge = blankBurstInput();
+  syncBurstChrome();
+}
+
+function syncBurstChrome(): void {
+  if (!burstState) return;
+  const level = BURST_LEVELS[burstState.levelIndex];
+  if (burstHeading) burstHeading.textContent = burstState.phase === "done" ? "Berry Burst" : level.name;
+  const live = burstState.phase === "playing" || burstState.phase === "paused";
+  burstPad?.querySelectorAll<HTMLButtonElement>("button[data-burst]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (burstNext) {
+    burstNext.hidden = live;
+    burstNext.textContent = burstState.phase === "done" ? "Play again" : burstState.phase === "retry" ? "Try again" : burstState.levelIndex >= BURST_LEVELS.length - 1 ? "The last garden" : "Next garden";
+  }
+}
+
+function burstInput(): BurstInput {
+  return burstEdge;
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -575,6 +622,10 @@ document.querySelector<HTMLButtonElement>("#play-spot")?.addEventListener("point
   event.preventDefault();
   show("spot");
 });
+document.querySelector<HTMLButtonElement>("#play-burst")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("burst");
+});
 document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("settings");
@@ -623,6 +674,10 @@ document.querySelector("#spot-games")?.addEventListener("pointerdown", (event) =
   event.preventDefault();
   show("menu");
 });
+document.querySelector("#burst-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 raceNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!raceState) return;
@@ -666,6 +721,12 @@ spotNext?.addEventListener("pointerdown", (event) => {
   spotState = advanceSpot(spotState);
   syncSpotChrome();
 });
+burstNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!burstState) return;
+  burstState = advanceBurst(burstState);
+  syncBurstChrome();
+});
 
 if (tuneTabs && tuneForm) {
   mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
@@ -677,6 +738,13 @@ if (tuneTabs && tuneForm) {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+  if (mode === "burst") {
+    if (event.code === "KeyH") burstEdge = { ...burstEdge, hint: true };
+    if (event.code === "Escape") burstEdge = { ...burstEdge, pause: true };
+    if (event.code === "Enter") burstEdge = { ...burstEdge, confirm: true };
+    if (event.code === "KeyH") event.preventDefault();
+    return;
+  }
   if (mode === "spot") {
     if (event.code === "KeyH") spotEdge = { ...spotEdge, hint: true };
     if (event.code === "Escape") spotEdge = { ...spotEdge, pause: true };
@@ -806,6 +874,16 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
   };
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-burst]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.burst ?? "";
+    if (name === "hint") burstEdge = { ...burstEdge, hint: true };
+    if (name === "pause") burstEdge = { ...burstEdge, pause: true };
+  });
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 
@@ -1000,6 +1078,22 @@ spotSurface.addEventListener("pointerdown", (event) => {
   };
 });
 
+burstSurface.addEventListener("pointerdown", (event) => {
+  if (mode !== "burst" || !burstState) return;
+  if (burstState.phase === "clear" || burstState.phase === "retry" || burstState.phase === "done") {
+    burstState = advanceBurst(burstState);
+    syncBurstChrome();
+    return;
+  }
+  const rect = burstSurface.getBoundingClientRect();
+  burstEdge = {
+    ...burstEdge,
+    tap: true,
+    x: ((event.clientX - rect.left) * burstSurface.width) / rect.width,
+    y: ((event.clientY - rect.top) * burstSurface.height) / rect.height,
+  };
+});
+
 capySurface.addEventListener("pointerdown", () => {
   if (mode !== "capy" || !capyState) return;
   if (capyState.phase === "clear" || capyState.phase === "retry" || capyState.phase === "done") {
@@ -1183,6 +1277,20 @@ function frame(now: number): void {
     }
     drawSpot(spotGfx, spotState, now);
     syncSpotChrome();
+  }
+  if (mode === "burst" && burstState) {
+    burstAcc += delta;
+    let steps = 0;
+    while (burstAcc >= STEP_MS && steps < 5) {
+      const input = burstInput();
+      if (input.confirm && (burstState.phase === "clear" || burstState.phase === "retry" || burstState.phase === "done")) burstState = advanceBurst(burstState);
+      else burstState = tickBurst(burstState, input, STEP_MS);
+      burstEdge = blankBurstInput();
+      burstAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawBurst(burstGfx, burstState, now);
+    syncBurstChrome();
   }
   requestAnimationFrame(frame);
 }
