@@ -12,6 +12,37 @@ function center(size: number, x: number, y: number): { x: number; y: number } {
   return { x: box.originX + x * box.tile + box.tile / 2, y: box.originY + y * box.tile + box.tile / 2 };
 }
 
+function countWord(level: (typeof HUNT_LEVELS)[number], word: string): number {
+  const dirs = [
+    { x: 1, y: 0 },
+    { x: 1, y: 1 },
+    { x: 0, y: 1 },
+    { x: -1, y: 1 },
+    { x: -1, y: 0 },
+    { x: -1, y: -1 },
+    { x: 0, y: -1 },
+    { x: 1, y: -1 },
+  ];
+  let count = 0;
+  for (let y = 0; y < level.size; y += 1) {
+    for (let x = 0; x < level.size; x += 1) {
+      for (const dir of dirs) {
+        let matches = true;
+        for (let i = 0; i < word.length; i += 1) {
+          const cx = x + dir.x * i;
+          const cy = y + dir.y * i;
+          if (cx < 0 || cy < 0 || cx >= level.size || cy >= level.size || level.grid[cy][cx] !== word[i]) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) count += 1;
+      }
+    }
+  }
+  return count;
+}
+
 function drag(state: HuntState, x: number, y: number, x2: number, y2: number): HuntState {
   const size = HUNT_LEVELS[state.levelIndex].size;
   const start = point(size, x, y);
@@ -21,9 +52,31 @@ function drag(state: HuntState, x: number, y: number, x2: number, y2: number): H
 
 describe("word hunt", () => {
   it("hides fifth-grade words on straight lines", () => {
-    expect(HUNT_LEVELS.map((level) => level.name)).toEqual(["Space Lab", "Habitats", "Math Lab", "Explorers", "Story Craft"]);
-    expect(HUNT_LEVELS.map((level) => level.words.length)).toEqual([6, 7, 7, 8, 8]);
-    expect(HUNT_LEVELS.map((level) => level.size)).toEqual([8, 10, 10, 10, 10]);
+    expect(HUNT_LEVELS.map((level) => level.name)).toEqual([
+      "Space Lab",
+      "Weather Watch",
+      "Matter Lab",
+      "Waterways",
+      "Human Body",
+      "Simple Machines",
+      "Habitats",
+      "Rock Lab",
+      "Night Sky",
+      "Plant Lab",
+      "Forces",
+      "Food Webs",
+      "Math Lab",
+      "Explorers",
+      "Story Craft",
+      "Civics",
+      "Landforms",
+      "Grammar Lab",
+      "Earth Forces",
+      "Science Fair",
+    ]);
+    expect(HUNT_LEVELS).toHaveLength(20);
+    expect(HUNT_LEVELS.map((level) => level.words.length)).toEqual([6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8]);
+    expect(HUNT_LEVELS.map((level) => level.size)).toEqual([8, 8, 8, 8, 8, 8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]);
     for (const level of HUNT_LEVELS) {
       expect(level.grid).toHaveLength(level.size);
       expect(new Set(level.words).size).toBe(level.words.length);
@@ -35,6 +88,7 @@ describe("word hunt", () => {
         expect(level.words).toContain(place.word);
         const letters = place.cells.map((cell) => level.grid[cell.y][cell.x]).join("");
         expect(letters).toBe(place.word);
+        expect(countWord(level, place.word)).toBe(1);
         if (place.cells.length > 1) {
           const dx = place.cells[1].x - place.cells[0].x;
           const dy = place.cells[1].y - place.cells[0].y;
@@ -114,15 +168,16 @@ describe("word hunt", () => {
     expect(state.score).toBe(40 + 6 * 100 + 250);
     expect(state.found).toHaveLength(0);
 
-    state = createHunt(4, 15);
-    for (const place of HUNT_LEVELS[4].placed) {
+    const lastLevel = HUNT_LEVELS.length - 1;
+    state = createHunt(lastLevel, 15);
+    for (const place of HUNT_LEVELS[lastLevel].placed) {
       const last = place.cells[place.cells.length - 1];
       state = drag(state, place.cells[0].x, place.cells[0].y, last.x, last.y);
     }
     expect(state.phase).toBe("clear");
     state = advanceHunt(state);
     expect(state.phase).toBe("done");
-    expect(state.toast).toBe("You finished all 5 levels.");
+    expect(state.toast).toBe("You finished all 20 levels.");
     state = advanceHunt(state);
     expect(state.levelIndex).toBe(0);
     expect(state.score).toBe(0);
@@ -161,14 +216,15 @@ describe("word hunt", () => {
   });
 
   it("finds a diagonal word when the last letter is one cell off", () => {
-    const level = HUNT_LEVELS[3];
+    const levelIndex = HUNT_LEVELS.findIndex((level) => level.words.includes("EQUATOR"));
+    const level = HUNT_LEVELS[levelIndex];
     const equator = level.placed.find((place) => place.word === "EQUATOR");
     expect(equator).toBeTruthy();
     if (!equator) return;
     const end = equator.cells[equator.cells.length - 1];
     const start = center(level.size, equator.cells[0].x, equator.cells[0].y);
     const slipped = center(level.size, end.x, end.y + 1);
-    const state = tickHunt(createHunt(3), { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: slipped.x, y2: slipped.y }, 16);
+    const state = tickHunt(createHunt(levelIndex), { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: slipped.x, y2: slipped.y }, 16);
     expect(state.found.map((found) => found.word)).toEqual(["EQUATOR"]);
   });
 

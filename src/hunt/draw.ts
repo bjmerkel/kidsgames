@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { huntLevel, metrics } from "./puzzles";
+import { HUNT_LEVELS, huntLevel, metrics } from "./puzzles";
 import type { HuntState, FoundWord } from "./sim";
 
 const MARKS = ["#d64545", "#2f6b3a", "#24357a", "#c47b14", "#7a4ea3", "#0e7490", "#b45309", "#be185d"];
@@ -15,7 +15,7 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
   ctx.font = "700 22px Georgia, serif";
   ctx.fillText(level.name, 16, 30);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Level ${state.levelIndex + 1} of 5`, 16, 54);
+  ctx.fillText(`Level ${state.levelIndex + 1} of ${HUNT_LEVELS.length}`, 16, 54);
   ctx.fillText(`Score ${state.score}`, 16, 76);
   ctx.textAlign = "right";
   const left = level.words.length - state.found.length;
@@ -95,7 +95,7 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
   }
   if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to keep looking.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "Every word is circled.");
-  if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every puzzle is solved.");
+  if (state.phase === "done") banner(ctx, `You finished all ${HUNT_LEVELS.length} levels.`, "Every puzzle is solved.");
 }
 
 function strokeWord(ctx: CanvasRenderingContext2D, found: FoundWord, box: { tile: number; originX: number; originY: number }, color: string, alpha: number): void {

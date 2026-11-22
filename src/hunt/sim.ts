@@ -304,7 +304,7 @@ export function advanceHunt(state: HuntState): HuntState {
   if (state.levelIndex >= HUNT_LEVELS.length - 1) {
     const done = structuredClone(state);
     done.phase = "done";
-    done.toast = "You finished all 5 levels.";
+    done.toast = `You finished all ${HUNT_LEVELS.length} levels.`;
     done.toastMs = 0;
     return done;
   }
