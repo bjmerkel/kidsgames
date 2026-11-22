@@ -166,6 +166,32 @@ describe("simulation", () => {
     expect(state.toast).toBe(COPY.tryAgain);
   });
 
+  it("costs a life when a near neighbor stone would catch a sinking ride", () => {
+    const level = buildLevel(tiny({
+      bands: [
+        { kind: "curb", h: 200 },
+        {
+          kind: "pond",
+          h: 200,
+          stones: [
+            { x: 240, localY: 48, r: 36, vx: 0, minX: 240, maxX: 240, sinkAfterMs: 120 },
+            { x: 240, localY: 96, r: 36, vx: 0, minX: 240, maxX: 240, sinkAfterMs: null },
+          ],
+        },
+      ],
+    }));
+    let state = startPlaying(createGame([level]));
+    const sinking = state.level.segments[1].stones[0];
+    state.crab.x = sinking.x;
+    state.crab.y = sinking.y;
+    state.crab.supportId = sinking.id;
+    state.crab.supportKind = "stone";
+    const livesBefore = state.crab.lives;
+    state = idle(state, 200);
+    expect(state.lastFail).toBe("water");
+    expect(state.crab.lives).toBe(livesBefore - 1);
+  });
+
   it("ends the level on time and offers the level again with the score kept", () => {
     const level = buildLevel(tiny({ timeLimitMs: 80, bands: [{ kind: "curb", h: 200 }] }));
     let state = startPlaying(createGame([level]));

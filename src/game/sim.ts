@@ -1,10 +1,10 @@
 import { CHECKPOINT_INSET, CRAB_R, HIT_FLASH_MS, INTRO_MS, LEVEL_SCORE, LIVES, MAX_FRAME_MS, SEGMENT_SCORE, TOAST_MS } from "./constants";
 import { advanceHop, advanceTuck, beginHop } from "./crab";
 import { COPY } from "./copy";
-import { clamp } from "./geometry";
+import { circlesOverlap, clamp } from "./geometry";
 import { stepHazards } from "./hazards";
 import { curbSegment, LEVELS, startPoint } from "./levels";
-import type { Crab, FailReason, GameState, InputFrame, LevelDef } from "./types";
+import type { Crab, FailReason, GameState, Hold, InputFrame, LevelDef, Stone } from "./types";
 import { detectHit, pickSupport, segmentAt, zoneAt } from "./zones";
 
 export function createGame(templates: LevelDef[] = LEVELS): GameState {
@@ -70,6 +70,8 @@ export function tick(state: GameState, input: InputFrame, dtMs: number): GameSta
 
   next.elapsedMs += dt;
   stepHazards(next.level, dt, next.elapsedMs, next.crab.supportId);
+  const sunkStoneWater = sunkStandingStoneHit(next);
+  if (sunkStoneWater) return applyHit(next, sunkStoneWater);
   if (next.crab.mode === "hopping") advanceHop(next.crab, dt);
   advanceTuck(next.crab, dt, input.tuck);
   if (next.crab.mode === "idle" && !input.tuck) beginHop(next.crab, input.dx, input.dy, next.level);
@@ -162,6 +164,44 @@ function updateCheckpoint(state: GameState): void {
   state.checkpointX = x;
   state.checkpointY = y;
   state.crab.score += SEGMENT_SCORE;
+}
+
+function sunkStandingStoneHit(state: GameState): FailReason | null {
+  const crab = state.crab;
+  if (crab.supportKind !== "stone" || !crab.supportId) return null;
+  const stone = stoneById(state.level, crab.supportId);
+  if (!stone?.submerged) return null;
+  if (crabOverlapsVisibleHold(state.level, crab)) return null;
+  return "water";
+}
+
+function stoneById(level: LevelDef, id: string): Stone | null {
+  for (const segment of level.segments) {
+    const direct = segment.stones.find((stone) => stone.id === id);
+    if (direct) return direct;
+    for (const chamber of segment.chambers) {
+      const inChamber = chamber.stones.find((stone) => stone.id === id);
+      if (inChamber) return inChamber;
+    }
+  }
+  return null;
+}
+
+function crabOverlapsVisibleHold(level: LevelDef, crab: Crab): boolean {
+  for (const hold of allHolds(level)) {
+    if (!hold.visible) continue;
+    if (circlesOverlap(crab.x, crab.y, CRAB_R, hold.x, hold.y, hold.r)) return true;
+  }
+  return false;
+}
+
+function allHolds(level: LevelDef): Hold[] {
+  const holds: Hold[] = [];
+  for (const segment of level.segments) {
+    holds.push(...segment.holds);
+    for (const chamber of segment.chambers) holds.push(...chamber.holds);
+  }
+  return holds;
 }
 
 function attachSupport(state: GameState): void {
