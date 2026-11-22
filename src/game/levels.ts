@@ -461,7 +461,7 @@ function campaignDrafts(): LevelDraft[] {
       intro: "The toys drive faster and the stones drift. Emery is awesome.",
       timeLimitMs: 80_000,
       width: WORLD_W,
-      spine: driftSpine(32, 6600, 1600),
+      spine: driftSpine(32, 9600, 1600),
       bands: [
         { kind: "curb", h: 96 },
         {
@@ -491,7 +491,7 @@ function campaignDrafts(): LevelDraft[] {
       intro: "Swings cross your path and holds blink. Emery is awesome.",
       timeLimitMs: 70_000,
       width: WORLD_W,
-      spine: driftSpine(46, 6300, 1400),
+      spine: driftSpine(46, 9300, 1400),
       bands: [
         { kind: "curb", h: 96 },
         {
@@ -521,7 +521,7 @@ function campaignDrafts(): LevelDraft[] {
       intro: "Everything moves. The tunnel is the real course. Emery is awesome.",
       timeLimitMs: 60_000,
       width: WORLD_W,
-      spine: driftSpine(58, 6100, 1200),
+      spine: driftSpine(58, 9100, 1200),
       bands: [
         { kind: "curb", h: 96 },
         {
@@ -551,7 +551,7 @@ function campaignDrafts(): LevelDraft[] {
       intro: "The whole backyard is in the tunnel. Emery is awesome.",
       timeLimitMs: 85_000,
       width: WORLD_W,
-      spine: driftSpine(70, 5900, 1000),
+      spine: driftSpine(70, 8900, 1000),
       bands: [
         { kind: "curb", h: 96 },
         {

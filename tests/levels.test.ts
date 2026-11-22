@@ -44,10 +44,10 @@ describe("five levels", () => {
     expect(LEVELS.map((level) => level.timeLimitMs)).toEqual([90000, 80000, 70000, 60000, 85000]);
     expect(allStones(LEVELS[0]).every((stone) => stone.sinkAfterMs === null)).toBe(true);
     expect(LEVELS.slice(1).map((level) => new Set(allStones(level).map((stone) => stone.sinkAfterMs)))).toEqual([
-      new Set([6600]),
-      new Set([6300]),
-      new Set([6100]),
-      new Set([5900]),
+      new Set([9600]),
+      new Set([9300]),
+      new Set([9100]),
+      new Set([8900]),
     ]);
   });
 
