@@ -12,6 +12,9 @@ import { TRACKS } from "./race/tracks";
 import { drawPond } from "./fish/draw";
 import { FISH_LEVELS } from "./fish/levels";
 import { advancePond, blankPondInput, createPond, tickPond, type PondInput, type PondState } from "./fish/sim";
+import { drawAxo } from "./axolotl/draw";
+import { AXO_LEVELS } from "./axolotl/levels";
+import { advanceAxo, blankAxoInput, createAxo, tickAxo, type AxoInput, type AxoState } from "./axolotl/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -47,6 +50,17 @@ const fishSection = document.querySelector<HTMLElement>("#fish");
 const fishHeading = document.querySelector<HTMLElement>("#fish-heading");
 const fishNext = document.querySelector<HTMLButtonElement>("#fish-next");
 const fishPad = document.querySelector<HTMLElement>("#fish-pad");
+const axoCanvas = document.querySelector<HTMLCanvasElement>("#axo-canvas");
+if (!axoCanvas) throw new Error("missing axolotl canvas");
+const axoSurface: HTMLCanvasElement = axoCanvas;
+const axoContext = axoCanvas.getContext("2d");
+if (!axoContext) throw new Error("missing axolotl context");
+const axoGfx: CanvasRenderingContext2D = axoContext;
+const axoStage = document.querySelector<HTMLElement>("#axo-stage");
+const axoSection = document.querySelector<HTMLElement>("#axo");
+const axoHeading = document.querySelector<HTMLElement>("#axo-heading");
+const axoNext = document.querySelector<HTMLButtonElement>("#axo-next");
+const axoPad = document.querySelector<HTMLElement>("#axo-pad");
 
 let state = createGame();
 let pending = blankInput();
@@ -55,7 +69,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -67,6 +81,10 @@ let fishState: PondState | null = null;
 let fishAcc = 0;
 const fishKeys = { left: false, right: false, up: false, down: false };
 let fishEdge = blankPondInput();
+let axoState: AxoState | null = null;
+let axoAcc = 0;
+const axoKeys = { left: false, right: false, fire: false };
+let axoEdge = blankAxoInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -91,6 +109,7 @@ function fit(): void {
   fitBox(stage, gameCanvas);
   fitBox(raceStage, raceSurface);
   fitBox(fishStage, fishSurface);
+  fitBox(axoStage, axoSurface);
 }
 
 fit();
@@ -100,6 +119,7 @@ window.visualViewport?.addEventListener("scroll", fit);
 if (stage) new ResizeObserver(() => fitBox(stage, gameCanvas)).observe(stage);
 if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceSurface)).observe(raceStage);
 if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(fishStage);
+if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axoStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -107,7 +127,15 @@ function show(next: Mode): void {
   if (crabSection) crabSection.hidden = next !== "crab";
   if (raceSection) raceSection.hidden = next !== "race";
   if (fishSection) fishSection.hidden = next !== "fish";
-  document.title = next === "crab" ? "Hermit Crab Crossing" : next === "race" ? "Woodland Grand Prix" : next === "fish" ? "Pond Fishing" : "Kids Games";
+  if (axoSection) axoSection.hidden = next !== "axo";
+  const titles: Record<Mode, string> = {
+    menu: "Kids Games",
+    crab: "Hermit Crab Crossing",
+    race: "Woodland Grand Prix",
+    fish: "Pond Fishing",
+    axo: "Axolotl Patrol",
+  };
+  document.title = titles[next];
   if (next === "crab") {
     state = createGame();
     pending = blankInput();
@@ -116,6 +144,7 @@ function show(next: Mode): void {
   }
   if (next === "race") openGarage();
   if (next === "fish") openPond();
+  if (next === "axo") openAxo();
   requestAnimationFrame(() => fit());
 }
 
@@ -176,6 +205,39 @@ function syncFishChrome(): void {
     fishNext.hidden = live;
     fishNext.textContent = fishState.phase === "done" ? "Play again" : fishState.levelIndex >= FISH_LEVELS.length - 1 ? "The creel" : "Next level";
   }
+}
+
+function openAxo(): void {
+  axoState = createAxo(0);
+  axoAcc = 0;
+  axoEdge = blankAxoInput();
+  axoKeys.left = false;
+  axoKeys.right = false;
+  axoKeys.fire = false;
+  syncAxoChrome();
+}
+
+function syncAxoChrome(): void {
+  if (!axoState) return;
+  const level = AXO_LEVELS[axoState.levelIndex];
+  if (axoHeading) axoHeading.textContent = axoState.phase === "done" ? "Axolotl Patrol" : level.name;
+  const live = axoState.phase === "playing" || axoState.phase === "paused";
+  axoPad?.querySelectorAll<HTMLButtonElement>("button[data-axo]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (axoNext) {
+    axoNext.hidden = live;
+    axoNext.textContent = axoState.phase === "done" ? "Play again" : axoState.phase === "retry" ? "Try again" : axoState.levelIndex >= AXO_LEVELS.length - 1 ? "The patrol" : "Next level";
+  }
+}
+
+function axoInput(): AxoInput {
+  return {
+    dx: (axoKeys.right ? 1 : 0) - (axoKeys.left ? 1 : 0),
+    fire: axoKeys.fire,
+    pause: axoEdge.pause,
+    confirm: axoEdge.confirm,
+  };
 }
 
 function fishInput(): PondInput {
@@ -264,6 +326,10 @@ document.querySelector<HTMLButtonElement>("#play-fish")?.addEventListener("point
   event.preventDefault();
   show("fish");
 });
+document.querySelector<HTMLButtonElement>("#play-axo")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("axo");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -273,6 +339,10 @@ document.querySelector("#race-games")?.addEventListener("pointerdown", (event) =
   show("menu");
 });
 document.querySelector("#fish-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#axo-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -289,8 +359,23 @@ fishNext?.addEventListener("pointerdown", (event) => {
   fishState = advancePond(fishState);
   syncFishChrome();
 });
+axoNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!axoState) return;
+  axoState = advanceAxo(axoState);
+  syncAxoChrome();
+});
 
 window.addEventListener("keydown", (event) => {
+  if (mode === "axo") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") axoKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") axoKeys.right = true;
+    if (event.code === "Space") axoKeys.fire = true;
+    if (event.code === "Escape") axoEdge = { ...axoEdge, pause: true };
+    if (event.code === "Enter") axoEdge = { ...axoEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "KeyA", "KeyD", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "fish") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") fishKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") fishKeys.right = true;
@@ -324,11 +409,14 @@ window.addEventListener("keyup", (event) => {
   if (event.code === "ArrowLeft" || event.code === "KeyA") {
     raceKeys.left = false;
     fishKeys.left = false;
+    axoKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
     fishKeys.right = false;
+    axoKeys.right = false;
   }
+  if (event.code === "Space") axoKeys.fire = false;
   if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
   if (event.code === "ArrowDown" || event.code === "KeyS") {
     raceKeys.brake = false;
@@ -354,6 +442,32 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-axo]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.axo ?? "";
+    if (name === "left") axoKeys.left = true;
+    if (name === "right") axoKeys.right = true;
+    if (name === "fire") axoKeys.fire = true;
+    if (name === "pause") axoEdge = { ...axoEdge, pause: true };
+    if (name === "left" || name === "right" || name === "fire") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.axo ?? "";
+    if (name === "left") axoKeys.left = false;
+    if (name === "right") axoKeys.right = false;
+    if (name === "fire") axoKeys.fire = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -403,6 +517,14 @@ document.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((butto
 
 canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
+});
+
+axoSurface.addEventListener("pointerdown", () => {
+  if (mode !== "axo" || !axoState) return;
+  if (axoState.phase === "clear" || axoState.phase === "retry" || axoState.phase === "done") {
+    axoState = advanceAxo(axoState);
+    syncAxoChrome();
+  }
 });
 
 raceSurface.addEventListener("pointerdown", () => {
@@ -485,6 +607,20 @@ function frame(now: number): void {
     }
     drawPond(fishGfx, fishState, now);
     syncFishChrome();
+  }
+  if (mode === "axo" && axoState) {
+    axoAcc += delta;
+    let steps = 0;
+    while (axoAcc >= STEP_MS && steps < 5) {
+      const input = axoInput();
+      if (input.confirm && (axoState.phase === "clear" || axoState.phase === "retry" || axoState.phase === "done")) axoState = advanceAxo(axoState);
+      else axoState = tickAxo(axoState, input, STEP_MS);
+      axoEdge = blankAxoInput();
+      axoAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawAxo(axoGfx, axoState, now);
+    syncAxoChrome();
   }
   requestAnimationFrame(frame);
 }

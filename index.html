@@ -25,6 +25,10 @@
         Pond Fishing
         <small>Catch the fish each level asks for. 5 levels.</small>
       </button>
+      <button type="button" id="play-axo" class="game-card">
+        Axolotl Patrol
+        <small>Pop the diving bugs. 5 levels.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
@@ -88,6 +92,24 @@
           <button type="button" data-fish="catch">Catch</button>
           <button type="button" data-fish="pause">Pause</button>
           <button type="button" id="fish-next">Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="axo" hidden>
+      <header class="slim-head">
+        <button type="button" id="axo-games">Games</button>
+        <p id="axo-heading">Axolotl Patrol</p>
+      </header>
+      <div id="axo-board">
+        <div id="axo-stage">
+          <canvas id="axo-canvas" width="480" height="720" aria-label="Axolotl Patrol"></canvas>
+        </div>
+        <div id="axo-pad">
+          <button type="button" data-axo="left">Left</button>
+          <button type="button" data-axo="right">Right</button>
+          <button type="button" data-axo="fire">Bubble</button>
+          <button type="button" data-axo="pause">Pause</button>
+          <button type="button" id="axo-next" hidden>Next level</button>
         </div>
       </div>
     </section>

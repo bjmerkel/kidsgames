@@ -1,6 +1,6 @@
 # Kids Games
 
-Three games live here. From the first screen, pick one.
+Four games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Axolotl Patrol
+
+An arcade shooter. You play a pink axolotl at the bottom of the tank. Bugs line up, then peel off and dive. Hold Left or Right to slide. Hold Bubble to shoot. Only two bubbles can be in the air at once. Pop every bug to finish the level. Dragonflies and the king beetle drop water, so slide out of the way. You have 3 lives. A hit says try again, and losing the last life restarts that level.
+
+The five levels are Skimmer School, Beetle Rows, Dragonfly Dive, Mixed Swarm, and King Beetle. The king takes six bubbles. The score carries from level to level.
 
 ## Pond Fishing
 
@@ -36,6 +42,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
 - In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
 - In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
+- In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

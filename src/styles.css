@@ -147,7 +147,8 @@ button:focus-visible {
 #menu,
 #crab,
 #race,
-#fish {
+#fish,
+#axo {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -161,12 +162,15 @@ button:focus-visible {
 #crab[hidden],
 #race[hidden],
 #fish[hidden],
+#axo[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
 #race-next[hidden],
 #race-pad button[hidden],
 #fish-next[hidden],
-#fish-pad button[hidden] {
+#fish-pad button[hidden],
+#axo-next[hidden],
+#axo-pad button[hidden] {
   display: none !important;
 }
 
@@ -284,6 +288,43 @@ button:focus-visible {
   background: #f2c14e;
 }
 
+#axo-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#axo-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#axo-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#axo-pad button[data-axo="fire"],
+#axo-pad button[data-axo="pause"],
+#axo-next {
+  grid-column: 1 / -1;
+}
+
+#axo-pad button[data-axo="fire"],
+#axo-next {
+  background: #f2c14e;
+}
+
 .slim-head {
   width: min(480px, 100%);
   display: flex;
@@ -320,6 +361,14 @@ button:focus-visible {
 }
 
 @media (max-height: 520px) {
+  #menu {
+    gap: 8px;
+  }
+
+  .game-card {
+    min-height: 58px;
+  }
+
   body {
     gap: 6px;
   }
@@ -402,6 +451,28 @@ button:focus-visible {
   }
 
   #fish-pad {
+    width: min(260px, 40vw);
+    align-self: flex-end;
+  }
+
+  #axo-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #axo-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #axo-pad {
     width: min(260px, 40vw);
     align-self: flex-end;
   }
