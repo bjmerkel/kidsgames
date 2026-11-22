@@ -166,7 +166,7 @@ function updateCheckpoint(state: GameState): void {
 
 function attachSupport(state: GameState): void {
   const crab = state.crab;
-  if (crab.mode !== "idle") return;
+  if (crab.mode === "hopping") return;
   const support = pickSupport(state.level, crab);
   if (support.kind !== "stone" && support.kind !== "hold") {
     crab.supportId = null;

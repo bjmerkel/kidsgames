@@ -61,6 +61,39 @@ describe("simulation", () => {
     expect(tucked.crab.lives).toBe(state.crab.lives);
   });
 
+  it("keeps a tucked crab on its stone and the sink timer", () => {
+    const level = buildLevel(tiny({
+      bands: [
+        { kind: "curb", h: 200 },
+        {
+          kind: "pond",
+          h: 120,
+          stones: [{ x: 240, localY: 60, r: 30, vx: 0, minX: 240, maxX: 240, sinkAfterMs: 800 }],
+        },
+      ],
+    }));
+    let state = startPlaying(createGame([level]));
+    const stone = state.level.segments[1].stones[0];
+    state.crab.x = stone.x;
+    state.crab.y = stone.y;
+    state = idle(state, 32);
+    expect(state.crab.supportId).toBe(stone.id);
+    let stoodStone = state.level.segments[1].stones[0];
+    expect(stoodStone.occupiedMs).toBeGreaterThan(0);
+    const occupiedBeforeTuck = stoodStone.occupiedMs;
+    state = tick(state, { ...blankInput(), tuck: true }, 16);
+    const stood = state.level.segments[1].stones[0];
+    expect(state.crab.mode).toBe("tucked");
+    expect(state.crab.supportId).toBe(stone.id);
+    expect(stood.occupiedMs).toBeGreaterThan(0);
+    const occupiedAfterTuck = stood.occupiedMs;
+    state = tick(state, blankInput(), 16);
+    const stoodAgain = state.level.segments[1].stones[0];
+    expect(state.crab.supportId).toBe(stone.id);
+    expect(stoodAgain.occupiedMs).toBeGreaterThan(occupiedAfterTuck);
+    expect(stoodAgain.occupiedMs).toBeGreaterThan(occupiedBeforeTuck);
+  });
+
   it("sinks a stood-on stone and drops the crab in the water", () => {
     const level = buildLevel(tiny({
       bands: [
