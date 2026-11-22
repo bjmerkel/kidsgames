@@ -18,6 +18,9 @@ import { advanceAxo, blankAxoInput, createAxo, tickAxo, type AxoInput, type AxoS
 import { drawRascal } from "./rascal/draw";
 import { ROOF_LEVELS } from "./rascal/levels";
 import { advanceRascal, blankRascalInput, createRascal, tickRascal, type RascalInput, type RascalState } from "./rascal/sim";
+import { drawCapy } from "./capy/draw";
+import { JUNGLE_LEVELS } from "./capy/levels";
+import { advanceCapy, blankCapyInput, createCapy, tickCapy, type CapyInput, type CapyState } from "./capy/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -75,6 +78,17 @@ const rascalSection = document.querySelector<HTMLElement>("#rascal");
 const rascalHeading = document.querySelector<HTMLElement>("#rascal-heading");
 const rascalNext = document.querySelector<HTMLButtonElement>("#rascal-next");
 const rascalPad = document.querySelector<HTMLElement>("#rascal-pad");
+const capyCanvas = document.querySelector<HTMLCanvasElement>("#capy-canvas");
+if (!capyCanvas) throw new Error("missing capybara canvas");
+const capySurface: HTMLCanvasElement = capyCanvas;
+const capyContext = capyCanvas.getContext("2d");
+if (!capyContext) throw new Error("missing capybara context");
+const capyGfx: CanvasRenderingContext2D = capyContext;
+const capyStage = document.querySelector<HTMLElement>("#capy-stage");
+const capySection = document.querySelector<HTMLElement>("#capy");
+const capyHeading = document.querySelector<HTMLElement>("#capy-heading");
+const capyNext = document.querySelector<HTMLButtonElement>("#capy-next");
+const capyPad = document.querySelector<HTMLElement>("#capy-pad");
 
 let state = createGame();
 let pending = blankInput();
@@ -83,7 +97,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -103,6 +117,10 @@ let rascalState: RascalState | null = null;
 let rascalAcc = 0;
 const rascalKeys = { left: false, right: false, jump: false };
 let rascalEdge = blankRascalInput();
+let capyState: CapyState | null = null;
+let capyAcc = 0;
+const capyKeys = { left: false, right: false, jump: false };
+let capyEdge = blankCapyInput();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -129,6 +147,7 @@ function fit(): void {
   fitBox(fishStage, fishSurface);
   fitBox(axoStage, axoSurface);
   fitBox(rascalStage, rascalSurface);
+  fitBox(capyStage, capySurface);
 }
 
 fit();
@@ -140,6 +159,7 @@ if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceSurface)).observe(
 if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(fishStage);
 if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axoStage);
 if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).observe(rascalStage);
+if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(capyStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -149,6 +169,7 @@ function show(next: Mode): void {
   if (fishSection) fishSection.hidden = next !== "fish";
   if (axoSection) axoSection.hidden = next !== "axo";
   if (rascalSection) rascalSection.hidden = next !== "rascal";
+  if (capySection) capySection.hidden = next !== "capy";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
     crab: "Hermit Crab Crossing",
@@ -156,6 +177,7 @@ function show(next: Mode): void {
     fish: "Pond Fishing",
     axo: "Axolotl Patrol",
     rascal: "Web Rascal",
+    capy: "Capy Swing",
   };
   document.title = titles[next];
   if (next === "crab") {
@@ -168,6 +190,7 @@ function show(next: Mode): void {
   if (next === "fish") openPond();
   if (next === "axo") openAxo();
   if (next === "rascal") openRascal();
+  if (next === "capy") openCapy();
   requestAnimationFrame(() => fit());
 }
 
@@ -298,6 +321,40 @@ function rascalInput(): RascalInput {
   };
 }
 
+function openCapy(): void {
+  capyState = createCapy(0);
+  capyAcc = 0;
+  capyEdge = blankCapyInput();
+  capyKeys.left = false;
+  capyKeys.right = false;
+  capyKeys.jump = false;
+  syncCapyChrome();
+}
+
+function syncCapyChrome(): void {
+  if (!capyState) return;
+  const level = JUNGLE_LEVELS[capyState.levelIndex];
+  if (capyHeading) capyHeading.textContent = capyState.phase === "done" ? "Capy Swing" : level.name;
+  const live = capyState.phase === "playing" || capyState.phase === "paused";
+  capyPad?.querySelectorAll<HTMLButtonElement>("button[data-capy]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (capyNext) {
+    capyNext.hidden = live;
+    capyNext.textContent = capyState.phase === "done" ? "Play again" : capyState.phase === "retry" ? "Try again" : capyState.levelIndex >= JUNGLE_LEVELS.length - 1 ? "The pool" : "Next level";
+  }
+}
+
+function capyInput(): CapyInput {
+  return {
+    dx: (capyKeys.right ? 1 : 0) - (capyKeys.left ? 1 : 0),
+    jump: capyEdge.jump,
+    jumpHeld: capyKeys.jump,
+    pause: capyEdge.pause,
+    confirm: capyEdge.confirm,
+  };
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -392,6 +449,10 @@ document.querySelector<HTMLButtonElement>("#play-rascal")?.addEventListener("poi
   event.preventDefault();
   show("rascal");
 });
+document.querySelector<HTMLButtonElement>("#play-capy")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("capy");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -409,6 +470,10 @@ document.querySelector("#axo-games")?.addEventListener("pointerdown", (event) =>
   show("menu");
 });
 document.querySelector("#rascal-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#capy-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -437,8 +502,24 @@ rascalNext?.addEventListener("pointerdown", (event) => {
   rascalState = advanceRascal(rascalState);
   syncRascalChrome();
 });
+capyNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!capyState) return;
+  capyState = advanceCapy(capyState);
+  syncCapyChrome();
+});
 
 window.addEventListener("keydown", (event) => {
+  if (mode === "capy") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") capyKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") capyKeys.right = true;
+    if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") capyKeys.jump = true;
+    if (!event.repeat && (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW")) capyEdge = { ...capyEdge, jump: true };
+    if (event.code === "Escape") capyEdge = { ...capyEdge, pause: true };
+    if (event.code === "Enter") capyEdge = { ...capyEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "KeyA", "KeyD", "KeyW", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "rascal") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") rascalKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") rascalKeys.right = true;
@@ -494,14 +575,19 @@ window.addEventListener("keyup", (event) => {
     fishKeys.left = false;
     axoKeys.left = false;
     rascalKeys.left = false;
+    capyKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
     fishKeys.right = false;
     axoKeys.right = false;
     rascalKeys.right = false;
+    capyKeys.right = false;
   }
-  if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") rascalKeys.jump = false;
+  if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
+    rascalKeys.jump = false;
+    capyKeys.jump = false;
+  }
   if (event.code === "Space") axoKeys.fire = false;
   if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
   if (event.code === "ArrowDown" || event.code === "KeyS") {
@@ -528,6 +614,35 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
     if (input.dx !== 0 || input.dy !== 0) {
       if (held.dx === input.dx && held.dy === input.dy) held = blankInput();
     }
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-capy]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.capy ?? "";
+    if (name === "left") capyKeys.left = true;
+    if (name === "right") capyKeys.right = true;
+    if (name === "jump") {
+      capyKeys.jump = true;
+      capyEdge = { ...capyEdge, jump: true };
+    }
+    if (name === "pause") capyEdge = { ...capyEdge, pause: true };
+    if (name === "left" || name === "right" || name === "jump") {
+      button.classList.add("is-held");
+      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
+    }
+  });
+  const release = (event: PointerEvent) => {
+    const name = button.dataset.capy ?? "";
+    if (name === "left") capyKeys.left = false;
+    if (name === "right") capyKeys.right = false;
+    if (name === "jump") capyKeys.jump = false;
+    button.classList.remove("is-held");
     if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
   };
   button.addEventListener("pointerup", release);
@@ -633,6 +748,14 @@ document.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((butto
 
 canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
+});
+
+capySurface.addEventListener("pointerdown", () => {
+  if (mode !== "capy" || !capyState) return;
+  if (capyState.phase === "clear" || capyState.phase === "retry" || capyState.phase === "done") {
+    capyState = advanceCapy(capyState);
+    syncCapyChrome();
+  }
 });
 
 rascalSurface.addEventListener("pointerdown", () => {
@@ -759,6 +882,20 @@ function frame(now: number): void {
     }
     drawRascal(rascalGfx, rascalState, now);
     syncRascalChrome();
+  }
+  if (mode === "capy" && capyState) {
+    capyAcc += delta;
+    let steps = 0;
+    while (capyAcc >= STEP_MS && steps < 5) {
+      const input = capyInput();
+      if (input.confirm && (capyState.phase === "clear" || capyState.phase === "retry" || capyState.phase === "done")) capyState = advanceCapy(capyState);
+      else capyState = tickCapy(capyState, input, STEP_MS);
+      capyEdge = blankCapyInput();
+      capyAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawCapy(capyGfx, capyState, now);
+    syncCapyChrome();
   }
   requestAnimationFrame(frame);
 }

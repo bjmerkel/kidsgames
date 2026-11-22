@@ -33,6 +33,10 @@
         Web Rascal
         <small>Run, jump, and swing. 5 levels.</small>
       </button>
+      <button type="button" id="play-capy" class="game-card">
+        Capy Swing
+        <small>Swing the vines. 5 levels.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
@@ -133,6 +137,24 @@
           <button type="button" data-rascal="web">Web</button>
           <button type="button" data-rascal="pause">Pause</button>
           <button type="button" id="rascal-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="capy" hidden>
+      <header class="slim-head">
+        <button type="button" id="capy-games">Games</button>
+        <p id="capy-heading">Capy Swing</p>
+      </header>
+      <div id="capy-board">
+        <div id="capy-stage">
+          <canvas id="capy-canvas" width="480" height="720" aria-label="Capy Swing"></canvas>
+        </div>
+        <div id="capy-pad">
+          <button type="button" data-capy="left">Left</button>
+          <button type="button" data-capy="right">Right</button>
+          <button type="button" data-capy="jump">Jump</button>
+          <button type="button" data-capy="pause">Pause</button>
+          <button type="button" id="capy-next" hidden>Next level</button>
         </div>
       </div>
     </section>

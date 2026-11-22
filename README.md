@@ -1,6 +1,6 @@
 # Kids Games
 
-Five games live here. From the first screen, pick one.
+Six games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,14 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Capy Swing
+
+A jungle trail in the style of a classic pit runner. You play a capybara. Hold Right to run and Jump to hop. A short gap is a running jump. A wide river has a vine: jump into the vine and it swings you to the far bank. Jump over the rolling logs. On Driftwood, hop across the logs in the water. Mangoes add points. The pool at the end of the trail finishes the level.
+
+You have 3 lives. Falling in the river or touching a rolling log says try again and sends you back to the last safe bank. The score carries, and lives come back on the next trail.
+
+The five trails are River Bend, Two Vines, Log Run, Driftwood, and Deep Jungle.
 
 ## Web Rascal
 
@@ -50,6 +58,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
 - In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
 - In Web Rascal, Left and Right run. Space or Jump hops. F or Web shoots a web at a white web mark.
+- In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.
