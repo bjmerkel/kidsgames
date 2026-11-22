@@ -6,32 +6,67 @@
     <meta name="theme-color" content="#d7ecf3" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Hermit Crab Crossing</title>
+    <title>Kids Games</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <header>
+    <section id="menu">
       <p class="emery">Emery is awesome</p>
-      <h1>Hermit Crab Crossing</h1>
-    </header>
-    <div id="board">
-    <div id="stage">
-      <canvas id="game" width="480" height="720" aria-label="Hermit Crab Crossing. Emery is awesome."></canvas>
-    </div>
-    <div id="pad">
-      <div class="dpad" role="group" aria-label="Hop">
-        <button type="button" data-input="n">Up</button>
-        <button type="button" data-input="w">Left</button>
-        <button type="button" data-input="e">Right</button>
-        <button type="button" data-input="s">Down</button>
+      <h1>Kids Games</h1>
+      <button type="button" id="play-crab" class="game-card">
+        Hermit Crab Crossing
+        <small>Hop the yard. 5 levels.</small>
+      </button>
+      <button type="button" id="play-race" class="game-card">
+        Woodland Grand Prix
+        <small>10 racers, including a wood duck. 5 tracks.</small>
+      </button>
+    </section>
+    <section id="crab" hidden>
+      <header>
+        <p class="emery">Emery is awesome</p>
+        <h1>Hermit Crab Crossing</h1>
+        <button type="button" id="crab-games">Games</button>
+      </header>
+      <div id="board">
+        <div id="stage">
+          <canvas id="game" width="480" height="720" aria-label="Hermit Crab Crossing. Emery is awesome."></canvas>
+        </div>
+        <div id="pad">
+          <div class="dpad" role="group" aria-label="Hop">
+            <button type="button" data-input="n">Up</button>
+            <button type="button" data-input="w">Left</button>
+            <button type="button" data-input="e">Right</button>
+            <button type="button" data-input="s">Down</button>
+          </div>
+          <div class="actions">
+            <button type="button" data-input="tuck">Tuck</button>
+            <button type="button" data-input="pause">Pause</button>
+          </div>
+          <button type="button" data-input="confirm" id="continue">Play</button>
+        </div>
       </div>
-      <div class="actions">
-        <button type="button" data-input="tuck">Tuck</button>
-        <button type="button" data-input="pause">Pause</button>
+    </section>
+    <section id="race" hidden>
+      <header class="slim-head">
+        <button type="button" id="race-games">Games</button>
+        <p id="race-heading">Pick a racer</p>
+      </header>
+      <div id="race-board">
+        <div id="race-stage">
+          <canvas id="race-canvas" width="480" height="720" aria-label="Woodland Grand Prix"></canvas>
+        </div>
+        <div id="race-picker"></div>
+        <div id="race-pad" hidden>
+          <button type="button" data-race="left">Left</button>
+          <button type="button" data-race="right">Right</button>
+          <button type="button" data-race="brake">Brake</button>
+          <button type="button" data-race="use">Use</button>
+          <button type="button" data-race="pause">Pause</button>
+          <button type="button" id="race-next">Next level</button>
+        </div>
       </div>
-      <button type="button" data-input="confirm" id="continue">Play</button>
-    </div>
-    </div>
+    </section>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

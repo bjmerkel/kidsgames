@@ -1,4 +1,18 @@
-# Hermit Crab Crossing
+# Kids Games
+
+Two games live here. From the first screen, pick one.
+
+Emery is awesome.
+
+## Woodland Grand Prix
+
+A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balanced racer. The others are a rabbit, squirrel, raccoon, fox, owl, deer, hedgehog, chipmunk, and beaver. Each one feels a little different: some are fast, some turn quicker, some take longer to get going.
+
+There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
+
+Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Hermit Crab Crossing
 
 A Frogger-style crossing game. You play a hermit crab. Five backyards stand between the crab and the burrow, and every one of them ends in a tunnel.
 
@@ -16,6 +30,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 ## Controls
 
 - Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
+- In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

@@ -144,6 +144,124 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+#menu,
+#crab,
+#race {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#menu[hidden],
+#crab[hidden],
+#race[hidden],
+#race-picker[hidden],
+#race-pad[hidden],
+#race-next[hidden],
+#race-pad button[hidden] {
+  display: none !important;
+}
+
+#menu {
+  justify-content: center;
+  gap: 16px;
+}
+
+.game-card {
+  width: min(420px, 100%);
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.game-card small,
+#race-picker button small {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#race-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#race-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#race-picker {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+#race-picker button {
+  min-height: 48px;
+  padding: 6px 8px;
+}
+
+#race-picker button.is-selected,
+#race-start,
+#race-next {
+  background: #f2c14e;
+}
+
+#race-start,
+#race-next,
+#race-pad button[data-race="pause"] {
+  grid-column: 1 / -1;
+}
+
+#race-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#race-pad button[data-race="use"] {
+  background: #7ed37a;
+}
+
+.slim-head {
+  width: min(480px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slim-head p {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+#crab-games,
+.slim-head button {
+  min-height: 40px;
+  width: auto;
+  padding: 6px 12px;
+}
+
 @media (max-height: 700px) {
   body {
     gap: 6px;
@@ -193,6 +311,29 @@ button:focus-visible {
 
   #pad {
     width: min(260px, 38vw);
+    align-self: flex-end;
+  }
+
+  #race-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #race-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #race-picker,
+  #race-pad {
+    width: min(260px, 40vw);
     align-self: flex-end;
   }
 
