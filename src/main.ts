@@ -2,8 +2,11 @@ import { cameraTop } from "./game/camera";
 import { STEP_MS, VIEW_H, VIEW_W } from "./game/constants";
 import { continueLabel } from "./game/copy";
 import { blankInput, buttonToInput, keyDown, mergeInput } from "./game/input";
+import { LEVELS } from "./game/levels";
 import { createGame, tick } from "./game/sim";
+import { applyTunes, defaultTunes, loadTunes, saveTunes, type LevelTune } from "./game/tune";
 import type { InputFrame } from "./game/types";
+import { mountLevelSettings } from "./settings/panel";
 import { drawFrame } from "./render/draw";
 import { CHARACTERS, characterById } from "./race/characters";
 import { drawGarage, drawRace } from "./race/draw";
@@ -28,20 +31,25 @@ const raceStage = document.querySelector<HTMLElement>("#race-stage");
 const menu = document.querySelector<HTMLElement>("#menu");
 const crabSection = document.querySelector<HTMLElement>("#crab");
 const raceSection = document.querySelector<HTMLElement>("#race");
+const settingsSection = document.querySelector<HTMLElement>("#settings");
+const tuneTabs = document.querySelector<HTMLElement>("#tune-tabs");
+const tuneForm = document.querySelector<HTMLElement>("#tune-form");
 const picker = document.querySelector<HTMLElement>("#race-picker");
 const racePad = document.querySelector<HTMLElement>("#race-pad");
 const raceHeading = document.querySelector<HTMLElement>("#race-heading");
 const raceNext = document.querySelector<HTMLButtonElement>("#race-next");
 const raceUse = document.querySelector<HTMLButtonElement>("#race-pad button[data-race='use']");
 
-let state = createGame();
+const tuneStore = levelStore();
+let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
+let state = createGame(applyTunes(LEVELS, tunes));
 let pending = blankInput();
 let held = blankInput();
 let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race";
+type Mode = "menu" | "crab" | "race" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -86,9 +94,11 @@ function show(next: Mode): void {
   if (menu) menu.hidden = next !== "menu";
   if (crabSection) crabSection.hidden = next !== "crab";
   if (raceSection) raceSection.hidden = next !== "race";
-  document.title = next === "crab" ? "Hermit Crab Crossing" : next === "race" ? "Woodland Grand Prix" : "Kids Games";
+  if (settingsSection) settingsSection.hidden = next !== "settings";
+  document.title =
+    next === "crab" ? "Hermit Crab Crossing" : next === "race" ? "Woodland Grand Prix" : next === "settings" ? "Level settings" : "Kids Games";
   if (next === "crab") {
-    state = createGame();
+    state = createGame(applyTunes(LEVELS, tunes));
     pending = blankInput();
     held = blankInput();
     cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
@@ -207,6 +217,22 @@ document.querySelector<HTMLButtonElement>("#play-race")?.addEventListener("point
   event.preventDefault();
   show("race");
 });
+document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("settings");
+});
+document.querySelector("#crab-settings")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("settings");
+});
+document.querySelector("#settings-play")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("crab");
+});
+document.querySelector("#settings-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 document.querySelector("#crab-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -223,7 +249,16 @@ raceNext?.addEventListener("pointerdown", (event) => {
   syncRaceChrome();
 });
 
+if (tuneTabs && tuneForm) {
+  mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
+    tunes = next;
+    saveTunes(tunes, tuneStore);
+  });
+}
+
 window.addEventListener("keydown", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
   if (mode === "race") {
     if (event.code === "ArrowLeft" || event.code === "KeyA") raceKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") raceKeys.right = true;
@@ -356,6 +391,14 @@ function frame(now: number): void {
     }
   }
   requestAnimationFrame(frame);
+}
+
+function levelStore(): Storage | null {
+  try {
+    return localStorage;
+  } catch {
+    return null;
+  }
 }
 
 syncRaceChrome();

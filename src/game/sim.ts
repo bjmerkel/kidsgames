@@ -11,7 +11,7 @@ export function createGame(templates: LevelDef[] = LEVELS): GameState {
   const cloned = structuredClone(templates);
   const level = structuredClone(cloned[0]);
   const start = startPoint(level);
-  const crab = makeCrab(start.x, start.y);
+  const crab = makeCrab(start.x, start.y, 0, level.lives ?? LIVES);
   return {
     phase: "title",
     levelIndex: 0,
@@ -108,7 +108,7 @@ function beginLevel(state: GameState, index: number): GameState {
   state.levelIndex = index;
   state.level = structuredClone(state.templates[index]);
   const start = startPoint(state.level);
-  state.crab = makeCrab(start.x, start.y, state.crab.score);
+  state.crab = makeCrab(start.x, start.y, state.crab.score, state.level.lives ?? LIVES);
   state.elapsedMs = 0;
   state.checkpointX = start.x;
   state.checkpointY = start.y;
@@ -232,7 +232,7 @@ function decayFx(state: GameState, dt: number): void {
   if (state.toastMs === 0) state.toast = "";
 }
 
-function makeCrab(x: number, y: number, score = 0): Crab {
+function makeCrab(x: number, y: number, score = 0, lives = LIVES): Crab {
   return {
     x,
     y,
@@ -249,7 +249,7 @@ function makeCrab(x: number, y: number, score = 0): Crab {
     supportKind: null,
     rideOffsetX: 0,
     rideOffsetY: 0,
-    lives: LIVES,
+    lives,
     score,
   };
 }

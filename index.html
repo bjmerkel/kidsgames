@@ -21,12 +21,19 @@
         Woodland Grand Prix
         <small>10 racers, including a wood duck. 5 tracks.</small>
       </button>
+      <button type="button" id="open-settings" class="game-card">
+        Level settings
+        <small>Change the timer, stones, holds, cars, and swings for each level.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
         <p class="emery">Emery is awesome</p>
         <h1>Hermit Crab Crossing</h1>
-        <button type="button" id="crab-games">Games</button>
+        <div class="head-actions">
+          <button type="button" id="crab-settings">Settings</button>
+          <button type="button" id="crab-games">Games</button>
+        </div>
       </header>
       <div id="board">
         <div id="stage">
@@ -66,6 +73,18 @@
           <button type="button" id="race-next">Next level</button>
         </div>
       </div>
+    </section>
+    <section id="settings" hidden>
+      <header>
+        <p class="emery">Emery is awesome</p>
+        <h1>Level settings</h1>
+        <div class="head-actions">
+          <button type="button" id="settings-play">Play</button>
+          <button type="button" id="settings-games">Games</button>
+        </div>
+      </header>
+      <div id="tune-tabs" class="level-tabs" role="tablist" aria-label="Levels"></div>
+      <div id="tune-form"></div>
     </section>
     <script type="module" src="/src/main.ts"></script>
   </body>

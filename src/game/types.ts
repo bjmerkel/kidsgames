@@ -99,6 +99,7 @@ export interface LevelDef {
   timeLimitMs: number;
   width: number;
   height: number;
+  lives?: number;
   segments: Segment[];
 }
 
