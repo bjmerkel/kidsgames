@@ -11,6 +11,7 @@ describe("renderer", () => {
     expect(() => drawFrame(ctx, createGame(), 0, 0)).not.toThrow();
     expect(painted(fillTexts, COPY.title)).toBe(true);
     expect(painted(fillTexts, COPY.emery)).toBe(true);
+    expect(exactChunkCount(fillTexts, COPY.emery)).toBeGreaterThanOrEqual(2);
 
     clearTexts();
     let state = startPlaying();
@@ -20,6 +21,7 @@ describe("renderer", () => {
     expect(() => drawFrame(ctx, state, 0, 1200)).not.toThrow();
     expect(painted(fillTexts, COPY.finishedLevel)).toBe(true);
     expect(painted(fillTexts, COPY.emery)).toBe(true);
+    expect(exactChunk(fillTexts, `${COPY.emery}.`)).toBe(true);
   });
 
   it("paints the HUD and tunnel sign while playing level 1", () => {
@@ -28,6 +30,11 @@ describe("renderer", () => {
     expect(() => drawFrame(ctx, state, 0, 0)).not.toThrow();
     expect(painted(fillTexts, COPY.emery)).toBe(true);
     expect(painted(fillTexts, COPY.tunnel)).toBe(true);
+    expect(exactChunk(fillTexts, COPY.emery)).toBe(true);
+    expect(exactChunk(fillTexts, `${state.level.name}   ${COPY.score} ${state.crab.score}`)).toBe(
+      true,
+    );
+    expect(exactChunk(fillTexts, `${COPY.emery}.`)).toBe(false);
   });
 
   it("paints time-up and try-again toasts with the Emery line", () => {
@@ -58,6 +65,7 @@ describe("renderer", () => {
     drawFrame(ctx, state, 0, 0);
     expect(painted(fillTexts, COPY.paused)).toBe(true);
     expect(painted(fillTexts, `${COPY.emery}.`)).toBe(true);
+    expect(exactChunk(fillTexts, `${COPY.emery}.`)).toBe(true);
     clearTexts();
 
     state = startPlaying();
@@ -72,6 +80,7 @@ describe("renderer", () => {
     drawFrame(ctx, state, 0, 0);
     expect(painted(fillTexts, COPY.tryLevel)).toBe(true);
     expect(painted(fillTexts, `${COPY.emery}.`)).toBe(true);
+    expect(exactChunk(fillTexts, `${COPY.emery}.`)).toBe(true);
     clearTexts();
 
     state = startPlaying();
@@ -87,6 +96,14 @@ describe("renderer", () => {
 function painted(fillTexts: string[], phrase: string): boolean {
   if (fillTexts.some((chunk) => chunk.includes(phrase))) return true;
   return fillTexts.join(" ").includes(phrase);
+}
+
+function exactChunk(fillTexts: string[], phrase: string): boolean {
+  return fillTexts.some((chunk) => chunk === phrase);
+}
+
+function exactChunkCount(fillTexts: string[], phrase: string): number {
+  return fillTexts.filter((chunk) => chunk === phrase).length;
 }
 
 function fakeCtx(): {
