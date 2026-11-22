@@ -48,11 +48,30 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
   ctx.lineWidth = 3;
   ctx.strokeRect(box.originX - 8, box.originY - 8, level.size * box.tile + 16, level.size * box.tile + 16);
 
-  state.found.forEach((found, index) => strokeWord(ctx, found, box, MARKS[index % MARKS.length]));
+  ctx.strokeStyle = "#e4d9c8";
+  ctx.lineWidth = 1;
+  for (let line = 0; line <= level.size; line += 1) {
+    ctx.beginPath();
+    ctx.moveTo(box.originX + line * box.tile, box.originY);
+    ctx.lineTo(box.originX + line * box.tile, box.originY + level.size * box.tile);
+    ctx.moveTo(box.originX, box.originY + line * box.tile);
+    ctx.lineTo(box.originX + level.size * box.tile, box.originY + line * box.tile);
+    ctx.stroke();
+  }
+
+  state.found.forEach((found, index) => strokeWord(ctx, found, box, MARKS[index % MARKS.length], 0.38));
+  if (state.trail && state.trail.length > 1) {
+    const forward = state.trail.map((cell) => level.grid[cell.y][cell.x]).join("");
+    const backward = forward.split("").reverse().join("");
+    const ready = level.words.some((word) => (word === forward || word === backward) && !state.found.some((found) => found.word === word));
+    strokeWord(ctx, { word: "", cells: state.trail }, box, ready ? "#2f6b3a" : "#24357a", 0.55);
+  } else if (state.trail && state.trail.length === 1) {
+    ring(ctx, state.trail[0].x, state.trail[0].y, box, "#24357a");
+  }
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `700 ${Math.max(16, Math.floor(box.tile * 0.46))}px Trebuchet MS, sans-serif`;
+  ctx.font = `700 ${Math.max(18, Math.floor(box.tile * 0.52))}px Trebuchet MS, sans-serif`;
   ctx.fillStyle = "#1c1915";
   for (let y = 0; y < level.size; y += 1) {
     for (let x = 0; x < level.size; x += 1) {
@@ -65,20 +84,21 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
   if (state.hint) ring(ctx, state.hint.x, state.hint.y, box, "#f2c14e", 3 + Math.sin(nowMs / 140));
 
   if (state.toastMs > 0 && state.phase === "playing") {
+    const toastY = Math.min(VIEW_H - 46, box.originY + level.size * box.tile + 12);
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(28, 25, 21, 0.55)";
-    roundRect(ctx, 70, box.originY + 8, VIEW_W - 140, 32, 10);
+    roundRect(ctx, 70, toastY, VIEW_W - 140, 32, 10);
     ctx.fill();
     ctx.fillStyle = "#f7f1e6";
     ctx.font = "700 16px Trebuchet MS, sans-serif";
-    ctx.fillText(state.toast, VIEW_W / 2, box.originY + 30);
+    ctx.fillText(state.toast, VIEW_W / 2, toastY + 22);
   }
   if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to keep looking.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "Every word is circled.");
   if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every puzzle is solved.");
 }
 
-function strokeWord(ctx: CanvasRenderingContext2D, found: FoundWord, box: { tile: number; originX: number; originY: number }, color: string): void {
+function strokeWord(ctx: CanvasRenderingContext2D, found: FoundWord, box: { tile: number; originX: number; originY: number }, color: string, alpha: number): void {
   if (found.cells.length === 0) return;
   const center = (cell: { x: number; y: number }) => ({
     x: box.originX + cell.x * box.tile + box.tile / 2,
@@ -88,7 +108,7 @@ function strokeWord(ctx: CanvasRenderingContext2D, found: FoundWord, box: { tile
   const end = center(found.cells[found.cells.length - 1]);
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.globalAlpha = 0.38;
+  ctx.globalAlpha = alpha;
   ctx.lineWidth = box.tile * 0.72;
   ctx.lineCap = "round";
   ctx.beginPath();

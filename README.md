@@ -14,7 +14,7 @@ Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for
 
 ## Word Hunt
 
-A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
+A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. The highlight snaps onto a straight line while you drag, and a near miss still counts. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
 
 The score carries from puzzle to puzzle. The five puzzles are Space Lab, Habitats, Math Lab, Explorers, and Story Craft. Later puzzles let words run on a diagonal and backwards.
 
@@ -88,7 +88,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
-- In Word Hunt, tap the first letter and then the last letter, or drag between them. H or Hint glows a starting letter.
+- In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. H or Hint glows a starting letter.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

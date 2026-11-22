@@ -34,7 +34,7 @@ import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
 import { drawHunt } from "./hunt/draw";
-import { HUNT_LEVELS } from "./hunt/puzzles";
+import { HUNT_LEVELS, metrics as huntMetrics } from "./hunt/puzzles";
 import { advanceHunt, blankHuntInput, createHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
@@ -198,7 +198,7 @@ let burstEdge = blankBurstInput();
 let huntState: HuntState | null = null;
 let huntAcc = 0;
 let huntEdge = blankHuntInput();
-let huntDrag: { x: number; y: number; pointer: number } | null = null;
+let huntDrag: { x: number; y: number; x2: number; y2: number; pointer: number } | null = null;
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -562,7 +562,8 @@ function syncHuntChrome(): void {
 }
 
 function huntInput(): HuntInput {
-  return huntEdge;
+  if (!huntDrag) return huntEdge;
+  return { ...huntEdge, tracking: true, x: huntDrag.x, y: huntDrag.y, x2: huntDrag.x2, y2: huntDrag.y2 };
 }
 
 function canvasPoint(surface: HTMLCanvasElement, event: PointerEvent): { x: number; y: number } {
@@ -1190,13 +1191,20 @@ huntSurface.addEventListener("pointerdown", (event) => {
     return;
   }
   const point = canvasPoint(huntSurface, event);
-  huntDrag = { x: point.x, y: point.y, pointer: event.pointerId };
+  huntDrag = { x: point.x, y: point.y, x2: point.x, y2: point.y, pointer: event.pointerId };
   if (!huntSurface.hasPointerCapture(event.pointerId)) huntSurface.setPointerCapture(event.pointerId);
+});
+huntSurface.addEventListener("pointermove", (event) => {
+  if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt") return;
+  const point = canvasPoint(huntSurface, event);
+  huntDrag.x2 = point.x;
+  huntDrag.y2 = point.y;
 });
 const finishHuntDrag = (event: PointerEvent) => {
   if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt" || !huntState) return;
   const point = canvasPoint(huntSurface, event);
-  const moved = Math.hypot(point.x - huntDrag.x, point.y - huntDrag.y) > 18;
+  const tile = huntMetrics(HUNT_LEVELS[huntState.levelIndex].size).tile;
+  const moved = Math.hypot(point.x - huntDrag.x, point.y - huntDrag.y) > tile * 0.55;
   huntEdge = moved
     ? { ...huntEdge, drag: true, x: huntDrag.x, y: huntDrag.y, x2: point.x, y2: point.y }
     : { ...huntEdge, tap: true, x: point.x, y: point.y };

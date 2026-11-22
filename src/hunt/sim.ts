@@ -5,6 +5,7 @@ export type HuntPhase = "playing" | "paused" | "clear" | "done";
 export type HuntInput = {
   tap: boolean;
   drag: boolean;
+  tracking: boolean;
   x: number;
   y: number;
   x2: number;
@@ -22,6 +23,7 @@ export type HuntState = {
   score: number;
   found: FoundWord[];
   selected: Point | null;
+  trail: Point[] | null;
   hint: Point | null;
   toast: string;
   toastMs: number;
@@ -32,7 +34,16 @@ const FIND_POINTS = 100;
 const CLEAR_BONUS = 250;
 
 export function blankHuntInput(): HuntInput {
-  return { tap: false, drag: false, x: 0, y: 0, x2: 0, y2: 0, pause: false, confirm: false, hint: false };
+  return { tap: false, drag: false, tracking: false, x: 0, y: 0, x2: 0, y2: 0, pause: false, confirm: false, hint: false };
+}
+
+export function nearestCell(px: number, py: number, size: number): Point | null {
+  const { tile, originX, originY } = metrics(size);
+  const reach = tile * 0.5;
+  if (px < originX - reach || py < originY - reach || px >= originX + size * tile + reach || py >= originY + size * tile + reach) return null;
+  const x = Math.min(size - 1, Math.max(0, Math.floor((px - originX) / tile)));
+  const y = Math.min(size - 1, Math.max(0, Math.floor((py - originY) / tile)));
+  return { x, y };
 }
 
 export function cellAt(px: number, py: number, size: number): Point | null {
@@ -52,6 +63,7 @@ export function createHunt(levelIndex = 0, score = 0): HuntState {
     score,
     found: [],
     selected: null,
+    trail: null,
     hint: null,
     toast: level.blurb,
     toastMs: 1800,
@@ -79,6 +91,105 @@ function lineBetween(a: Point, b: Point, size: number): Point[] | null {
 
 function spell(grid: string[], cells: Point[]): string {
   return cells.map((cell) => grid[cell.y][cell.x]).join("");
+}
+
+const AIM_DIRS: Point[] = [
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+  { x: -1, y: 1 },
+  { x: -1, y: 0 },
+  { x: -1, y: -1 },
+  { x: 0, y: -1 },
+  { x: 1, y: -1 },
+];
+
+function chebyshev(a: Point, b: Point): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+function knownWord(level: WordPuzzle, cells: Point[]): string | null {
+  const forward = spell(level.grid, cells);
+  const backward = forward.split("").reverse().join("");
+  return level.words.find((word) => word === forward || word === backward) ?? null;
+}
+
+function aimedLine(level: WordPuzzle, x: number, y: number, x2: number, y2: number, found: FoundWord[]): Point[] | null {
+  const start = nearestCell(x, y, level.size);
+  if (!start) return null;
+  const { tile } = metrics(level.size);
+  const dx = x2 - x;
+  const dy = y2 - y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < tile * 0.45) return [nearestCell(x2, y2, level.size) ?? start];
+  let dir = AIM_DIRS[0];
+  let best = -2;
+  for (const candidate of AIM_DIRS) {
+    const length = Math.hypot(candidate.x, candidate.y);
+    const dot = (dx * candidate.x + dy * candidate.y) / (dist * length);
+    if (dot > best) {
+      best = dot;
+      dir = candidate;
+    }
+  }
+  const step = tile * Math.hypot(dir.x, dir.y);
+  let steps = Math.max(1, Math.round(dist / step));
+  let line: Point[] | null = null;
+  while (steps >= 1) {
+    const end = { x: start.x + dir.x * steps, y: start.y + dir.y * steps };
+    line = lineBetween(start, end, level.size);
+    if (line) break;
+    steps -= 1;
+  }
+  if (!line || line.length < 2) return [start];
+  if (knownWord(level, line)) return line;
+  const taken = new Set(found.map((item) => item.word));
+  const end = line[line.length - 1];
+  let winner: { miss: number; cells: Point[] } | null = null;
+  let tied = false;
+  for (const place of level.placed) {
+    if (taken.has(place.word) || place.cells.length < 2) continue;
+    const first = place.cells[0];
+    const last = place.cells[place.cells.length - 1];
+    const wordDx = Math.sign(last.x - first.x);
+    const wordDy = Math.sign(last.y - first.y);
+    const aligned = (wordDx === dir.x && wordDy === dir.y) || (wordDx === -dir.x && wordDy === -dir.y);
+    if (!aligned) continue;
+    const miss = Math.min(chebyshev(start, first) + chebyshev(end, last), chebyshev(start, last) + chebyshev(end, first));
+    if (miss > 1) continue;
+    if (!winner || miss < winner.miss) {
+      winner = { miss, cells: place.cells };
+      tied = false;
+    } else if (miss === winner.miss && spell(level.grid, winner.cells) !== place.word) tied = true;
+  }
+  if (winner && !tied) return winner.cells;
+  return line;
+}
+
+function chooseTap(px: number, py: number, level: WordPuzzle, selected: Point | null, found: FoundWord[]): Point | null {
+  const cell = nearestCell(px, py, level.size);
+  if (!cell || !selected) return cell;
+  const direct = lineBetween(selected, cell, level.size);
+  const taken = new Set(found.map((item) => item.word));
+  if (direct && direct.length > 1) {
+    const word = knownWord(level, direct);
+    if (word && !taken.has(word)) return cell;
+  }
+  const { tile, originX, originY } = metrics(level.size);
+  const fx = (px - originX) / tile;
+  const fy = (py - originY) / tile;
+  const options: Point[] = [];
+  for (let y = cell.y - 1; y <= cell.y + 1; y += 1) {
+    for (let x = cell.x - 1; x <= cell.x + 1; x += 1) {
+      if (x < 0 || y < 0 || x >= level.size || y >= level.size || (x === cell.x && y === cell.y)) continue;
+      if (Math.hypot(fx - (x + 0.5), fy - (y + 0.5)) > 0.72) continue;
+      const line = lineBetween(selected, { x, y }, level.size);
+      if (!line || line.length < 2) continue;
+      const word = knownWord(level, line);
+      if (word && !taken.has(word)) options.push({ x, y });
+    }
+  }
+  return options.length === 1 ? options[0] : cell;
 }
 
 function mark(state: HuntState, level: WordPuzzle, cells: Point[]): void {
@@ -134,22 +245,25 @@ export function tickHunt(state: HuntState, input: HuntInput, dt: number): HuntSt
     next.toastMs = 900;
     return next;
   }
+  if (!input.tracking) next.trail = null;
   if (input.drag) {
-    const start = cellAt(input.x, input.y, level.size);
-    const end = cellAt(input.x2, input.y2, level.size);
-    if (!start || !end) return next;
-    const cells = lineBetween(start, end, level.size);
-    if (!cells) {
+    const cells = aimedLine(level, input.x, input.y, input.x2, input.y2, next.found);
+    next.trail = null;
+    next.selected = null;
+    if (!cells || cells.length < 2) {
       next.toast = "Look again.";
       next.toastMs = 700;
-      next.selected = null;
       return next;
     }
     mark(next, level, cells);
     return next;
   }
+  if (input.tracking) {
+    next.trail = aimedLine(level, input.x, input.y, input.x2, input.y2, next.found);
+    return next;
+  }
   if (!input.tap) return next;
-  const cell = cellAt(input.x, input.y, level.size);
+  const cell = chooseTap(input.x, input.y, level, next.selected, next.found);
   if (!cell) {
     next.selected = null;
     return next;
@@ -160,6 +274,19 @@ export function tickHunt(state: HuntState, input: HuntInput, dt: number): HuntSt
   }
   if (next.selected.x === cell.x && next.selected.y === cell.y) {
     next.selected = null;
+    return next;
+  }
+  const box = metrics(level.size);
+  const aimed = aimedLine(
+    level,
+    box.originX + next.selected.x * box.tile + box.tile / 2,
+    box.originY + next.selected.y * box.tile + box.tile / 2,
+    input.x,
+    input.y,
+    next.found,
+  );
+  if (aimed && aimed.length > 1 && knownWord(level, aimed)) {
+    mark(next, level, aimed);
     return next;
   }
   const cells = lineBetween(next.selected, cell, level.size);

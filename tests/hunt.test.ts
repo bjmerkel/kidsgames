@@ -7,6 +7,11 @@ function point(size: number, x: number, y: number): { x: number; y: number } {
   return { x: box.originX + x * box.tile + 4, y: box.originY + y * box.tile + 4 };
 }
 
+function center(size: number, x: number, y: number): { x: number; y: number } {
+  const box = metrics(size);
+  return { x: box.originX + x * box.tile + box.tile / 2, y: box.originY + y * box.tile + box.tile / 2 };
+}
+
 function drag(state: HuntState, x: number, y: number, x2: number, y2: number): HuntState {
   const size = HUNT_LEVELS[state.levelIndex].size;
   const start = point(size, x, y);
@@ -121,6 +126,66 @@ describe("word hunt", () => {
     state = advanceHunt(state);
     expect(state.levelIndex).toBe(0);
     expect(state.score).toBe(0);
+  });
+
+  it("selects the nearest letter when a tap lands just outside the grid", () => {
+    const box = metrics(8);
+    const state = tickHunt(createHunt(0), { ...blankHuntInput(), tap: true, x: box.originX - box.tile * 0.4, y: box.originY + box.tile * 0.4 }, 16);
+    expect(state.selected).toEqual({ x: 0, y: 0 });
+    const far = tickHunt(createHunt(0), { ...blankHuntInput(), tap: true, x: box.originX - box.tile * 1.2, y: box.originY - box.tile * 1.2 }, 16);
+    expect(far.selected).toBeNull();
+  });
+
+  it("finds a word when the drag slips off the row or stops a letter early", () => {
+    const level = HUNT_LEVELS[0];
+    const meteor = level.placed.find((place) => place.word === "METEOR");
+    const planet = level.placed.find((place) => place.word === "PLANET");
+    expect(meteor).toBeTruthy();
+    expect(planet).toBeTruthy();
+    if (!meteor || !planet) return;
+    const meteorEnd = meteor.cells[meteor.cells.length - 1];
+    const slipped = center(level.size, meteorEnd.x, meteorEnd.y + 1);
+    const start = center(level.size, meteor.cells[0].x, meteor.cells[0].y);
+    let state = tickHunt(createHunt(0), { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: slipped.x, y2: slipped.y }, 16);
+    expect(state.found.map((found) => found.word)).toEqual(["METEOR"]);
+
+    const shortEnd = center(level.size, meteorEnd.x - 1, meteorEnd.y);
+    state = tickHunt(createHunt(0), { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: shortEnd.x, y2: shortEnd.y }, 16);
+    expect(state.found.map((found) => found.word)).toEqual(["METEOR"]);
+
+    const planetEnd = planet.cells[planet.cells.length - 1];
+    const early = center(level.size, planet.cells[0].x - 1, planet.cells[0].y);
+    const last = center(level.size, planetEnd.x, planetEnd.y);
+    state = tickHunt(createHunt(0), { ...blankHuntInput(), drag: true, x: early.x, y: early.y, x2: last.x, y2: last.y }, 16);
+    expect(state.found.map((found) => found.word)).toEqual(["PLANET"]);
+  });
+
+  it("finds a diagonal word when the last letter is one cell off", () => {
+    const level = HUNT_LEVELS[3];
+    const equator = level.placed.find((place) => place.word === "EQUATOR");
+    expect(equator).toBeTruthy();
+    if (!equator) return;
+    const end = equator.cells[equator.cells.length - 1];
+    const start = center(level.size, equator.cells[0].x, equator.cells[0].y);
+    const slipped = center(level.size, end.x, end.y + 1);
+    const state = tickHunt(createHunt(3), { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: slipped.x, y2: slipped.y }, 16);
+    expect(state.found.map((found) => found.word)).toEqual(["EQUATOR"]);
+  });
+
+  it("shows the snapped letters while the finger is still down", () => {
+    const level = HUNT_LEVELS[0];
+    const meteor = level.placed.find((place) => place.word === "METEOR");
+    expect(meteor).toBeTruthy();
+    if (!meteor) return;
+    const end = meteor.cells[meteor.cells.length - 1];
+    const start = center(level.size, meteor.cells[0].x, meteor.cells[0].y);
+    const slipped = center(level.size, end.x, end.y + 1);
+    let state = tickHunt(createHunt(0), { ...blankHuntInput(), tracking: true, x: start.x, y: start.y, x2: slipped.x, y2: slipped.y }, 16);
+    expect(state.found).toHaveLength(0);
+    expect(state.score).toBe(0);
+    expect(state.trail?.map((cell) => level.grid[cell.y][cell.x]).join("")).toBe("METEOR");
+    state = tickHunt(state, blankHuntInput(), 16);
+    expect(state.trail).toBeNull();
   });
 
   it("pauses without accepting a word", () => {
