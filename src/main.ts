@@ -28,8 +28,7 @@ import { drawWaddle } from "./waddle/draw";
 import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
 import { drawSpot } from "./spot/draw";
-import { SPOT_LEVELS } from "./spot/scenes";
-import { advanceSpot, blankSpotInput, createSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
+import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
@@ -490,7 +489,7 @@ function waddleInput(): WaddleInput {
 }
 
 function openSpot(): void {
-  spotState = createSpot(0);
+  spotState = startSpot();
   spotAcc = 0;
   spotEdge = blankSpotInput();
   syncSpotChrome();
@@ -498,7 +497,7 @@ function openSpot(): void {
 
 function syncSpotChrome(): void {
   if (!spotState) return;
-  const level = SPOT_LEVELS[spotState.levelIndex];
+  const level = spotState.levels[spotState.levelIndex];
   if (spotHeading) spotHeading.textContent = spotState.phase === "done" ? "Silk Spot" : level.name;
   const live = spotState.phase === "playing" || spotState.phase === "paused";
   spotPad?.querySelectorAll<HTMLButtonElement>("button[data-spot]").forEach((button) => {
@@ -506,7 +505,7 @@ function syncSpotChrome(): void {
   });
   if (spotNext) {
     spotNext.hidden = live;
-    spotNext.textContent = spotState.phase === "done" ? "Play again" : spotState.levelIndex >= SPOT_LEVELS.length - 1 ? "The last picture" : "Next picture";
+    spotNext.textContent = spotState.phase === "done" ? "Play again" : spotState.levelIndex >= spotState.levels.length - 1 ? "The last picture" : "Next picture";
   }
 }
 

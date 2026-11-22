@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { PANEL_H, PANEL_W, PANEL_X, PANEL_TOP, SPOT_LEVELS } from "../src/spot/scenes";
-import { advanceSpot, blankSpotInput, createSpot, panelLocal, tickSpot } from "../src/spot/sim";
+import { describe, expect, it, vi } from "vitest";
+import { dealSpot, PANEL_H, PANEL_W, PANEL_X, PANEL_TOP, SPOT_LEVELS } from "../src/spot/scenes";
+import { advanceSpot, blankSpotInput, createSpot, panelLocal, startSpot, tickSpot } from "../src/spot/sim";
 
 const STEP = 1000 / 60;
 
@@ -128,6 +128,61 @@ describe("silk spot", () => {
     expect(state.levelIndex).toBe(0);
     expect(state.score).toBe(0);
     expect(state.phase).toBe("playing");
+  });
+
+  it("deals a new set and keeps it until the game ends", () => {
+    const first = startSpot(11);
+    const same = startSpot(11);
+    const other = startSpot(29);
+    const stamp = (levels: typeof first.levels) => levels.map((level) => [level.name, ...level.diffs.map((diff) => `${diff.id}:${diff.x},${diff.y}`)]);
+    expect(stamp(same.levels)).toEqual(stamp(first.levels));
+    expect(stamp(other.levels)).not.toEqual(stamp(first.levels));
+    const counts = first.levels.map((level) => level.diffs.length);
+    expect(counts).toEqual([...counts].sort((a, b) => a - b));
+    for (const count of new Set(counts)) {
+      const dealt = first.levels.filter((level) => level.diffs.length === count).map((level) => level.name).sort();
+      const catalog = SPOT_LEVELS.filter((level) => level.diffs.length === count).map((level) => level.name).sort();
+      expect(dealt).toEqual(catalog);
+    }
+    for (const level of first.levels) {
+      const original = SPOT_LEVELS.find((picture) => picture.name === level.name);
+      expect(level.diffs.map((diff) => diff.id)).toEqual(original?.diffs.map((diff) => diff.id));
+      for (const diff of level.diffs) {
+        expect(diff.x).toBeGreaterThan(30);
+        expect(diff.y).toBeGreaterThan(24);
+        expect(diff.x).toBeLessThan(PANEL_W - 30);
+        expect(diff.y).toBeLessThan(PANEL_H - 24);
+      }
+      for (let i = 0; i < level.diffs.length; i += 1) {
+        for (let j = i + 1; j < level.diffs.length; j += 1) {
+          const a = level.diffs[i];
+          const b = level.diffs[j];
+          expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(a.r + b.r);
+        }
+      }
+    }
+    const moved = first.levels.some((level) => {
+      const original = SPOT_LEVELS.find((picture) => picture.name === level.name);
+      return level.diffs.some((diff, index) => diff.x !== original?.diffs[index].x || diff.y !== original?.diffs[index].y);
+    });
+    expect(moved).toBe(true);
+
+    let state = first;
+    for (const diff of state.diffs) state = tap(state, PANEL_X + diff.x, PANEL_TOP + diff.y);
+    state = advanceSpot(state);
+    expect(state.levelIndex).toBe(1);
+    expect(state.levels[1].name).toBe(first.levels[1].name);
+    expect(state.diffs.map((diff) => [diff.id, diff.x, diff.y])).toEqual(first.levels[1].diffs.map((diff) => [diff.id, diff.x, diff.y]));
+    expect(state.reshuffle).toBe(true);
+
+    state.phase = "done";
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.42);
+    const replay = advanceSpot(state);
+    random.mockRestore();
+    const seed = 1 + Math.floor(0.42 * 2147483646);
+    expect(replay.levelIndex).toBe(0);
+    expect(replay.score).toBe(0);
+    expect(stamp(replay.levels)).toEqual(stamp(dealSpot(seed)));
   });
 
   it("pauses and maps both pictures", () => {

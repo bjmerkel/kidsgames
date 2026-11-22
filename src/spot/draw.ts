@@ -1,23 +1,23 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, spotLevel } from "./scenes";
+import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, type SpotLevel } from "./scenes";
 import type { SpotState } from "./sim";
 
 export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs: number): void {
-  const level = spotLevel(state.levelIndex);
+  const level = state.levels[state.levelIndex];
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
   ctx.fillStyle = "#d7ecf3";
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
   const found = new Set(state.diffs.filter((diff) => diff.found).map((diff) => diff.id));
-  drawPanel(ctx, state.levelIndex, false, PANEL_X, PANEL_TOP, found, state.hintId, nowMs);
-  drawPanel(ctx, state.levelIndex, true, PANEL_X, PANEL_BOTTOM, found, state.hintId, nowMs);
+  drawPanel(ctx, level, false, PANEL_X, PANEL_TOP, found, state.hintId, nowMs);
+  drawPanel(ctx, level, true, PANEL_X, PANEL_BOTTOM, found, state.hintId, nowMs);
 
   ctx.fillStyle = "#1c1915";
   ctx.textAlign = "left";
   ctx.font = "700 20px Georgia, serif";
   ctx.fillText(level.name, 16, 28);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Level ${state.levelIndex + 1} of ${SPOT_LEVELS.length}`, 16, 50);
+  ctx.fillText(`Level ${state.levelIndex + 1} of ${state.levels.length}`, 16, 50);
   ctx.fillText(`Score ${state.score}`, 16, 70);
   const left = state.diffs.filter((diff) => !diff.found).length;
   ctx.textAlign = "right";
@@ -37,12 +37,12 @@ export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs:
   }
   if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to look again.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "You found every change.");
-  if (state.phase === "done") banner(ctx, `You finished all ${SPOT_LEVELS.length} levels.`, "Every picture is solved.");
+  if (state.phase === "done") banner(ctx, `You finished all ${state.levels.length} levels.`, "Every picture is solved.");
 }
 
 function drawPanel(
   ctx: CanvasRenderingContext2D,
-  levelIndex: number,
+  level: SpotLevel,
   changed: boolean,
   ox: number,
   oy: number,
@@ -50,7 +50,6 @@ function drawPanel(
   hintId: string | null,
   nowMs: number,
 ): void {
-  const level = spotLevel(levelIndex);
   ctx.save();
   ctx.beginPath();
   ctx.rect(ox, oy, PANEL_W, PANEL_H);

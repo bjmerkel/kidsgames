@@ -284,3 +284,75 @@ export function spotLevel(index: number): SpotLevel {
   const safe = ((index % SPOT_LEVELS.length) + SPOT_LEVELS.length) % SPOT_LEVELS.length;
   return SPOT_LEVELS[safe];
 }
+
+const SKY = new Set(["balloon", "bird", "star", "moon", "cloud", "kite", "butterfly", "smoke"]);
+const GROUND = new Set(["flower", "puddle", "cat", "snack", "acorn"]);
+
+function rng(seed: number): () => number {
+  let state = (seed >>> 0) || 1;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
+function shuffle<T>(items: T[], random: () => number): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    const swap = next[i];
+    next[i] = next[j];
+    next[j] = swap;
+  }
+  return next;
+}
+
+function zoneFor(id: string): { y0: number; y1: number } {
+  const kind = id.replace(/\d+$/, "");
+  if (SKY.has(kind)) return { y0: 36, y1: 110 };
+  if (GROUND.has(kind)) return { y0: 190, y1: 240 };
+  return { y0: 96, y1: 200 };
+}
+
+function layoutDiffs(diffs: SpotDiff[], random: () => number): SpotDiff[] {
+  const place = (wide: boolean): SpotDiff[] | null => {
+    const next: SpotDiff[] = [];
+    for (const diff of diffs) {
+      const zone = wide ? { y0: 36, y1: 240 } : zoneFor(diff.id);
+      let chosen: SpotDiff | null = null;
+      for (let tries = 0; tries < 80; tries += 1) {
+        const x = 40 + Math.floor(random() * (PANEL_W - 80));
+        const y = zone.y0 + Math.floor(random() * (zone.y1 - zone.y0 + 1));
+        const candidate = { ...diff, x, y };
+        const clear = next.every((other) => Math.hypot(other.x - x, other.y - y) > other.r + diff.r);
+        if (clear) {
+          chosen = candidate;
+          break;
+        }
+      }
+      if (!chosen) return null;
+      next.push(chosen);
+    }
+    return next;
+  };
+  for (const wide of [false, true]) {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const laid = place(wide);
+      if (laid) return laid;
+    }
+  }
+  return diffs.map((diff) => ({ ...diff }));
+}
+
+export function dealSpot(seed: number): SpotLevel[] {
+  const random = rng(seed);
+  const groups = new Map<number, SpotLevel[]>();
+  for (const picture of SPOT_LEVELS) {
+    const group = groups.get(picture.diffs.length) ?? [];
+    group.push(picture);
+    groups.set(picture.diffs.length, group);
+  }
+  return [...groups.keys()]
+    .sort((a, b) => a - b)
+    .flatMap((count) => shuffle(groups.get(count) ?? [], random).map((picture) => ({ ...picture, hero: { ...picture.hero }, diffs: layoutDiffs(picture.diffs, random) })));
+}

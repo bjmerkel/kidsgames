@@ -1,4 +1,4 @@
-import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, spotLevel, type SpotDiff } from "./scenes";
+import { dealSpot, PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, type SpotDiff, type SpotLevel } from "./scenes";
 
 export type SpotPhase = "playing" | "paused" | "clear" | "done";
 
@@ -23,6 +23,8 @@ export type SpotState = {
   toast: string;
   toastMs: number;
   elapsedMs: number;
+  levels: SpotLevel[];
+  reshuffle: boolean;
 };
 
 const CLEAR_BONUS = 250;
@@ -32,11 +34,13 @@ export function blankSpotInput(): SpotInput {
   return { tap: false, x: 0, y: 0, pause: false, confirm: false, hint: false };
 }
 
-export function createSpot(levelIndex = 0, score = 0): SpotState {
-  const level = spotLevel(levelIndex);
+export function createSpot(levelIndex = 0, score = 0, levels: SpotLevel[] = SPOT_LEVELS): SpotState {
+  const list = levels.length > 0 ? levels : SPOT_LEVELS;
+  const safe = Math.max(0, Math.min(list.length - 1, levelIndex));
+  const level = list[safe];
   return {
     phase: "playing",
-    levelIndex: spotLevel(levelIndex) === level ? Math.max(0, Math.min(SPOT_LEVELS.length - 1, levelIndex)) : 0,
+    levelIndex: safe,
     score,
     misses: 0,
     hintId: null,
@@ -44,7 +48,15 @@ export function createSpot(levelIndex = 0, score = 0): SpotState {
     toast: level.blurb,
     toastMs: 1800,
     elapsedMs: 0,
+    levels: list,
+    reshuffle: false,
   };
+}
+
+export function startSpot(seed = 1 + Math.floor(Math.random() * 2147483646)): SpotState {
+  const state = createSpot(0, 0, dealSpot(seed));
+  state.reshuffle = true;
+  return state;
 }
 
 export function panelLocal(x: number, y: number): { x: number; y: number } | null {
@@ -118,14 +130,16 @@ export function tickSpot(state: SpotState, input: SpotInput, dt: number): SpotSt
 }
 
 export function advanceSpot(state: SpotState): SpotState {
-  if (state.phase === "done") return createSpot(0, 0);
+  if (state.phase === "done") return state.reshuffle ? startSpot() : createSpot(0, 0);
   if (state.phase !== "clear") return state;
-  if (state.levelIndex >= SPOT_LEVELS.length - 1) {
+  if (state.levelIndex >= state.levels.length - 1) {
     const done = structuredClone(state);
     done.phase = "done";
-    done.toast = `You finished all ${SPOT_LEVELS.length} levels.`;
+    done.toast = `You finished all ${state.levels.length} levels.`;
     done.toastMs = 0;
     return done;
   }
-  return createSpot(state.levelIndex + 1, state.score);
+  const next = createSpot(state.levelIndex + 1, state.score, state.levels);
+  next.reshuffle = state.reshuffle;
+  return next;
 }
