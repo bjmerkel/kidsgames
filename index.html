@@ -33,12 +33,27 @@
         Web Rascal
         <small>Run, jump, and swing. 5 levels.</small>
       </button>
+      <button type="button" id="play-capy" class="game-card">
+        Capy Swing
+        <small>Swing the vines. 5 levels.</small>
+      </button>
+<button type="button" id="play-waddle" class="game-card">
+        Ice Waddle
+        <small>Eat the fish. Dodge the seals. 5 mazes.</small>
+      </button>
+      <button type="button" id="open-settings" class="game-card">
+        Level settings
+        <small>Change the timer, stones, holds, cars, and swings for each level.</small>
+      </button>
     </section>
     <section id="crab" hidden>
       <header>
         <p class="emery">Emery is awesome</p>
         <h1>Hermit Crab Crossing</h1>
-        <button type="button" id="crab-games">Games</button>
+        <div class="head-actions">
+          <button type="button" id="crab-settings">Settings</button>
+          <button type="button" id="crab-games">Games</button>
+        </div>
       </header>
       <div id="board">
         <div id="stage">
@@ -135,6 +150,55 @@
           <button type="button" id="rascal-next" hidden>Next level</button>
         </div>
       </div>
+    </section>
+    <section id="capy" hidden>
+      <header class="slim-head">
+        <button type="button" id="capy-games">Games</button>
+        <p id="capy-heading">Capy Swing</p>
+      </header>
+      <div id="capy-board">
+        <div id="capy-stage">
+          <canvas id="capy-canvas" width="480" height="720" aria-label="Capy Swing"></canvas>
+        </div>
+        <div id="capy-pad">
+          <button type="button" data-capy="left">Left</button>
+          <button type="button" data-capy="right">Right</button>
+          <button type="button" data-capy="jump">Jump</button>
+          <button type="button" data-capy="pause">Pause</button>
+          <button type="button" id="capy-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+<section id="waddle" hidden>
+      <header class="slim-head">
+        <button type="button" id="waddle-games">Games</button>
+        <p id="waddle-heading">Ice Waddle</p>
+      </header>
+      <div id="waddle-board">
+        <div id="waddle-stage">
+          <canvas id="waddle-canvas" width="480" height="720" aria-label="Ice Waddle"></canvas>
+        </div>
+        <div id="waddle-pad">
+          <button type="button" data-waddle="up">Up</button>
+          <button type="button" data-waddle="left">Left</button>
+          <button type="button" data-waddle="right">Right</button>
+          <button type="button" data-waddle="down">Down</button>
+          <button type="button" data-waddle="pause">Pause</button>
+          <button type="button" id="waddle-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="settings" hidden>
+      <header>
+        <p class="emery">Emery is awesome</p>
+        <h1>Level settings</h1>
+        <div class="head-actions">
+          <button type="button" id="settings-play">Play</button>
+          <button type="button" id="settings-games">Games</button>
+        </div>
+      </header>
+      <div id="tune-tabs" class="level-tabs" role="tablist" aria-label="Levels"></div>
+      <div id="tune-form"></div>
     </section>
     <script type="module" src="/src/main.ts"></script>
   </body>
