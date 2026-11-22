@@ -1,4 +1,4 @@
-import { HUNT_LEVELS, huntLevel, metrics, type Point, type WordPuzzle } from "./puzzles";
+import { dealHunt, HUNT_LEVELS, metrics, type Point, type WordPuzzle } from "./puzzles";
 
 export type HuntPhase = "playing" | "paused" | "clear" | "done";
 
@@ -28,6 +28,8 @@ export type HuntState = {
   toast: string;
   toastMs: number;
   elapsedMs: number;
+  levels: WordPuzzle[];
+  reshuffle: boolean;
 };
 
 const FIND_POINTS = 100;
@@ -54,9 +56,10 @@ export function cellAt(px: number, py: number, size: number): Point | null {
   return { x, y };
 }
 
-export function createHunt(levelIndex = 0, score = 0): HuntState {
-  const safe = Math.max(0, Math.min(HUNT_LEVELS.length - 1, levelIndex));
-  const level = huntLevel(safe);
+export function createHunt(levelIndex = 0, score = 0, levels: WordPuzzle[] = HUNT_LEVELS): HuntState {
+  const list = levels.length > 0 ? levels : HUNT_LEVELS;
+  const safe = Math.max(0, Math.min(list.length - 1, levelIndex));
+  const level = list[safe];
   return {
     phase: "playing",
     levelIndex: safe,
@@ -68,7 +71,15 @@ export function createHunt(levelIndex = 0, score = 0): HuntState {
     toast: level.blurb,
     toastMs: 1800,
     elapsedMs: 0,
+    levels: list,
+    reshuffle: false,
   };
+}
+
+export function startHunt(seed = 1 + Math.floor(Math.random() * 2147483646)): HuntState {
+  const state = createHunt(0, 0, dealHunt(seed));
+  state.reshuffle = true;
+  return state;
 }
 
 function lineBetween(a: Point, b: Point, size: number): Point[] | null {
@@ -226,7 +237,7 @@ function mark(state: HuntState, level: WordPuzzle, cells: Point[]): void {
 export function tickHunt(state: HuntState, input: HuntInput, dt: number): HuntState {
   const step = Math.max(0, Math.min(50, dt));
   const next = structuredClone(state);
-  const level = huntLevel(next.levelIndex);
+  const level = next.levels[next.levelIndex];
   next.elapsedMs += step;
   next.toastMs = Math.max(0, next.toastMs - step);
   if (next.phase === "paused") {
@@ -299,14 +310,16 @@ export function tickHunt(state: HuntState, input: HuntInput, dt: number): HuntSt
 }
 
 export function advanceHunt(state: HuntState): HuntState {
-  if (state.phase === "done") return createHunt(0, 0);
+  if (state.phase === "done") return state.reshuffle ? startHunt() : createHunt(0, 0);
   if (state.phase !== "clear") return state;
-  if (state.levelIndex >= HUNT_LEVELS.length - 1) {
+  if (state.levelIndex >= state.levels.length - 1) {
     const done = structuredClone(state);
     done.phase = "done";
-    done.toast = `You finished all ${HUNT_LEVELS.length} levels.`;
+    done.toast = `You finished all ${state.levels.length} levels.`;
     done.toastMs = 0;
     return done;
   }
-  return createHunt(state.levelIndex + 1, state.score);
+  const next = createHunt(state.levelIndex + 1, state.score, state.levels);
+  next.reshuffle = state.reshuffle;
+  return next;
 }

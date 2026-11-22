@@ -111,42 +111,71 @@ function occurrences(grid: string[], word: string, size: number): number {
   return count;
 }
 
-function layout(name: string, blurb: string, words: string[], size: number, dirs: Dir[]): WordPuzzle {
-  for (let seed = 1; seed < 8000; seed += 1) {
-    const built = tryBuild(words, size, dirs, seed);
+type PuzzleSpec = {
+  name: string;
+  blurb: string;
+  words: string[];
+  size: number;
+  dirs: Dir[];
+};
+
+function buildSpec(spec: PuzzleSpec, seedStart: number): WordPuzzle {
+  for (let step = 0; step < 8000; step += 1) {
+    const seed = (seedStart + step) >>> 0;
+    if (seed === 0) continue;
+    const built = tryBuild(spec.words, spec.size, spec.dirs, seed);
     if (!built) continue;
-    if (words.some((word) => occurrences(built.grid, word, size) !== 1)) continue;
-    return { name, blurb, words: [...words], size, grid: built.grid, placed: built.placed };
+    if (spec.words.some((word) => occurrences(built.grid, word, spec.size) !== 1)) continue;
+    return { name: spec.name, blurb: spec.blurb, words: [...spec.words], size: spec.size, grid: built.grid, placed: built.placed };
   }
-  throw new Error(`no word hunt layout for ${name}`);
+  throw new Error(`no word hunt layout for ${spec.name}`);
+}
+
+function shuffle<T>(items: T[], random: () => number): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    const swap = next[i];
+    next[i] = next[j];
+    next[j] = swap;
+  }
+  return next;
 }
 
 const ACROSS = "Words go across or down.";
 const DIAGONAL = "Words can run on a diagonal.";
 const ANY = "Words can run any straight line.";
 
-export const HUNT_LEVELS: WordPuzzle[] = [
-  layout("Space Lab", ACROSS, ["PLANET", "ORBIT", "COMET", "GRAVITY", "METEOR", "SOLAR"], 8, ACROSS_DOWN),
-  layout("Weather Watch", ACROSS, ["CLOUD", "STORM", "BREEZE", "HUMID", "CYCLONE", "FORECAST"], 8, ACROSS_DOWN),
-  layout("Matter Lab", ACROSS, ["SOLID", "LIQUID", "MELTING", "FREEZE", "VAPOR", "DENSITY"], 8, ACROSS_DOWN),
-  layout("Waterways", ACROSS, ["OCEAN", "RIVER", "DROPLET", "RUNOFF", "GLACIER", "CURRENT"], 8, ACROSS_DOWN),
-  layout("Human Body", ACROSS, ["MUSCLE", "HEART", "LUNGS", "BRAIN", "SKELETON", "NERVES"], 8, ACROSS_DOWN),
-  layout("Simple Machines", ACROSS, ["LEVER", "WHEEL", "PULLEY", "SCREW", "WEDGE", "INCLINE"], 8, ACROSS_DOWN),
-  layout("Habitats", DIAGONAL, ["HABITAT", "PREDATOR", "CLIMATE", "FOSSIL", "BIOME", "ENERGY", "ORGANISM"], 10, WITH_DIAGONAL),
-  layout("Rock Lab", DIAGONAL, ["MINERAL", "IGNEOUS", "SEDIMENT", "MAGMA", "CRYSTAL", "EROSION", "GRANITE"], 10, WITH_DIAGONAL),
-  layout("Night Sky", DIAGONAL, ["SATURN", "JUPITER", "NEBULA", "GALAXY", "ASTEROID", "ECLIPSE", "ROTATION"], 10, WITH_DIAGONAL),
-  layout("Plant Lab", DIAGONAL, ["FLOWER", "PETAL", "POLLEN", "ROOTS", "SEEDLING", "NECTAR", "BLOSSOM"], 10, WITH_DIAGONAL),
-  layout("Forces", DIAGONAL, ["FRICTION", "INERTIA", "MAGNET", "VELOCITY", "MOTION", "BALANCE", "TENSION"], 10, WITH_DIAGONAL),
-  layout("Food Webs", DIAGONAL, ["PRODUCER", "CONSUMER", "NICHE", "CANOPY", "MARSH", "FUNGUS", "SCAVENGER"], 10, WITH_DIAGONAL),
-  layout("Math Lab", "Words can run backwards.", ["FRACTION", "DECIMAL", "POLYGON", "VOLUME", "QUOTIENT", "FACTOR", "PERIMETER"], 10, ANY_LINE),
-  layout("Explorers", ANY, ["COLONY", "PIONEER", "COMPASS", "LIBERTY", "HARBOR", "TREATY", "EQUATOR", "VOYAGE"], 10, ANY_LINE),
-  layout("Story Craft", ANY, ["METAPHOR", "SUMMARY", "CONFLICT", "NARRATOR", "STANZA", "FICTION", "THEME", "DIALOGUE"], 10, ANY_LINE),
-  layout("Civics", ANY, ["SENATE", "BALLOT", "CITIZEN", "JUSTICE", "AMENDMENT", "RIGHTS", "MAYOR", "DEBATE"], 10, ANY_LINE),
-  layout("Landforms", ANY, ["CONTINENT", "PENINSULA", "LATITUDE", "ISTHMUS", "PLATEAU", "DELTA", "VALLEY", "CANYON"], 10, ANY_LINE),
-  layout("Grammar Lab", ANY, ["ADJECTIVE", "ADVERB", "PRONOUN", "SYNONYM", "ANTONYM", "PREFIX", "SUFFIX", "CLAUSE"], 10, ANY_LINE),
-  layout("Earth Forces", ANY, ["VOLCANO", "TSUNAMI", "MANTLE", "CRUST", "GEYSER", "TREMOR", "CINDER", "BASALT"], 10, ANY_LINE),
-  layout("Science Fair", ANY, ["HYPOTHESIS", "VARIABLE", "CONTROL", "OBSERVE", "RESULT", "SAMPLE", "EVIDENCE", "METHOD"], 10, ANY_LINE),
+const SPECS: PuzzleSpec[] = [
+  { name: "Space Lab", blurb: ACROSS, words: ["PLANET", "ORBIT", "COMET", "GRAVITY", "METEOR", "SOLAR"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Weather Watch", blurb: ACROSS, words: ["CLOUD", "STORM", "BREEZE", "HUMID", "CYCLONE", "FORECAST"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Matter Lab", blurb: ACROSS, words: ["SOLID", "LIQUID", "MELTING", "FREEZE", "VAPOR", "DENSITY"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Waterways", blurb: ACROSS, words: ["OCEAN", "RIVER", "DROPLET", "RUNOFF", "GLACIER", "CURRENT"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Human Body", blurb: ACROSS, words: ["MUSCLE", "HEART", "LUNGS", "BRAIN", "SKELETON", "NERVES"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Simple Machines", blurb: ACROSS, words: ["LEVER", "WHEEL", "PULLEY", "SCREW", "WEDGE", "INCLINE"], size: 8, dirs: ACROSS_DOWN },
+  { name: "Habitats", blurb: DIAGONAL, words: ["HABITAT", "PREDATOR", "CLIMATE", "FOSSIL", "BIOME", "ENERGY", "ORGANISM"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Rock Lab", blurb: DIAGONAL, words: ["MINERAL", "IGNEOUS", "SEDIMENT", "MAGMA", "CRYSTAL", "EROSION", "GRANITE"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Night Sky", blurb: DIAGONAL, words: ["SATURN", "JUPITER", "NEBULA", "GALAXY", "ASTEROID", "ECLIPSE", "ROTATION"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Plant Lab", blurb: DIAGONAL, words: ["FLOWER", "PETAL", "POLLEN", "ROOTS", "SEEDLING", "NECTAR", "BLOSSOM"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Forces", blurb: DIAGONAL, words: ["FRICTION", "INERTIA", "MAGNET", "VELOCITY", "MOTION", "BALANCE", "TENSION"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Food Webs", blurb: DIAGONAL, words: ["PRODUCER", "CONSUMER", "NICHE", "CANOPY", "MARSH", "FUNGUS", "SCAVENGER"], size: 10, dirs: WITH_DIAGONAL },
+  { name: "Math Lab", blurb: "Words can run backwards.", words: ["FRACTION", "DECIMAL", "POLYGON", "VOLUME", "QUOTIENT", "FACTOR", "PERIMETER"], size: 10, dirs: ANY_LINE },
+  { name: "Explorers", blurb: ANY, words: ["COLONY", "PIONEER", "COMPASS", "LIBERTY", "HARBOR", "TREATY", "EQUATOR", "VOYAGE"], size: 10, dirs: ANY_LINE },
+  { name: "Story Craft", blurb: ANY, words: ["METAPHOR", "SUMMARY", "CONFLICT", "NARRATOR", "STANZA", "FICTION", "THEME", "DIALOGUE"], size: 10, dirs: ANY_LINE },
+  { name: "Civics", blurb: ANY, words: ["SENATE", "BALLOT", "CITIZEN", "JUSTICE", "AMENDMENT", "RIGHTS", "MAYOR", "DEBATE"], size: 10, dirs: ANY_LINE },
+  { name: "Landforms", blurb: ANY, words: ["CONTINENT", "PENINSULA", "LATITUDE", "ISTHMUS", "PLATEAU", "DELTA", "VALLEY", "CANYON"], size: 10, dirs: ANY_LINE },
+  { name: "Grammar Lab", blurb: ANY, words: ["ADJECTIVE", "ADVERB", "PRONOUN", "SYNONYM", "ANTONYM", "PREFIX", "SUFFIX", "CLAUSE"], size: 10, dirs: ANY_LINE },
+  { name: "Earth Forces", blurb: ANY, words: ["VOLCANO", "TSUNAMI", "MANTLE", "CRUST", "GEYSER", "TREMOR", "CINDER", "BASALT"], size: 10, dirs: ANY_LINE },
+  { name: "Science Fair", blurb: ANY, words: ["HYPOTHESIS", "VARIABLE", "CONTROL", "OBSERVE", "RESULT", "SAMPLE", "EVIDENCE", "METHOD"], size: 10, dirs: ANY_LINE },
 ];
+
+export const HUNT_LEVELS: WordPuzzle[] = SPECS.map((spec) => buildSpec(spec, 1));
+
+export function dealHunt(seed: number): WordPuzzle[] {
+  const random = rng((seed >>> 0) || 1);
+  const bands = [SPECS.slice(0, 6), SPECS.slice(6, 12), SPECS.slice(12)];
+  return bands.flatMap((band) => shuffle(band, random)).map((spec) => buildSpec(spec, 1 + Math.floor(random() * 6000)));
+}
 
 export function huntLevel(index: number): WordPuzzle {
   const safe = Math.max(0, Math.min(HUNT_LEVELS.length - 1, index));

@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { HUNT_LEVELS, metrics } from "../src/hunt/puzzles";
-import { advanceHunt, blankHuntInput, cellAt, createHunt, tickHunt, type HuntState } from "../src/hunt/sim";
+import { describe, expect, it, vi } from "vitest";
+import { dealHunt, HUNT_LEVELS, metrics } from "../src/hunt/puzzles";
+import { advanceHunt, blankHuntInput, cellAt, createHunt, startHunt, tickHunt, type HuntState } from "../src/hunt/sim";
 
 function point(size: number, x: number, y: number): { x: number; y: number } {
   const box = metrics(size);
@@ -44,7 +44,7 @@ function countWord(level: (typeof HUNT_LEVELS)[number], word: string): number {
 }
 
 function drag(state: HuntState, x: number, y: number, x2: number, y2: number): HuntState {
-  const size = HUNT_LEVELS[state.levelIndex].size;
+  const size = state.levels[state.levelIndex].size;
   const start = point(size, x, y);
   const end = point(size, x2, y2);
   return tickHunt(state, { ...blankHuntInput(), drag: true, x: start.x, y: start.y, x2: end.x, y2: end.y }, 16);
@@ -242,6 +242,41 @@ describe("word hunt", () => {
     expect(state.trail?.map((cell) => level.grid[cell.y][cell.x]).join("")).toBe("METEOR");
     state = tickHunt(state, blankHuntInput(), 16);
     expect(state.trail).toBeNull();
+  });
+
+  it("deals a new hunt and keeps it until the game ends", () => {
+    const first = startHunt(11);
+    const same = startHunt(11);
+    const other = startHunt(29);
+    expect(same.levels.map((level) => [level.name, ...level.grid])).toEqual(first.levels.map((level) => [level.name, ...level.grid]));
+    const changed = other.levels.some((level, index) => level.name !== first.levels[index].name || level.grid.join("") !== first.levels[index].grid.join(""));
+    expect(changed).toBe(true);
+    expect(first.levels.slice(0, 6).map((level) => level.name).sort()).toEqual(HUNT_LEVELS.slice(0, 6).map((level) => level.name).sort());
+    expect(first.levels.slice(6, 12).map((level) => level.name).sort()).toEqual(HUNT_LEVELS.slice(6, 12).map((level) => level.name).sort());
+    expect(first.levels.slice(12).map((level) => level.name).sort()).toEqual(HUNT_LEVELS.slice(12).map((level) => level.name).sort());
+    for (const level of first.levels) {
+      expect(level.placed).toHaveLength(level.words.length);
+      for (const place of level.placed) expect(countWord(level, place.word)).toBe(1);
+    }
+
+    let state = first;
+    for (const place of state.levels[0].placed) {
+      const last = place.cells[place.cells.length - 1];
+      state = drag(state, place.cells[0].x, place.cells[0].y, last.x, last.y);
+    }
+    state = advanceHunt(state);
+    expect(state.levelIndex).toBe(1);
+    expect(state.levels[1].grid).toEqual(first.levels[1].grid);
+    expect(state.reshuffle).toBe(true);
+
+    state.phase = "done";
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.42);
+    const replay = advanceHunt(state);
+    random.mockRestore();
+    const seed = 1 + Math.floor(0.42 * 2147483646);
+    expect(replay.levelIndex).toBe(0);
+    expect(replay.score).toBe(0);
+    expect(replay.levels.map((level) => [level.name, ...level.grid])).toEqual(dealHunt(seed).map((level) => [level.name, ...level.grid]));
   });
 
   it("pauses without accepting a word", () => {

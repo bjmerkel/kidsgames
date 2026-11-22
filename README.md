@@ -16,7 +16,7 @@ Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for
 
 A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. The highlight snaps onto a straight line while you drag, and a near miss still counts. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
 
-The score carries from puzzle to puzzle. There are 20 puzzles. The first ones hide words across or down. Later puzzles add diagonals, then backwards words, in science, math, history, and reading.
+The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shuffles them inside three groups and hides the words in a new place. The first group goes across or down. The next group adds diagonals. The last group can run any straight line, including backwards, in science, math, history, and reading.
 
 ## Berry Burst
 
