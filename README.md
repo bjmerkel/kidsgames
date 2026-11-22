@@ -1,6 +1,6 @@
 # Kids Games
 
-Nine games live here. From the first screen, pick one.
+Ten games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -11,6 +11,12 @@ A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balance
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
 Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for a sharp turn. After all 5 races, the cup shows who scored the most points.
+
+## Word Hunt
+
+A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
+
+The score carries from puzzle to puzzle. The five puzzles are Space Lab, Habitats, Math Lab, Explorers, and Story Craft. Later puzzles let words run on a diagonal and backwards.
 
 ## Berry Burst
 
@@ -82,6 +88,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
+- In Word Hunt, tap the first letter and then the last letter, or drag between them. H or Hint glows a starting letter.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

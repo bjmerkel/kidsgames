@@ -49,6 +49,10 @@
         Berry Burst
         <small>Swap and match three. 5 gardens.</small>
       </button>
+      <button type="button" id="play-hunt" class="game-card">
+        Word Hunt
+        <small>Find the hidden words. 5 puzzles.</small>
+      </button>
       <button type="button" id="open-settings" class="game-card">
         Level settings
         <small>Change the timer, stones, holds, cars, and swings for each level.</small>
@@ -225,6 +229,22 @@
           <button type="button" data-burst="hint">Hint</button>
           <button type="button" data-burst="pause">Pause</button>
           <button type="button" id="burst-next" hidden>Next garden</button>
+        </div>
+      </div>
+    </section>
+    <section id="hunt" hidden>
+      <header class="slim-head">
+        <button type="button" id="hunt-games">Games</button>
+        <p id="hunt-heading">Word Hunt</p>
+      </header>
+      <div id="hunt-board">
+        <div id="hunt-stage">
+          <canvas id="hunt-canvas" width="480" height="720" aria-label="Word Hunt"></canvas>
+        </div>
+        <div id="hunt-pad">
+          <button type="button" data-hunt="hint">Hint</button>
+          <button type="button" data-hunt="pause">Pause</button>
+          <button type="button" id="hunt-next" hidden>Next puzzle</button>
         </div>
       </div>
     </section>

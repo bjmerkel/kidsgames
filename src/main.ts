@@ -33,6 +33,9 @@ import { advanceSpot, blankSpotInput, createSpot, tickSpot, type SpotInput, type
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
+import { drawHunt } from "./hunt/draw";
+import { HUNT_LEVELS } from "./hunt/puzzles";
+import { advanceHunt, blankHuntInput, createHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -137,6 +140,17 @@ const burstSection = document.querySelector<HTMLElement>("#burst");
 const burstHeading = document.querySelector<HTMLElement>("#burst-heading");
 const burstNext = document.querySelector<HTMLButtonElement>("#burst-next");
 const burstPad = document.querySelector<HTMLElement>("#burst-pad");
+const huntCanvas = document.querySelector<HTMLCanvasElement>("#hunt-canvas");
+if (!huntCanvas) throw new Error("missing hunt canvas");
+const huntSurface: HTMLCanvasElement = huntCanvas;
+const huntContext = huntCanvas.getContext("2d");
+if (!huntContext) throw new Error("missing hunt context");
+const huntGfx: CanvasRenderingContext2D = huntContext;
+const huntStage = document.querySelector<HTMLElement>("#hunt-stage");
+const huntSection = document.querySelector<HTMLElement>("#hunt");
+const huntHeading = document.querySelector<HTMLElement>("#hunt-heading");
+const huntNext = document.querySelector<HTMLButtonElement>("#hunt-next");
+const huntPad = document.querySelector<HTMLElement>("#hunt-pad");
 
 const tuneStore = levelStore();
 let tunes: LevelTune[] = loadTunes(LEVELS, tuneStore);
@@ -147,7 +161,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -181,6 +195,10 @@ let spotEdge = blankSpotInput();
 let burstState: BurstState | null = null;
 let burstAcc = 0;
 let burstEdge = blankBurstInput();
+let huntState: HuntState | null = null;
+let huntAcc = 0;
+let huntEdge = blankHuntInput();
+let huntDrag: { x: number; y: number; pointer: number } | null = null;
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -211,6 +229,7 @@ function fit(): void {
   fitBox(waddleStage, waddleSurface);
   fitBox(spotStage, spotSurface);
   fitBox(burstStage, burstSurface);
+  fitBox(huntStage, huntSurface);
 }
 
 fit();
@@ -226,6 +245,7 @@ if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
+if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -239,6 +259,7 @@ function show(next: Mode): void {
   if (waddleSection) waddleSection.hidden = next !== "waddle";
   if (spotSection) spotSection.hidden = next !== "spot";
   if (burstSection) burstSection.hidden = next !== "burst";
+  if (huntSection) huntSection.hidden = next !== "hunt";
   if (settingsSection) settingsSection.hidden = next !== "settings";
   const titles: Record<Mode, string> = {
     menu: "Kids Games",
@@ -251,6 +272,7 @@ function show(next: Mode): void {
     waddle: "Ice Waddle",
     spot: "Silk Spot",
     burst: "Berry Burst",
+    hunt: "Word Hunt",
     settings: "Level settings",
   };
   document.title = titles[next];
@@ -268,6 +290,7 @@ function show(next: Mode): void {
   if (next === "waddle") openWaddle();
   if (next === "spot") openSpot();
   if (next === "burst") openBurst();
+  if (next === "hunt") openHunt();
   requestAnimationFrame(() => fit());
 }
 
@@ -516,6 +539,40 @@ function burstInput(): BurstInput {
   return burstEdge;
 }
 
+function openHunt(): void {
+  huntState = createHunt(0);
+  huntAcc = 0;
+  huntEdge = blankHuntInput();
+  huntDrag = null;
+  syncHuntChrome();
+}
+
+function syncHuntChrome(): void {
+  if (!huntState) return;
+  const level = HUNT_LEVELS[huntState.levelIndex];
+  if (huntHeading) huntHeading.textContent = huntState.phase === "done" ? "Word Hunt" : level.name;
+  const live = huntState.phase === "playing" || huntState.phase === "paused";
+  huntPad?.querySelectorAll<HTMLButtonElement>("button[data-hunt]").forEach((button) => {
+    button.hidden = !live;
+  });
+  if (huntNext) {
+    huntNext.hidden = live;
+    huntNext.textContent = huntState.phase === "done" ? "Play again" : huntState.levelIndex >= HUNT_LEVELS.length - 1 ? "The last puzzle" : "Next puzzle";
+  }
+}
+
+function huntInput(): HuntInput {
+  return huntEdge;
+}
+
+function canvasPoint(surface: HTMLCanvasElement, event: PointerEvent): { x: number; y: number } {
+  const rect = surface.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) * surface.width) / rect.width,
+    y: ((event.clientY - rect.top) * surface.height) / rect.height,
+  };
+}
+
 function fishInput(): PondInput {
   return {
     dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
@@ -626,6 +683,10 @@ document.querySelector<HTMLButtonElement>("#play-burst")?.addEventListener("poin
   event.preventDefault();
   show("burst");
 });
+document.querySelector<HTMLButtonElement>("#play-hunt")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("hunt");
+});
 document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("settings");
@@ -678,6 +739,10 @@ document.querySelector("#burst-games")?.addEventListener("pointerdown", (event) 
   event.preventDefault();
   show("menu");
 });
+document.querySelector("#hunt-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 raceNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!raceState) return;
@@ -727,6 +792,12 @@ burstNext?.addEventListener("pointerdown", (event) => {
   burstState = advanceBurst(burstState);
   syncBurstChrome();
 });
+huntNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!huntState) return;
+  huntState = advanceHunt(huntState);
+  syncHuntChrome();
+});
 
 if (tuneTabs && tuneForm) {
   mountLevelSettings(tuneTabs, tuneForm, tunes, defaultTunes(LEVELS), (next) => {
@@ -738,6 +809,13 @@ if (tuneTabs && tuneForm) {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+  if (mode === "hunt") {
+    if (event.code === "KeyH") huntEdge = { ...huntEdge, hint: true };
+    if (event.code === "Escape") huntEdge = { ...huntEdge, pause: true };
+    if (event.code === "Enter") huntEdge = { ...huntEdge, confirm: true };
+    if (event.code === "KeyH") event.preventDefault();
+    return;
+  }
   if (mode === "burst") {
     if (event.code === "KeyH") burstEdge = { ...burstEdge, hint: true };
     if (event.code === "Escape") burstEdge = { ...burstEdge, pause: true };
@@ -874,6 +952,16 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
   };
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+});
+
+document.querySelectorAll<HTMLButtonElement>("button[data-hunt]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    const name = button.dataset.hunt ?? "";
+    if (name === "hint") huntEdge = { ...huntEdge, hint: true };
+    if (name === "pause") huntEdge = { ...huntEdge, pause: true };
+  });
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 
@@ -1094,6 +1182,31 @@ burstSurface.addEventListener("pointerdown", (event) => {
   };
 });
 
+huntSurface.addEventListener("pointerdown", (event) => {
+  if (mode !== "hunt" || !huntState) return;
+  if (huntState.phase === "clear" || huntState.phase === "done") {
+    huntState = advanceHunt(huntState);
+    syncHuntChrome();
+    return;
+  }
+  const point = canvasPoint(huntSurface, event);
+  huntDrag = { x: point.x, y: point.y, pointer: event.pointerId };
+  if (!huntSurface.hasPointerCapture(event.pointerId)) huntSurface.setPointerCapture(event.pointerId);
+});
+const finishHuntDrag = (event: PointerEvent) => {
+  if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt" || !huntState) return;
+  const point = canvasPoint(huntSurface, event);
+  const moved = Math.hypot(point.x - huntDrag.x, point.y - huntDrag.y) > 18;
+  huntEdge = moved
+    ? { ...huntEdge, drag: true, x: huntDrag.x, y: huntDrag.y, x2: point.x, y2: point.y }
+    : { ...huntEdge, tap: true, x: point.x, y: point.y };
+  huntDrag = null;
+};
+huntSurface.addEventListener("pointerup", finishHuntDrag);
+huntSurface.addEventListener("pointercancel", () => {
+  huntDrag = null;
+});
+
 capySurface.addEventListener("pointerdown", () => {
   if (mode !== "capy" || !capyState) return;
   if (capyState.phase === "clear" || capyState.phase === "retry" || capyState.phase === "done") {
@@ -1291,6 +1404,20 @@ function frame(now: number): void {
     }
     drawBurst(burstGfx, burstState, now);
     syncBurstChrome();
+  }
+  if (mode === "hunt" && huntState) {
+    huntAcc += delta;
+    let steps = 0;
+    while (huntAcc >= STEP_MS && steps < 5) {
+      const input = huntInput();
+      if (input.confirm && (huntState.phase === "clear" || huntState.phase === "done")) huntState = advanceHunt(huntState);
+      else huntState = tickHunt(huntState, input, STEP_MS);
+      huntEdge = blankHuntInput();
+      huntAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawHunt(huntGfx, huntState, now);
+    syncHuntChrome();
   }
   requestAnimationFrame(frame);
 }

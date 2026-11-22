@@ -154,6 +154,7 @@ button:focus-visible {
 #waddle,
 #spot,
 #burst,
+#hunt,
 #settings {
   flex: 1 1 auto;
   width: 100%;
@@ -174,6 +175,7 @@ button:focus-visible {
 #waddle[hidden],
 #spot[hidden],
 #burst[hidden],
+#hunt[hidden],
 #settings[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
@@ -192,7 +194,9 @@ button:focus-visible {
 #spot-next[hidden],
 #spot-pad button[hidden],
 #burst-next[hidden],
-#burst-pad button[hidden] {
+#burst-pad button[hidden],
+#hunt-next[hidden],
+#hunt-pad button[hidden] {
   display: none !important;
 }
 
@@ -205,7 +209,7 @@ button:focus-visible {
 
 .game-card {
   width: min(420px, 100%);
-  min-height: 58px;
+  min-height: 52px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -528,6 +532,37 @@ button:focus-visible {
 }
 
 #burst-next {
+  grid-column: 1 / -1;
+  background: #f2c14e;
+}
+
+#hunt-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#hunt-stage {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#hunt-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#hunt-next {
   grid-column: 1 / -1;
   background: #f2c14e;
 }
@@ -933,6 +968,28 @@ button:focus-visible {
   }
 
   #burst-pad {
+    width: min(220px, 34vw);
+    align-self: flex-end;
+  }
+
+  #hunt-board {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #hunt-stage {
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
+    aspect-ratio: 480 / 720;
+    max-width: calc(100% - 200px);
+    max-height: 100%;
+  }
+
+  #hunt-pad {
     width: min(220px, 34vw);
     align-self: flex-end;
   }
