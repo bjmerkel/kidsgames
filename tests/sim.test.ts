@@ -89,8 +89,10 @@ describe("simulation", () => {
     state = idle(state, 120);
     expect(state.lastFail).toBe("time");
     expect(state.toast).toBe(COPY.timeUp);
-    state.crab.lives = 1;
-    state = tick(state, blankInput(), 16);
+    expect(state.phase).toBe("playing");
+    expect(state.crab.lives).toBe(3);
+    expect(state.elapsedMs).toBeLessThan(level.timeLimitMs);
+    state = idle(state, 360);
     expect(state.phase).toBe("retry");
     expect(state.bannerTitle).toBe(COPY.tryLevel);
     expect(state.bannerBody).toContain(COPY.emery);

@@ -143,6 +143,8 @@ function applyHit(state: GameState, reason: FailReason): GameState {
     state.phase = "retry";
     state.bannerTitle = COPY.tryLevel;
     state.bannerBody = `${COPY.emery}.`;
+  } else if (reason === "time") {
+    state.elapsedMs = 0;
   }
   return state;
 }
