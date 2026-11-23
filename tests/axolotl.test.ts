@@ -32,6 +32,19 @@ describe("axolotl patrol", () => {
     for (let i = 1; i < 4; i += 1) expect(AXO_LEVELS[i].diveEvery).toBeLessThan(AXO_LEVELS[i - 1].diveEvery);
   });
 
+  it("slides under a finger and shoots while the finger is down", () => {
+    const start = createAxo(0);
+    const aimed = tickAxo(start, { ...blankAxoInput(), aimX: 180, fire: true }, STEP);
+    expect(aimed.playerX).toBe(180);
+    expect(aimed.bubbles).toHaveLength(1);
+    const edge = tickAxo(start, { ...blankAxoInput(), aimX: -40 }, STEP);
+    expect(edge.playerX).toBeLessThan(50);
+    expect(edge.playerX).toBeGreaterThan(20);
+    const keyed = tickAxo(start, { ...blankAxoInput(), dx: -1 }, STEP);
+    expect(keyed.playerX).toBeLessThan(start.playerX);
+    expect(keyed.playerX).toBeGreaterThan(180);
+  });
+
   it("pops a bug with a bubble and does not change the earlier state", () => {
     const before = createAxo(0);
     const aimed = withBubbleOn(before, 0);

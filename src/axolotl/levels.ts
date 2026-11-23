@@ -33,7 +33,7 @@ export const BUG_LOOK: Record<BugKind, BugLook> = {
 export const AXO_LEVELS: AxoLevel[] = [
   {
     name: "Skimmer School",
-    blurb: "Pop the skimmers.",
+    blurb: "Slide a finger. The axolotl follows and shoots.",
     rows: ["skimmer", "skimmer"],
     columns: 4,
     top: 186,

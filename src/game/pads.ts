@@ -35,9 +35,9 @@ export const FISH_SPOTS: readonly PadSpot[] = [
 ];
 
 export const AXO_SPOTS: readonly PadSpot[] = [
-  { name: "left", label: "Left", x: 12, y: 400, w: 100, h: 150, tone: "cream", hold: true, pulse: false },
-  { name: "right", label: "Right", x: VIEW_W - 112, y: 400, w: 100, h: 150, tone: "cream", hold: true, pulse: false },
-  { name: "fire", label: "Bubble", x: 150, y: 668, w: 180, h: 44, tone: "gold", hold: true, pulse: false },
+  { name: "left", label: "Left", x: 12, y: 652, w: 108, h: 56, tone: "cream", hold: true, pulse: false },
+  { name: "fire", label: "Bubble", x: 128, y: 652, w: 224, h: 56, tone: "gold", hold: true, pulse: false },
+  { name: "right", label: "Right", x: VIEW_W - 120, y: 652, w: 108, h: 56, tone: "cream", hold: true, pulse: false },
   pauseSpot(),
 ];
 

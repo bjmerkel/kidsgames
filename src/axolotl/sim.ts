@@ -7,6 +7,7 @@ export type AxoInput = {
   fire: boolean;
   pause: boolean;
   confirm: boolean;
+  aimX: number | null;
 };
 
 export type AxoBug = {
@@ -63,7 +64,7 @@ const ENTER_GAP = 55;
 const ENTER_MS = 400;
 
 export function blankAxoInput(): AxoInput {
-  return { dx: 0, fire: false, pause: false, confirm: false };
+  return { dx: 0, fire: false, pause: false, confirm: false, aimX: null };
 }
 
 export function createAxo(levelIndex = 0, score = 0): AxoState {
@@ -248,8 +249,12 @@ export function tickAxo(state: AxoState, input: AxoInput, dtMs: number): AxoStat
   next.toastMs = Math.max(0, next.toastMs - step);
   next.invulnMs = Math.max(0, next.invulnMs - step);
   next.cooldownMs = Math.max(0, next.cooldownMs - step);
-  const dx = Math.max(-1, Math.min(1, input.dx));
-  next.playerX = Math.max(PLAYER_LEFT, Math.min(PLAYER_RIGHT, next.playerX + dx * PLAYER_SPEED * dt));
+  if (input.aimX != null) {
+    next.playerX = Math.max(PLAYER_LEFT, Math.min(PLAYER_RIGHT, input.aimX));
+  } else {
+    const dx = Math.max(-1, Math.min(1, input.dx));
+    next.playerX = Math.max(PLAYER_LEFT, Math.min(PLAYER_RIGHT, next.playerX + dx * PLAYER_SPEED * dt));
+  }
 
   if (input.fire && next.cooldownMs <= 0 && next.bubbles.length < MAX_BUBBLES) {
     next.bubbles.push({ x: next.playerX, y: next.playerY - 28, vy: BUBBLE_VY });

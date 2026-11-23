@@ -60,7 +60,7 @@ The five roofs are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. 
 
 ## Axolotl Patrol
 
-An arcade shooter. You play a pink axolotl at the bottom of the tank. Bugs line up, then peel off and dive. Hold Left or Right to slide. Hold Bubble to shoot. Only two bubbles can be in the air at once. Pop every bug to finish the level. Dragonflies and the king beetle drop water, so slide out of the way. You have 3 lives. A hit says try again, and losing the last life restarts that level.
+An arcade shooter. You play a pink axolotl at the bottom of the tank. Bugs line up, then peel off and dive. Slide a finger across the tank and the axolotl follows, shooting while your finger is down. Left, Right, and Bubble sit on the sand, and the arrow keys still slide. Hold Bubble or Space to shoot. Only two bubbles can be in the air at once. Pop every bug to finish the level. Dragonflies and the king beetle drop water, so slide out of the way. You have 3 lives. A hit says try again, and losing the last life restarts that level.
 
 The five levels are Skimmer School, Beetle Rows, Dragonfly Dive, Mixed Swarm, and King Beetle. The king takes six bubbles. The score carries from level to level.
 
@@ -89,7 +89,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Hermit Crab Crossing, hold Up, Down, Left, or Right on the picture to keep hopping. Tap Tuck to pull into the shell. Arrow keys or WASD hop one step. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - In Woodland Grand Prix, hold Left or Right, or the left or right side of the picture, to steer. Hold Brake to slow down. Tap Use to spend the item from a yellow box. The button name changes to Acorn, Leaf, or Honey.
 - In Pond Fishing, hold the arrows on the picture to move the hook, then tap Catch for the fish the level asks for.
-- In Axolotl Patrol, hold Left or Right to slide. Hold Bubble to shoot. Pop every diving bug.
+- In Axolotl Patrol, slide a finger across the tank and the axolotl follows and shoots. Hold Left, Right, or the arrow keys to slide. Hold Bubble or Space to shoot. Pop every diving bug.
 - In Web Rascal, hold Left or Right, hold the street to run right, or tap the street to jump. Tap Web, or a web mark, to shoot a web. You hang on it, then jump.
 - In Capy Swing, hold Left or Right, hold the trail to run, or tap the trail to jump. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.

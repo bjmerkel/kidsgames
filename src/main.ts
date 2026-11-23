@@ -241,6 +241,7 @@ const touchClaims = new Set<number>();
 type RunnerFinger = { id: number; x: number; y: number; x0: number; y0: number; t0: number };
 const raceFingers = new Map<number, RunnerFinger>();
 const rascalFingers = new Map<number, RunnerFinger>();
+const axoFingers = new Map<number, RunnerFinger>();
 const capyFingers = new Map<number, RunnerFinger>();
 const waddleFingers = new Map<number, RunnerFinger>();
 const crabTouch = new TouchPad(CRAB_SPOTS, (name) => {
@@ -446,6 +447,7 @@ function openAxo(): void {
   axoAcc = 0;
   axoEdge = blankAxoInput();
   axoTouch.clear();
+  axoFingers.clear();
   axoKeys.left = false;
   axoKeys.right = false;
   axoKeys.fire = false;
@@ -465,11 +467,13 @@ function syncAxoChrome(): void {
 }
 
 function axoInput(): AxoInput {
+  const finger = [...axoFingers.values()].at(-1);
   return {
     dx: (axoKeys.right || axoTouch.held("right") ? 1 : 0) - (axoKeys.left || axoTouch.held("left") ? 1 : 0),
-    fire: axoKeys.fire || axoTouch.held("fire"),
+    fire: axoKeys.fire || axoTouch.held("fire") || axoFingers.size > 0,
     pause: axoEdge.pause,
     confirm: axoEdge.confirm,
+    aimX: finger ? finger.x : null,
   };
 }
 
@@ -1481,6 +1485,7 @@ bindPad(axoSurface, axoTouch, {
   armed: () => axoState?.phase === "playing",
   paused: () => axoState?.phase === "paused",
   resume: () => { axoEdge = { ...axoEdge, pause: true }; },
+  fingers: axoFingers,
 });
 bindPad(rascalSurface, rascalTouch, {
   active: () => mode === "rascal" && !!rascalState,
