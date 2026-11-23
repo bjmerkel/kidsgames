@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { roofLevel } from "./levels";
+import { ROOF_LEVELS, roofLevel } from "./levels";
 import { rascalCameraX, type RascalBug, type RascalState } from "./sim";
 
 export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, nowMs: number): void {
@@ -24,7 +24,7 @@ export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, no
     }
   }
   ctx.beginPath();
-  ctx.arc(level.night ? 80 : 400, 70, level.night ? 22 : 18, 0, Math.PI * 2);
+  ctx.arc(level.night ? 236 : 400, level.night ? 168 : 70, level.night ? 22 : 18, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
@@ -79,7 +79,7 @@ export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, no
   ctx.font = "700 20px Georgia, serif";
   ctx.fillText(level.name, 16, 32);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
-  ctx.fillText(`Level ${state.levelIndex + 1} of 5`, 16, 54);
+  ctx.fillText(`Level ${state.levelIndex + 1} of ${ROOF_LEVELS.length}`, 16, 54);
   ctx.fillText(`Score ${state.score}`, 16, 76);
   for (let i = 0; i < state.lives; i += 1) drawHero(ctx, VIEW_W - 46 - i * 32, 8, 1, 1, 0.45);
 
@@ -95,7 +95,7 @@ export function drawRascal(ctx: CanvasRenderingContext2D, state: RascalState, no
   if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to run.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", level.blurb);
   if (state.phase === "retry") banner(ctx, "Try again.", "Back to the last safe roof.");
-  if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "The night nest is yours.");
+  if (state.phase === "done") banner(ctx, "You finished all 15 levels.", "The moon nest is yours.");
 }
 
 function drawPlat(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {

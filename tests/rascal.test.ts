@@ -9,21 +9,39 @@ function holdJump(extra: Partial<RascalInput> = {}): RascalInput {
 }
 
 describe("web rascal", () => {
-  it("has 5 rooftop levels that ask for jumps, webs, and a night nest", () => {
+  it("has 15 rooftop levels, the first five, then ten new roofs", () => {
     expect(ROOF_LEVELS.map((level) => level.name)).toEqual([
       "First Roof",
       "Silk Gap",
       "Bug Bounce",
       "High Wire",
       "Night Nest",
+      "Chimney Row",
+      "Laundry Line",
+      "Fire Escape",
+      "Pigeon Parade",
+      "Clock Tower",
+      "Rain Gutter",
+      "Antenna Garden",
+      "Subway Roof",
+      "Silk Spiral",
+      "Moon Nest",
     ]);
-    expect(ROOF_LEVELS.map((level) => level.webs.length)).toEqual([0, 2, 1, 2, 3]);
+    expect(ROOF_LEVELS.slice(0, 5).map((level) => level.webs.length)).toEqual([0, 2, 1, 2, 3]);
     expect(ROOF_LEVELS[3].movers.length).toBeGreaterThan(0);
     expect(ROOF_LEVELS[4].night).toBe(true);
-    for (let i = 1; i < ROOF_LEVELS.length; i += 1) {
-      expect(ROOF_LEVELS[i].width).toBeGreaterThan(ROOF_LEVELS[i - 1].width);
-      expect(ROOF_LEVELS[i].goal.x).toBeGreaterThan(400);
-      expect(ROOF_LEVELS[i].bugs.length).toBeGreaterThan(0);
+    for (let i = 1; i < 5; i += 1) expect(ROOF_LEVELS[i].width).toBeGreaterThan(ROOF_LEVELS[i - 1].width);
+    const added = ROOF_LEVELS.slice(5);
+    expect(added).toHaveLength(10);
+    expect(added.some((level) => level.webs.length >= 2)).toBe(true);
+    expect(added.some((level) => level.movers.length >= 2)).toBe(true);
+    expect(added.filter((level) => level.night)).toHaveLength(3);
+    expect(added.some((level) => level.bugs.length >= 3)).toBe(true);
+    for (const level of ROOF_LEVELS) {
+      expect(level.blurb.length).toBeGreaterThan(0);
+      expect(level.goal.x).toBeGreaterThan(400);
+      expect(level.goal.x + level.goal.w).toBeLessThan(level.width);
+      expect(level.bugs.length).toBeGreaterThan(0);
     }
   });
 
@@ -178,11 +196,11 @@ describe("web rascal", () => {
     expect(clear.score).toBe(600);
     expect(clear.lives).toBe(3);
 
-    let finale = createRascal(4);
+    let finale = createRascal(ROOF_LEVELS.length - 1);
     finale.phase = "clear";
     finale = advanceRascal(finale);
     expect(finale.phase).toBe("done");
-    expect(finale.toast).toBe("You finished all 5 levels.");
+    expect(finale.toast).toBe("You finished all 15 levels.");
     finale = advanceRascal(finale);
     expect(finale.levelIndex).toBe(0);
     expect(finale.score).toBe(0);

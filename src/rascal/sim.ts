@@ -409,7 +409,7 @@ export function advanceRascal(state: RascalState): RascalState {
   if (state.phase === "clear") {
     const next = structuredClone(state);
     next.phase = "done";
-    next.toast = "You finished all 5 levels.";
+    next.toast = "You finished all 15 levels.";
     return next;
   }
   if (state.phase === "done") return createRascal(0);

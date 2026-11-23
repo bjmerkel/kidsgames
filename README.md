@@ -56,7 +56,7 @@ The five trails are River Bend, Two Vines, Log Run, Driftwood, and Deep Jungle.
 
 A side-scrolling rooftop game. You play a raccoon in a red shirt and blue pants. Hold Right to run and Jump to hop. A short gap is a running jump. A wide gap needs a web: jump toward the web mark, then tap Web or the mark itself. You hang there long enough to jump again. Bounce on a bug from above. Touching one from the side, or falling off the roof, costs a life. You have 3 lives. The score carries, and lives come back at the next roof.
 
-The five roofs are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. The nest at the end of each roof finishes the level.
+Fifteen roofs. The first five are First Roof, Silk Gap, Bug Bounce, High Wire, and Night Nest. Then Chimney Row, Laundry Line, Fire Escape, Pigeon Parade, Clock Tower, Rain Gutter, Antenna Garden, Subway Roof, Silk Spiral, and Moon Nest. Chimneys stack up. Laundry lines and the clock tower ask for webs. Fire escapes and rain gutters ride moving planks. Pigeons are for bouncing. The moon nest is the last roof. The nest at the end of each roof finishes the level.
 
 ## Axolotl Patrol
 

@@ -33,6 +33,13 @@ function step(x: number, y: number, w = 150): Plat {
   return { x, y, w, h: 22 };
 }
 
+function sway(leftEnd: number, span: number, width: number, y: number, phase: number): { mover: Mover; nextX: number } {
+  return {
+    mover: { origin: leftEnd + 85 - span, y, w: width, h: 20, span, phase },
+    nextX: leftEnd + width + 170 - 2 * span,
+  };
+}
+
 const stand = GROUND_Y - RASCAL_H;
 
 export const ROOF_LEVELS: RoofLevel[] = [
@@ -154,7 +161,277 @@ export const ROOF_LEVELS: RoofLevel[] = [
     spawnX: 48,
     spawnY: stand,
   },
+  chimneyRow(),
+  laundryLine(),
+  fireEscape(),
+  pigeonParade(),
+  clockTower(),
+  rainGutter(),
+  antennaGarden(),
+  subwayRoof(),
+  silkSpiral(),
+  moonNest(),
 ];
+
+function chimneyRow(): RoofLevel {
+  return {
+    name: "Chimney Row",
+    blurb: "Hop the chimneys.",
+    width: 2200,
+    night: false,
+    platforms: [ground(0, 420), step(500, 570, 170), step(750, 500, 170), step(1000, 560, 180), ground(1260, 940)],
+    movers: [],
+    webs: [],
+    bugs: [{ x: 1600, y: GROUND_Y - 22, left: 1460, right: 1860 }],
+    coins: [
+      { x: 560, y: 500 },
+      { x: 820, y: 430 },
+      { x: 1080, y: 490 },
+      { x: 1500, y: 560 },
+    ],
+    checks: [1320],
+    goal: { x: 2000, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function laundryLine(): RoofLevel {
+  return {
+    name: "Laundry Line",
+    blurb: "Swing twice.",
+    width: 2500,
+    night: false,
+    platforms: [ground(0, 460), ground(640, 460), ground(1320, 1180)],
+    movers: [],
+    webs: [
+      { x: 560, y: 420 },
+      { x: 1240, y: 400 },
+    ],
+    bugs: [{ x: 1700, y: GROUND_Y - 22, left: 1520, right: 1980 }],
+    coins: [
+      { x: 560, y: 500 },
+      { x: 900, y: 560 },
+      { x: 1240, y: 480 },
+      { x: 1800, y: 560 },
+    ],
+    checks: [700, 1400],
+    goal: { x: 2280, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function fireEscape(): RoofLevel {
+  const plank = sway(500, 30, 160, 600, 0);
+  return {
+    name: "Fire Escape",
+    blurb: "Ride the plank, then swing.",
+    width: 2600,
+    night: false,
+    platforms: [ground(0, 500), ground(plank.nextX, 500), ground(plank.nextX + 700, 1100)],
+    movers: [plank.mover],
+    webs: [{ x: plank.nextX + 620, y: 400 }],
+    bugs: [{ x: plank.nextX + 220, y: GROUND_Y - 22, left: plank.nextX + 80, right: plank.nextX + 380 }],
+    coins: [
+      { x: 560, y: 540 },
+      { x: plank.nextX + 200, y: 560 },
+      { x: plank.nextX + 620, y: 480 },
+    ],
+    checks: [plank.nextX + 40, plank.nextX + 760],
+    goal: { x: plank.nextX + 1500, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function pigeonParade(): RoofLevel {
+  return {
+    name: "Pigeon Parade",
+    blurb: "Bounce the pigeons.",
+    width: 2700,
+    night: false,
+    platforms: [ground(0, 700), ground(790, 700), ground(1580, 1120)],
+    movers: [],
+    webs: [],
+    bugs: [
+      { x: 360, y: GROUND_Y - 22, left: 220, right: 520 },
+      { x: 1100, y: GROUND_Y - 22, left: 960, right: 1320 },
+      { x: 1900, y: GROUND_Y - 22, left: 1760, right: 2140 },
+    ],
+    coins: [
+      { x: 740, y: 540 },
+      { x: 1140, y: 560 },
+      { x: 1530, y: 540 },
+      { x: 2000, y: 560 },
+    ],
+    checks: [860, 1660],
+    goal: { x: 2480, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function clockTower(): RoofLevel {
+  return {
+    name: "Clock Tower",
+    blurb: "Climb the tower.",
+    width: 2700,
+    night: false,
+    platforms: [ground(0, 400), step(540, 560, 680), step(1360, 470, 640), step(2140, 380, 420)],
+    movers: [],
+    webs: [
+      { x: 620, y: 420 },
+      { x: 1460, y: 340 },
+      { x: 2240, y: 270 },
+    ],
+    bugs: [{ x: 1600, y: 448, left: 1500, right: 1760 }],
+    coins: [
+      { x: 700, y: 500 },
+      { x: 1540, y: 410 },
+      { x: 2320, y: 320 },
+    ],
+    checks: [640, 1460],
+    goal: { x: 2400, y: 280, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function rainGutter(): RoofLevel {
+  const first = sway(480, 35, 170, 610, 0);
+  const second = sway(first.nextX + 400, 40, 180, 590, 1.2);
+  return {
+    name: "Rain Gutter",
+    blurb: "Wait for both planks.",
+    width: 2800,
+    night: true,
+    platforms: [ground(0, 480), ground(first.nextX, 400), ground(second.nextX, 1000)],
+    movers: [first.mover, second.mover],
+    webs: [],
+    bugs: [{ x: first.nextX + 200, y: GROUND_Y - 22, left: first.nextX + 80, right: first.nextX + 320 }],
+    coins: [
+      { x: 560, y: 540 },
+      { x: first.nextX + 180, y: 560 },
+      { x: second.nextX - 80, y: 520 },
+      { x: second.nextX + 300, y: 560 },
+    ],
+    checks: [first.nextX + 40, second.nextX + 80],
+    goal: { x: second.nextX + 760, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function antennaGarden(): RoofLevel {
+  return {
+    name: "Antenna Garden",
+    blurb: "Jump, then one web.",
+    width: 2600,
+    night: false,
+    platforms: [ground(0, 640), ground(730, 500), step(900, 520, 140), ground(1450, 1150)],
+    movers: [],
+    webs: [{ x: 1350, y: 400 }],
+    bugs: [
+      { x: 300, y: GROUND_Y - 22, left: 180, right: 480 },
+      { x: 1800, y: GROUND_Y - 22, left: 1640, right: 2100 },
+    ],
+    coins: [
+      { x: 680, y: 540 },
+      { x: 960, y: 460 },
+      { x: 1350, y: 480 },
+      { x: 1900, y: 560 },
+    ],
+    checks: [800, 1520],
+    goal: { x: 2380, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function subwayRoof(): RoofLevel {
+  return {
+    name: "Subway Roof",
+    blurb: "Three jumps to the nest.",
+    width: 2800,
+    night: false,
+    platforms: [ground(0, 600), ground(690, 520), ground(1300, 520), ground(1910, 890)],
+    movers: [],
+    webs: [],
+    bugs: [
+      { x: 280, y: GROUND_Y - 22, left: 160, right: 420 },
+      { x: 940, y: GROUND_Y - 22, left: 820, right: 1080 },
+      { x: 1560, y: GROUND_Y - 22, left: 1440, right: 1700 },
+    ],
+    coins: [
+      { x: 645, y: 540 },
+      { x: 1255, y: 540 },
+      { x: 1865, y: 540 },
+      { x: 2200, y: 560 },
+    ],
+    checks: [760, 1380, 1980],
+    goal: { x: 2560, y: 540, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function silkSpiral(): RoofLevel {
+  return {
+    name: "Silk Spiral",
+    blurb: "Swing up the silk.",
+    width: 2900,
+    night: true,
+    platforms: [ground(0, 440), step(580, 540, 700), step(1440, 450, 660), step(2260, 360, 480)],
+    movers: [],
+    webs: [
+      { x: 680, y: 400 },
+      { x: 1540, y: 320 },
+      { x: 2360, y: 240 },
+    ],
+    bugs: [{ x: 1700, y: 428, left: 1580, right: 1860 }],
+    coins: [
+      { x: 760, y: 480 },
+      { x: 1620, y: 390 },
+      { x: 2480, y: 300 },
+    ],
+    checks: [680, 1540],
+    goal: { x: 2560, y: 260, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
+
+function moonNest(): RoofLevel {
+  const plank = sway(1130, 30, 160, 600, 0.6);
+  return {
+    name: "Moon Nest",
+    blurb: "The last nest.",
+    width: 3200,
+    night: true,
+    platforms: [ground(0, 560), ground(650, 480), ground(plank.nextX, 420), ground(plank.nextX + 640, 400), step(plank.nextX + 1180, 460, 400)],
+    movers: [plank.mover],
+    webs: [
+      { x: plank.nextX + 540, y: 400 },
+      { x: plank.nextX + 1240, y: 320 },
+    ],
+    bugs: [
+      { x: 860, y: GROUND_Y - 22, left: 740, right: 1000 },
+      { x: plank.nextX + 180, y: GROUND_Y - 22, left: plank.nextX + 60, right: plank.nextX + 300 },
+    ],
+    coins: [
+      { x: 605, y: 540 },
+      { x: 900, y: 560 },
+      { x: plank.nextX + 80, y: 540 },
+      { x: plank.nextX + 540, y: 470 },
+      { x: plank.nextX + 1280, y: 400 },
+    ],
+    checks: [720, plank.nextX + 40, plank.nextX + 700, plank.nextX + 1220],
+    goal: { x: plank.nextX + 1400, y: 360, w: 64, h: 100 },
+    spawnX: 48,
+    spawnY: stand,
+  };
+}
 
 export function roofLevel(index: number): RoofLevel {
   return ROOF_LEVELS[Math.max(0, Math.min(ROOF_LEVELS.length - 1, index))];
