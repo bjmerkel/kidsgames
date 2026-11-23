@@ -233,7 +233,7 @@ let huntEdge = blankHuntInput();
 let huntDrag: { x: number; y: number; x2: number; y2: number; pointer: number } | null = null;
 let skateState: SkateState | null = null;
 let skateAcc = 0;
-const skateKeys = { left: false, right: false, crouch: false, jump: false };
+const skateKeys = { left: false, right: false, brake: false, crouch: false, jump: false };
 let skateEdge = blankSkateInput();
 let skatePointers: SkatePointer[] = [];
 let skateTouchHeld: SkateTouchHeld = blankSkateTouch();
@@ -677,6 +677,7 @@ function openSkate(): void {
   skateEdge = blankSkateInput();
   skateKeys.left = false;
   skateKeys.right = false;
+  skateKeys.brake = false;
   skateKeys.crouch = false;
   skateKeys.jump = false;
   skatePointers = [];
@@ -707,12 +708,22 @@ function syncSkateChrome(): void {
 function skateInput(): SkateInput {
   syncSkateTouch();
   return {
-    dx: (skateKeys.right || skateTouchHeld.right ? 1 : 0) - (skateKeys.left || skateTouchHeld.left ? 1 : 0),
+    dx: (skateTouchHeld.right ? 1 : 0) - (skateKeys.brake || skateTouchHeld.left ? 1 : 0),
+    steer: skateSteer(),
     crouch: skateKeys.crouch || skateTouchHeld.crouch,
     jump: skateEdge.jump,
     pause: skateEdge.pause,
     confirm: skateEdge.confirm,
   };
+}
+
+function skateSteer(): number {
+  let steer = (skateKeys.right ? 1 : 0) - (skateKeys.left ? 1 : 0);
+  for (const pointer of skatePointers) {
+    if (pointer.origin !== "field") continue;
+    steer += sideSteer(pointer.x);
+  }
+  return Math.max(-1, Math.min(1, steer));
 }
 
 function huntInput(): HuntInput {
@@ -1040,6 +1051,7 @@ window.addEventListener("keydown", (event) => {
     if (event.code === "ArrowLeft" || event.code === "KeyA") skateKeys.left = true;
     if (event.code === "ArrowRight" || event.code === "KeyD") skateKeys.right = true;
     if (event.code === "ArrowDown" || event.code === "KeyS") skateKeys.crouch = true;
+    if (event.code === "ShiftLeft" || event.code === "ShiftRight") skateKeys.brake = true;
     if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") skateKeys.jump = true;
     if (!event.repeat && (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW")) skateEdge = { ...skateEdge, jump: true };
     if (event.code === "Escape") skateEdge = { ...skateEdge, pause: true };
@@ -1126,6 +1138,7 @@ window.addEventListener("keyup", (event) => {
     skateKeys.jump = false;
   }
   if (event.code === "Space") axoKeys.fire = false;
+  if (event.code === "ShiftLeft" || event.code === "ShiftRight") skateKeys.brake = false;
   if (event.code === "ArrowUp" || event.code === "KeyW") fishKeys.up = false;
   if (event.code === "ArrowDown" || event.code === "KeyS") {
     raceKeys.brake = false;

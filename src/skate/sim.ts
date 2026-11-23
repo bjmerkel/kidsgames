@@ -1,3 +1,4 @@
+import { RAIL_REACH, ROAD_HALF } from "./course";
 import { SKATE_LEVELS, surfaceAt, type SkateLevel } from "./levels";
 
 export type SkatePhase = "playing" | "paused" | "clear" | "retry" | "done";
@@ -5,6 +6,7 @@ export type AirTrick = "ollie" | "kickflip" | "grab";
 
 export type SkateInput = {
   dx: number;
+  steer: number;
   crouch: boolean;
   jump: boolean;
   pause: boolean;
@@ -22,6 +24,8 @@ export type SkateState = {
   y: number;
   vx: number;
   vy: number;
+  lane: number;
+  steerAngle: number;
   slope: number;
   grounded: boolean;
   grinding: boolean;
@@ -43,6 +47,8 @@ const GRAVITY = 2200;
 const PUSH = 980;
 const BRAKE = 1500;
 const FRICTION = 220;
+const CRUISE = 260;
+const TURN = 1.8;
 const MAX_SPEED = 460;
 const FAST = 640;
 const OLLIE = -560;
@@ -54,7 +60,7 @@ const BAILS = 3;
 const CLEAR_BONUS = 500;
 
 export function blankSkateInput(): SkateInput {
-  return { dx: 0, crouch: false, jump: false, pause: false, confirm: false };
+  return { dx: 0, steer: 0, crouch: false, jump: false, pause: false, confirm: false };
 }
 
 export function skateLevel(index: number): SkateLevel {
@@ -80,6 +86,8 @@ export function createSkate(levelIndex = 0, score = 0): SkateState {
     y: ground,
     vx: 0,
     vy: 0,
+    lane: 0,
+    steerAngle: 0,
     slope: 0,
     grounded: true,
     grinding: false,
@@ -106,6 +114,8 @@ function wipeout(state: SkateState, level: SkateLevel, message: string): void {
   state.airMs = 0;
   state.vx = 0;
   state.vy = 0;
+  state.lane = 0;
+  state.steerAngle = 0;
   state.grinding = false;
   state.grindMs = 0;
   state.slope = 0;
@@ -170,7 +180,10 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
   next.crouched = input.crouch;
   if (input.dx > 0 && (next.grounded || next.grinding)) next.vx = Math.min(MAX_SPEED, next.vx + PUSH * dt);
   else if (input.dx < 0) next.vx = Math.max(0, next.vx - BRAKE * dt);
-  else if (next.grounded || next.grinding) next.vx = Math.max(0, next.vx - FRICTION * dt);
+  else if (next.grounded || next.grinding) {
+    if (next.vx < CRUISE) next.vx = Math.min(CRUISE, next.vx + 360 * dt);
+    else next.vx = Math.max(CRUISE, next.vx - FRICTION * dt);
+  }
 
   if (input.jump) {
     if (next.grounded || next.grinding) {
@@ -190,7 +203,15 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
     next.y += next.vy * dt;
     next.airMs += step;
   }
-  next.x += next.vx * dt;
+  next.steerAngle += input.steer * TURN * dt;
+  next.steerAngle -= next.steerAngle * 2 * dt;
+  next.x += next.vx * Math.cos(next.steerAngle) * dt;
+  next.lane += next.vx * Math.sin(next.steerAngle) * dt;
+  if (Math.abs(next.lane) > ROAD_HALF) next.vx = Math.max(0, next.vx - 640 * dt);
+  if (Math.abs(next.lane) > ROAD_HALF + 320) {
+    wipeout(next, level, "Left the street.");
+    return next;
+  }
 
   const here = surfaceAt(level, next.x);
   const height = catHeight(next.crouched);
@@ -219,7 +240,7 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
     return next;
   }
 
-  if (here.kind === "rail" && here.ground != null) {
+  if (here.kind === "rail" && here.ground != null && Math.abs(next.lane) <= RAIL_REACH) {
     const close = next.y > here.ground - 48 && next.y < here.ground + 24;
     const crossed = prevY <= here.ground + 8 && next.y >= here.ground - 8 && next.vy >= 0;
     if (next.grinding || (close && (crossed || next.grounded))) {

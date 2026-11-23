@@ -5,7 +5,7 @@ const BEHIND = 90;
 const ABOVE = 520;
 const AHEAD = 70;
 
-export function skateChase(catX: number, catY: number): {
+export function skateChase(catX: number, catY: number, catZ: number, heading: number): {
   x: number;
   y: number;
   z: number;
@@ -13,13 +13,15 @@ export function skateChase(catX: number, catY: number): {
   lookY: number;
   lookZ: number;
 } {
+  const forwardX = Math.cos(heading);
+  const forwardZ = Math.sin(heading);
   return {
-    x: catX - BEHIND,
+    x: catX - forwardX * BEHIND,
     y: catY + ABOVE,
-    z: 8,
-    lookX: catX + AHEAD,
+    z: catZ - forwardZ * BEHIND,
+    lookX: catX + forwardX * AHEAD,
     lookY: catY - 6,
-    lookZ: 0,
+    lookZ: catZ + forwardZ * AHEAD,
   };
 }
 

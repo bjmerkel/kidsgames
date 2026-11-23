@@ -67,6 +67,35 @@ describe("ollie cat", () => {
     expect(harder.some((level) => level.sky === "night")).toBe(true);
   });
 
+  it("rolls on its own, steers off the racing line, and brakes", () => {
+    const rolling = hold(createSkate(0), 50);
+    expect(rolling.x).toBeGreaterThan(70);
+    expect(rolling.vx).toBeGreaterThan(120);
+
+    const steered = hold(rolling, 20, { steer: 1 });
+    expect(steered.steerAngle).toBeGreaterThan(0.25);
+    expect(Math.abs(steered.lane)).toBeGreaterThan(4);
+
+    const stopped = hold(steered, 40, { dx: -1 });
+    expect(stopped.vx).toBe(0);
+  });
+
+  it("misses a rail when the board is off to the side", () => {
+    let grind = createSkate(1);
+    grind.x = 230;
+    grind.y = 480;
+    grind.vx = 280;
+    grind.vy = 200;
+    grind.lane = 80;
+    grind.grounded = false;
+    let grinding = false;
+    for (let i = 0; i < 80; i += 1) {
+      grind = tickSkate(grind, { ...blankSkateInput(), dx: 1 }, STEP);
+      if (grind.grinding) grinding = true;
+    }
+    expect(grinding).toBe(false);
+  });
+
   it("pushes up to speed and brakes", () => {
     const pushed = hold(createSkate(0), 40, { dx: 1 });
     expect(pushed.vx).toBeGreaterThan(200);
