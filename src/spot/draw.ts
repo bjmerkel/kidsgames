@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, type SpotLevel } from "./scenes";
+import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, type SpotLevel, type SpotTheme } from "./scenes";
 import type { SpotState } from "./sim";
 
 export function drawSpotPick(ctx: CanvasRenderingContext2D): void {
@@ -69,7 +69,12 @@ function drawPanel(
   sky(ctx, ox, oy, level.sky);
   buildings(ctx, ox, oy, level.sky);
   drawHero(ctx, ox + level.hero.x, oy + level.hero.y, level.hero.face);
-  for (const diff of level.diffs) drawChange(ctx, diff.id, changed, ox + diff.x, oy + diff.y);
+  if (level.theme) {
+    for (const twin of level.twins ?? []) drawTight(ctx, level.theme, false, ox + twin.x, oy + twin.y);
+    for (const diff of level.diffs) drawTight(ctx, level.theme, changed, ox + diff.x, oy + diff.y);
+  } else {
+    for (const diff of level.diffs) drawChange(ctx, diff.id, changed, ox + diff.x, oy + diff.y);
+  }
   ctx.restore();
 
   ctx.strokeStyle = "#1c1915";
@@ -77,8 +82,8 @@ function drawPanel(
   ctx.strokeRect(ox + 1.5, oy + 1.5, PANEL_W - 3, PANEL_H - 3);
 
   for (const diff of level.diffs) {
-    if (found.has(diff.id)) ring(ctx, ox + diff.x, oy + diff.y, 22, "#d64545", 3);
-    else if (hintId === diff.id) ring(ctx, ox + diff.x, oy + diff.y, 16 + Math.sin(nowMs / 180) * 4, "#f2c14e", 3);
+    if (found.has(diff.id)) ring(ctx, ox + diff.x, oy + diff.y, Math.min(22, diff.r - 4), "#d64545", 3);
+    else if (hintId === diff.id) ring(ctx, ox + diff.x, oy + diff.y, Math.min(16, diff.r - 6) + Math.sin(nowMs / 180) * 3, "#f2c14e", 3);
   }
 }
 
@@ -126,6 +131,93 @@ function buildings(ctx: CanvasRenderingContext2D, x: number, y: number, kind: "d
   ]) {
     ctx.fillRect(x + wx, y + wy, 14, 16);
   }
+}
+
+function drawTight(ctx: CanvasRenderingContext2D, theme: SpotTheme, changed: boolean, x: number, y: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#1c1915";
+  ctx.lineJoin = "round";
+  if (theme === "fair") {
+    ctx.fillStyle = "#f7f4ef";
+    ctx.beginPath();
+    ctx.roundRect(-7, -11, 14, 22, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#3d8fd1";
+    ctx.fillRect(-6, changed ? -5 : 3, 12, changed ? 14 : 6);
+  } else if (theme === "planet") {
+    ctx.fillStyle = "#f7f1e6";
+    ctx.beginPath();
+    for (let i = 0; i < 5; i += 1) {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+      const px = Math.cos(angle) * 9;
+      const py = Math.sin(angle) * 9;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+      const inner = angle + Math.PI / 5;
+      ctx.lineTo(Math.cos(inner) * 4, Math.sin(inner) * 4);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    if (changed) {
+      ctx.fillStyle = "#243044";
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (theme === "garden") {
+    ctx.fillStyle = "#d64545";
+    for (const [dx, dy] of [
+      [0, -6],
+      [6, 0],
+      [0, 6],
+      [-6, 0],
+    ]) {
+      ctx.beginPath();
+      ctx.arc(dx, dy, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (!changed) {
+      ctx.fillStyle = "#f2c14e";
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (theme === "field") {
+    ctx.strokeStyle = "#5c4a3a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-8, -10);
+    ctx.lineTo(-8, 10);
+    ctx.stroke();
+    ctx.fillStyle = "#d64545";
+    ctx.beginPath();
+    ctx.moveTo(-8, -9);
+    ctx.lineTo(8, -3);
+    ctx.lineTo(-8, 3);
+    ctx.closePath();
+    ctx.fill();
+    if (changed) {
+      ctx.fillStyle = "#f2c14e";
+      ctx.fillRect(-2, -7, 3, 8);
+    }
+  } else {
+    ctx.fillStyle = "#f7f1e6";
+    ctx.beginPath();
+    ctx.arc(0, 0, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    if (changed) {
+      ctx.fillStyle = "#8d867c";
+      ctx.beginPath();
+      ctx.arc(3, -2, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
 }
 
 function drawChange(ctx: CanvasRenderingContext2D, id: string, changed: boolean, x: number, y: number): void {

@@ -103,7 +103,7 @@ export function tickSpot(state: SpotState, input: SpotInput, dt: number): SpotSt
     next.misses += 1;
     next.toast = "Look again.";
     next.toastMs = 800;
-    if (next.misses >= 3 && !next.hintId) {
+    if (next.misses >= (next.hard ? 6 : 3) && !next.hintId) {
       const left = next.diffs.find((diff) => !diff.found);
       if (left) next.hintId = left.id;
     }

@@ -14,12 +14,23 @@ export type SpotDiff = {
 
 export type SpotSky = "day" | "dusk" | "night";
 
+export type SpotTheme = "fair" | "planet" | "garden" | "field" | "scope";
+
+export type SpotTwin = {
+  id: string;
+  x: number;
+  y: number;
+};
+
 export type SpotLevel = {
   name: string;
   blurb: string;
   sky: SpotSky;
+  theme?: SpotTheme;
+  fixed?: boolean;
   hero: { x: number; y: number; face: number };
   diffs: SpotDiff[];
+  twins?: SpotTwin[];
 };
 
 const R = 28;
@@ -278,81 +289,6 @@ export const SPOT_LEVELS: SpotLevel[] = [
       { id: "balloon", x: 400, y: 140, r: R },
     ],
   }),
-  level({
-    name: "Science Fair",
-    sky: "dusk",
-    hero: { x: 160, y: 190, face: 1 },
-    diffs: [
-      { id: "window", x: 58, y: 130, r: R },
-      { id: "window2", x: 150, y: 130, r: R },
-      { id: "lantern", x: 420, y: 130, r: R },
-      { id: "snack", x: 58, y: 220, r: R },
-      { id: "flag", x: 334, y: 48, r: R },
-      { id: "balloon", x: 242, y: 48, r: R },
-      { id: "web", x: 242, y: 130, r: R },
-      { id: "acorn", x: 334, y: 220, r: R },
-    ],
-  }),
-  level({
-    name: "Planetarium",
-    sky: "night",
-    hero: { x: 250, y: 180, face: -1 },
-    diffs: [
-      { id: "star", x: 58, y: 48, r: R },
-      { id: "star2", x: 150, y: 48, r: R },
-      { id: "star3", x: 242, y: 48, r: R },
-      { id: "star4", x: 334, y: 48, r: R },
-      { id: "moon", x: 420, y: 48, r: R },
-      { id: "window", x: 150, y: 130, r: R },
-      { id: "web", x: 334, y: 130, r: R },
-      { id: "cat", x: 58, y: 220, r: R },
-    ],
-  }),
-  level({
-    name: "Class Garden",
-    sky: "day",
-    hero: { x: 250, y: 130, face: 1 },
-    diffs: [
-      { id: "flower", x: 58, y: 220, r: R },
-      { id: "flower2", x: 150, y: 220, r: R },
-      { id: "flower3", x: 242, y: 220, r: R },
-      { id: "butterfly", x: 58, y: 48, r: R },
-      { id: "butterfly2", x: 150, y: 48, r: R },
-      { id: "cloud", x: 334, y: 48, r: R },
-      { id: "bird", x: 420, y: 48, r: R },
-      { id: "acorn", x: 420, y: 220, r: R },
-    ],
-  }),
-  level({
-    name: "Field Day",
-    sky: "dusk",
-    hero: { x: 300, y: 170, face: -1 },
-    diffs: [
-      { id: "flag", x: 58, y: 130, r: R },
-      { id: "flag2", x: 150, y: 130, r: R },
-      { id: "balloon", x: 58, y: 48, r: R },
-      { id: "balloon2", x: 150, y: 48, r: R },
-      { id: "balloon3", x: 242, y: 48, r: R },
-      { id: "kite", x: 420, y: 48, r: R },
-      { id: "lantern", x: 420, y: 130, r: R },
-      { id: "snack", x: 242, y: 220, r: R },
-    ],
-  }),
-  level({
-    name: "Observatory",
-    sky: "night",
-    hero: { x: 180, y: 190, face: 1 },
-    diffs: [
-      { id: "moon", x: 420, y: 48, r: R },
-      { id: "star", x: 58, y: 48, r: R },
-      { id: "star2", x: 150, y: 48, r: R },
-      { id: "window", x: 58, y: 130, r: R },
-      { id: "window2", x: 242, y: 130, r: R },
-      { id: "lantern", x: 334, y: 130, r: R },
-      { id: "web", x: 334, y: 220, r: R },
-      { id: "cat", x: 58, y: 220, r: R },
-    ],
-  }),
 ];
 
 export function spotLevel(index: number): SpotLevel {
@@ -419,7 +355,55 @@ function layoutDiffs(diffs: SpotDiff[], random: () => number): SpotDiff[] {
   return diffs.map((diff) => ({ ...diff }));
 }
 
-export const HARD_CHANGES = 8;
+const HARD_R = 16;
+const HARD_FIND = 24;
+
+function hardCells(): { x: number; y: number }[] {
+  const cells: { x: number; y: number }[] = [];
+  for (let row = 0; row < 7; row += 1) {
+    for (let col = 0; col < 12; col += 1) {
+      if (col >= 5 && col <= 6 && row >= 2 && row <= 4) continue;
+      cells.push({ x: 42 + col * 34, y: 36 + row * 34 });
+    }
+  }
+  return cells;
+}
+
+function nameSeed(name: string): number {
+  let hash = 2166136261;
+  for (const char of name) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  return (hash >>> 0) || 1;
+}
+
+const HARD_SCENES: { name: string; sky: SpotSky; theme: SpotTheme; face: number }[] = [
+  { name: "Science Fair", sky: "dusk", theme: "fair", face: 1 },
+  { name: "Planetarium", sky: "night", theme: "planet", face: -1 },
+  { name: "Class Garden", sky: "day", theme: "garden", face: 1 },
+  { name: "Field Day", sky: "dusk", theme: "field", face: -1 },
+  { name: "Observatory", sky: "night", theme: "scope", face: 1 },
+];
+
+function buildHardScenes(): SpotLevel[] {
+  return HARD_SCENES.map((scene) => {
+    const cells = shuffle(hardCells(), rng(nameSeed(scene.name)));
+    const diffs = cells.slice(0, HARD_FIND).map((cell, index) => ({ id: `pip${index}`, x: cell.x, y: cell.y, r: HARD_R }));
+    const twins = cells.slice(HARD_FIND).map((cell, index) => ({ id: `same${index}`, x: cell.x, y: cell.y }));
+    return {
+      name: scene.name,
+      blurb: `Find ${diffs.length} changes.`,
+      sky: scene.sky,
+      theme: scene.theme,
+      fixed: true,
+      hero: { x: 229, y: 156, face: scene.face },
+      diffs,
+      twins,
+    };
+  });
+}
+
+for (const scene of buildHardScenes()) SPOT_LEVELS.push(scene);
+
+export const HARD_CHANGES = HARD_FIND;
 
 export function dealSpot(seed: number, minChanges = 0): SpotLevel[] {
   const random = rng(seed);
@@ -432,5 +416,12 @@ export function dealSpot(seed: number, minChanges = 0): SpotLevel[] {
   }
   return [...groups.keys()]
     .sort((a, b) => a - b)
-    .flatMap((count) => shuffle(groups.get(count) ?? [], random).map((picture) => ({ ...picture, hero: { ...picture.hero }, diffs: layoutDiffs(picture.diffs, random) })));
+    .flatMap((count) =>
+      shuffle(groups.get(count) ?? [], random).map((picture) => ({
+        ...picture,
+        hero: { ...picture.hero },
+        twins: picture.twins?.map((twin) => ({ ...twin })),
+        diffs: picture.fixed ? picture.diffs.map((diff) => ({ ...diff })) : layoutDiffs(picture.diffs, random),
+      })),
+    );
 }

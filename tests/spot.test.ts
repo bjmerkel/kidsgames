@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { dealSpot, PANEL_H, PANEL_W, PANEL_X, PANEL_TOP, SPOT_LEVELS } from "../src/spot/scenes";
+import { dealSpot, HARD_CHANGES, PANEL_H, PANEL_W, PANEL_X, PANEL_TOP, SPOT_LEVELS } from "../src/spot/scenes";
 import { advanceSpot, blankSpotInput, createSpot, panelLocal, startSpot, tickSpot } from "../src/spot/sim";
 
 const STEP = 1000 / 60;
@@ -37,7 +37,7 @@ describe("silk spot", () => {
       "Field Day",
       "Observatory",
     ]);
-    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8]);
+    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 24, 24, 24, 24, 24]);
     expect(SPOT_LEVELS.filter((level) => level.sky === "night").map((level) => level.name)).toEqual([
       "Night Windows",
       "Moon Nest",
@@ -198,7 +198,35 @@ describe("silk spot", () => {
     expect(hard.hard).toBe(true);
     expect(hard.levels).toHaveLength(5);
     expect(hard.levels.map((level) => level.name).sort()).toEqual(["Class Garden", "Field Day", "Observatory", "Planetarium", "Science Fair"]);
-    expect(hard.levels.every((level) => level.diffs.length === 8)).toBe(true);
+    expect(hard.levels.every((level) => level.diffs.length === HARD_CHANGES)).toBe(true);
+    for (const level of hard.levels) {
+      expect(level.twins).toHaveLength(54);
+      const spots = [...level.diffs, ...(level.twins ?? [])];
+      for (let i = 0; i < spots.length; i += 1) {
+        for (let j = i + 1; j < spots.length; j += 1) {
+          expect(Math.hypot(spots[i].x - spots[j].x, spots[i].y - spots[j].y)).toBeGreaterThan(32);
+        }
+      }
+    }
+    const fair = SPOT_LEVELS.find((level) => level.name === "Science Fair");
+    const dealt = dealSpot(11, HARD_CHANGES).find((level) => level.name === "Science Fair");
+    expect(dealt?.diffs.map((diff) => [diff.id, diff.x, diff.y])).toEqual(fair?.diffs.map((diff) => [diff.id, diff.x, diff.y]));
+    let looking = createSpot(0, 0, fair ? [fair] : []);
+    const twin = fair?.twins?.[0];
+    expect(twin).toBeTruthy();
+    looking = tap(looking, PANEL_X + (twin?.x ?? 0), PANEL_TOP + (twin?.y ?? 0));
+    expect(looking.misses).toBe(1);
+    expect(looking.score).toBe(0);
+    expect(looking.hintId).toBeNull();
+    const pip = looking.diffs[0];
+    looking = tap(looking, PANEL_X + pip.x, PANEL_TOP + pip.y);
+    expect(looking.score).toBe(100);
+    let stubborn = startSpot(3, true);
+    for (let miss = 0; miss < 5; miss += 1) stubborn = tap(stubborn, PANEL_X + 229, PANEL_TOP + 150);
+    expect(stubborn.misses).toBe(5);
+    expect(stubborn.hintId).toBeNull();
+    stubborn = tap(stubborn, PANEL_X + 229, PANEL_TOP + 150);
+    expect(stubborn.hintId).toBeTruthy();
     expect(startSpot(11).levels).toHaveLength(SPOT_LEVELS.length);
 
     let state = hard;
@@ -220,7 +248,7 @@ describe("silk spot", () => {
     random.mockRestore();
     const seed = 1 + Math.floor(0.2 * 2147483646);
     expect(again.hard).toBe(true);
-    expect(again.levels.map((level) => level.name)).toEqual(dealSpot(seed, 8).map((level) => level.name));
+    expect(again.levels.map((level) => level.name)).toEqual(dealSpot(seed, HARD_CHANGES).map((level) => level.name));
   });
 
   it("pauses and maps both pictures", () => {
