@@ -22,7 +22,7 @@ function reach(rows: string[], sx: number, sy: number): Set<string> {
 describe("ice waddle", () => {
   it("has 5 mazes a penguin can clear, with more seals later", () => {
     expect(ICE_LEVELS.map((level) => level.name)).toEqual(["Snow Start", "Ice Lanes", "Fish Fort", "Seal Slide", "Night Ice"]);
-    expect(ICE_LEVELS.map((level) => level.sealStep)).toEqual([230, 200, 180, 165, 155]);
+    expect(ICE_LEVELS.map((level) => level.sealStep)).toEqual([260, 230, 210, 195, 185]);
     expect(ICE_LEVELS[4].night).toBe(true);
     const seals = ICE_LEVELS.map((level) => createWaddle(ICE_LEVELS.indexOf(level)).seals.length);
     expect(seals).toEqual([2, 2, 3, 4, 4]);

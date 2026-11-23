@@ -23,7 +23,7 @@ export const ICE_LEVELS: IceLevel[] = [
     name: "Snow Start",
     blurb: "Slide a finger to waddle.",
     night: false,
-    sealStep: 230,
+    sealStep: 260,
     scareMs: 7000,
     rows: maze([
       "###############",
@@ -51,7 +51,7 @@ export const ICE_LEVELS: IceLevel[] = [
     name: "Ice Lanes",
     blurb: "The seals are quicker.",
     night: false,
-    sealStep: 200,
+    sealStep: 230,
     scareMs: 6000,
     rows: maze([
       "###############",
@@ -79,7 +79,7 @@ export const ICE_LEVELS: IceLevel[] = [
     name: "Fish Fort",
     blurb: "Grab the big fish.",
     night: false,
-    sealStep: 180,
+    sealStep: 210,
     scareMs: 5500,
     rows: maze([
       "###############",
@@ -107,7 +107,7 @@ export const ICE_LEVELS: IceLevel[] = [
     name: "Seal Slide",
     blurb: "Four seals are out.",
     night: false,
-    sealStep: 165,
+    sealStep: 195,
     scareMs: 5000,
     rows: maze([
       "###############",
@@ -135,7 +135,7 @@ export const ICE_LEVELS: IceLevel[] = [
     name: "Night Ice",
     blurb: "The ice is dark.",
     night: true,
-    sealStep: 155,
+    sealStep: 185,
     scareMs: 4500,
     rows: maze([
       "###############",
