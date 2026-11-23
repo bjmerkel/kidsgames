@@ -39,6 +39,8 @@ import { drawSkate } from "./skate/draw";
 import { SKATE_LEVELS } from "./skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "./skate/sim";
 import { blankSkateTouch, readSkateTouch, skateOriginAt, skateTapJump, type SkatePointer, type SkateTouchHeld } from "./skate/touch";
+import { AXO_SPOTS, CAPY_SPOTS, CRAB_SPOTS, FISH_SPOTS, LOOK_SPOTS, RACE_SPOTS, RASCAL_SPOTS, WADDLE_SPOTS } from "./game/pads";
+import { TouchPad, drawTouchPad, runnerPush, runnerTap, sideSteer, slideDirection } from "./game/touchpad";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -219,6 +221,51 @@ const skateKeys = { left: false, right: false, crouch: false, jump: false };
 let skateEdge = blankSkateInput();
 let skatePointers: SkatePointer[] = [];
 let skateTouchHeld: SkateTouchHeld = blankSkateTouch();
+const touchClaims = new Set<number>();
+type RunnerFinger = { id: number; x: number; y: number; x0: number; y0: number; t0: number };
+const raceFingers = new Map<number, RunnerFinger>();
+const rascalFingers = new Map<number, RunnerFinger>();
+const capyFingers = new Map<number, RunnerFinger>();
+const waddleFingers = new Map<number, RunnerFinger>();
+const crabTouch = new TouchPad(CRAB_SPOTS, (name) => {
+  if (name === "tuck") queue({ ...blankInput(), tuck: true });
+  if (name === "pause") queue({ ...blankInput(), pause: true });
+});
+const raceTouch = new TouchPad(RACE_SPOTS, (name) => {
+  if (name === "use") raceEdge = { ...raceEdge, use: true };
+  if (name === "pause") raceEdge = { ...raceEdge, pause: true };
+});
+const fishTouch = new TouchPad(FISH_SPOTS, (name) => {
+  if (name === "catch") fishEdge = { ...fishEdge, catch: true };
+  if (name === "pause") fishEdge = { ...fishEdge, pause: true };
+});
+const axoTouch = new TouchPad(AXO_SPOTS, (name) => {
+  if (name === "pause") axoEdge = { ...axoEdge, pause: true };
+});
+const rascalTouch = new TouchPad(RASCAL_SPOTS, (name) => {
+  if (name === "jump") rascalEdge = { ...rascalEdge, jump: true };
+  if (name === "web") rascalEdge = { ...rascalEdge, web: true };
+  if (name === "pause") rascalEdge = { ...rascalEdge, pause: true };
+});
+const capyTouch = new TouchPad(CAPY_SPOTS, (name) => {
+  if (name === "jump") capyEdge = { ...capyEdge, jump: true };
+  if (name === "pause") capyEdge = { ...capyEdge, pause: true };
+});
+const waddleTouch = new TouchPad(WADDLE_SPOTS, (name) => {
+  if (name === "pause") waddleEdge = { ...waddleEdge, pause: true };
+});
+const spotTouch = new TouchPad(LOOK_SPOTS, (name) => {
+  if (name === "hint") spotEdge = { ...spotEdge, hint: true };
+  if (name === "pause") spotEdge = { ...spotEdge, pause: true };
+});
+const burstTouch = new TouchPad(LOOK_SPOTS, (name) => {
+  if (name === "hint") burstEdge = { ...burstEdge, hint: true };
+  if (name === "pause") burstEdge = { ...burstEdge, pause: true };
+});
+const huntTouch = new TouchPad(LOOK_SPOTS, (name) => {
+  if (name === "hint") huntEdge = { ...huntEdge, hint: true };
+  if (name === "pause") huntEdge = { ...huntEdge, pause: true };
+});
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -304,6 +351,7 @@ function show(next: Mode): void {
     state = createGame(applyTunes(LEVELS, tunes));
     pending = blankInput();
     held = blankInput();
+    crabTouch.clear();
     cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
   }
   if (next === "race") openGarage();
@@ -323,6 +371,8 @@ function openGarage(): void {
   raceScreen = "select";
   raceState = null;
   raceEdge = blankRaceInput();
+  raceTouch.clear();
+  raceFingers.clear();
   syncRaceChrome();
 }
 
@@ -342,9 +392,7 @@ function syncRaceChrome(): void {
   const track = TRACKS[raceState.trackIndex];
   if (raceHeading) raceHeading.textContent = raceState.phase === "cup" ? "Woodland Cup" : track.name;
   const live = raceState.phase === "racing" || raceState.phase === "countdown" || raceState.phase === "paused";
-  racePad?.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (racePad) racePad.hidden = live;
   if (raceNext) {
     raceNext.hidden = live;
     if (raceState.phase === "cup") raceNext.textContent = "Play again";
@@ -361,6 +409,7 @@ function openPond(): void {
   fishState = createPond(0);
   fishAcc = 0;
   fishEdge = blankPondInput();
+  fishTouch.clear();
   syncFishChrome();
 }
 
@@ -369,9 +418,7 @@ function syncFishChrome(): void {
   const level = FISH_LEVELS[fishState.levelIndex];
   if (fishHeading) fishHeading.textContent = fishState.phase === "done" ? "Pond Fishing" : level.name;
   const live = fishState.phase === "playing" || fishState.phase === "paused";
-  fishPad?.querySelectorAll<HTMLButtonElement>("button[data-fish]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (fishPad) fishPad.hidden = live;
   if (fishNext) {
     fishNext.hidden = live;
     fishNext.textContent = fishState.phase === "done" ? "Play again" : fishState.levelIndex >= FISH_LEVELS.length - 1 ? "The creel" : "Next level";
@@ -382,6 +429,7 @@ function openAxo(): void {
   axoState = createAxo(0);
   axoAcc = 0;
   axoEdge = blankAxoInput();
+  axoTouch.clear();
   axoKeys.left = false;
   axoKeys.right = false;
   axoKeys.fire = false;
@@ -393,9 +441,7 @@ function syncAxoChrome(): void {
   const level = AXO_LEVELS[axoState.levelIndex];
   if (axoHeading) axoHeading.textContent = axoState.phase === "done" ? "Axolotl Patrol" : level.name;
   const live = axoState.phase === "playing" || axoState.phase === "paused";
-  axoPad?.querySelectorAll<HTMLButtonElement>("button[data-axo]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (axoPad) axoPad.hidden = live;
   if (axoNext) {
     axoNext.hidden = live;
     axoNext.textContent = axoState.phase === "done" ? "Play again" : axoState.phase === "retry" ? "Try again" : axoState.levelIndex >= AXO_LEVELS.length - 1 ? "The patrol" : "Next level";
@@ -404,8 +450,8 @@ function syncAxoChrome(): void {
 
 function axoInput(): AxoInput {
   return {
-    dx: (axoKeys.right ? 1 : 0) - (axoKeys.left ? 1 : 0),
-    fire: axoKeys.fire,
+    dx: (axoKeys.right || axoTouch.held("right") ? 1 : 0) - (axoKeys.left || axoTouch.held("left") ? 1 : 0),
+    fire: axoKeys.fire || axoTouch.held("fire"),
     pause: axoEdge.pause,
     confirm: axoEdge.confirm,
   };
@@ -415,6 +461,8 @@ function openRascal(): void {
   rascalState = createRascal(0);
   rascalAcc = 0;
   rascalEdge = blankRascalInput();
+  rascalTouch.clear();
+  rascalFingers.clear();
   rascalKeys.left = false;
   rascalKeys.right = false;
   rascalKeys.jump = false;
@@ -426,9 +474,7 @@ function syncRascalChrome(): void {
   const level = ROOF_LEVELS[rascalState.levelIndex];
   if (rascalHeading) rascalHeading.textContent = rascalState.phase === "done" ? "Web Rascal" : level.name;
   const live = rascalState.phase === "playing" || rascalState.phase === "paused";
-  rascalPad?.querySelectorAll<HTMLButtonElement>("button[data-rascal]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (rascalPad) rascalPad.hidden = live;
   if (rascalNext) {
     rascalNext.hidden = live;
     rascalNext.textContent = rascalState.phase === "done" ? "Play again" : rascalState.phase === "retry" ? "Try again" : rascalState.levelIndex >= ROOF_LEVELS.length - 1 ? "The nest" : "Next level";
@@ -436,10 +482,11 @@ function syncRascalChrome(): void {
 }
 
 function rascalInput(): RascalInput {
+  const running = runnerPush([...rascalFingers.values()], performance.now());
   return {
-    dx: (rascalKeys.right ? 1 : 0) - (rascalKeys.left ? 1 : 0),
+    dx: (rascalKeys.right || rascalTouch.held("right") || running ? 1 : 0) - (rascalKeys.left || rascalTouch.held("left") ? 1 : 0),
     jump: rascalEdge.jump,
-    jumpHeld: rascalKeys.jump,
+    jumpHeld: rascalKeys.jump || rascalTouch.held("jump"),
     web: rascalEdge.web,
     pause: rascalEdge.pause,
     confirm: rascalEdge.confirm,
@@ -450,6 +497,8 @@ function openCapy(): void {
   capyState = createCapy(0);
   capyAcc = 0;
   capyEdge = blankCapyInput();
+  capyTouch.clear();
+  capyFingers.clear();
   capyKeys.left = false;
   capyKeys.right = false;
   capyKeys.jump = false;
@@ -461,9 +510,7 @@ function syncCapyChrome(): void {
   const level = JUNGLE_LEVELS[capyState.levelIndex];
   if (capyHeading) capyHeading.textContent = capyState.phase === "done" ? "Capy Swing" : level.name;
   const live = capyState.phase === "playing" || capyState.phase === "paused";
-  capyPad?.querySelectorAll<HTMLButtonElement>("button[data-capy]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (capyPad) capyPad.hidden = live;
   if (capyNext) {
     capyNext.hidden = live;
     capyNext.textContent = capyState.phase === "done" ? "Play again" : capyState.phase === "retry" ? "Try again" : capyState.levelIndex >= JUNGLE_LEVELS.length - 1 ? "The pool" : "Next level";
@@ -471,10 +518,11 @@ function syncCapyChrome(): void {
 }
 
 function capyInput(): CapyInput {
+  const running = runnerPush([...capyFingers.values()], performance.now());
   return {
-    dx: (capyKeys.right ? 1 : 0) - (capyKeys.left ? 1 : 0),
+    dx: (capyKeys.right || capyTouch.held("right") || running ? 1 : 0) - (capyKeys.left || capyTouch.held("left") ? 1 : 0),
     jump: capyEdge.jump,
-    jumpHeld: capyKeys.jump,
+    jumpHeld: capyKeys.jump || capyTouch.held("jump"),
     pause: capyEdge.pause,
     confirm: capyEdge.confirm,
   };
@@ -484,6 +532,8 @@ function openWaddle(): void {
   waddleState = createWaddle(0);
   waddleAcc = 0;
   waddleEdge = blankWaddleInput();
+  waddleTouch.clear();
+  waddleFingers.clear();
   waddleKeys.left = false;
   waddleKeys.right = false;
   waddleKeys.up = false;
@@ -496,19 +546,26 @@ function syncWaddleChrome(): void {
   const level = ICE_LEVELS[waddleState.levelIndex];
   if (waddleHeading) waddleHeading.textContent = waddleState.phase === "done" ? "Ice Waddle" : level.name;
   const live = waddleState.phase === "playing" || waddleState.phase === "paused";
-  waddlePad?.querySelectorAll<HTMLButtonElement>("button[data-waddle]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (waddlePad) waddlePad.hidden = live;
   if (waddleNext) {
     waddleNext.hidden = live;
     waddleNext.textContent = waddleState.phase === "done" ? "Play again" : waddleState.phase === "retry" ? "Try again" : waddleState.levelIndex >= ICE_LEVELS.length - 1 ? "The ice" : "Next level";
   }
 }
 
+function waddleSlide(): { dx: number; dy: number } {
+  for (const finger of waddleFingers.values()) {
+    const dir = slideDirection(finger.x0, finger.y0, finger.x, finger.y);
+    if (dir.dx || dir.dy) return dir;
+  }
+  return { dx: 0, dy: 0 };
+}
+
 function waddleInput(): WaddleInput {
+  const slide = waddleSlide();
   return {
-    dx: (waddleKeys.right ? 1 : 0) - (waddleKeys.left ? 1 : 0),
-    dy: (waddleKeys.down ? 1 : 0) - (waddleKeys.up ? 1 : 0),
+    dx: (waddleKeys.right || slide.dx > 0 ? 1 : 0) - (waddleKeys.left || slide.dx < 0 ? 1 : 0),
+    dy: (waddleKeys.down || slide.dy > 0 ? 1 : 0) - (waddleKeys.up || slide.dy < 0 ? 1 : 0),
     pause: waddleEdge.pause,
     confirm: waddleEdge.confirm,
   };
@@ -518,6 +575,7 @@ function openSpot(): void {
   spotState = startSpot();
   spotAcc = 0;
   spotEdge = blankSpotInput();
+  spotTouch.clear();
   syncSpotChrome();
 }
 
@@ -526,9 +584,7 @@ function syncSpotChrome(): void {
   const level = spotState.levels[spotState.levelIndex];
   if (spotHeading) spotHeading.textContent = spotState.phase === "done" ? "Silk Spot" : level.name;
   const live = spotState.phase === "playing" || spotState.phase === "paused";
-  spotPad?.querySelectorAll<HTMLButtonElement>("button[data-spot]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (spotPad) spotPad.hidden = live;
   if (spotNext) {
     spotNext.hidden = live;
     spotNext.textContent = spotState.phase === "done" ? "Play again" : spotState.levelIndex >= spotState.levels.length - 1 ? "The last picture" : "Next picture";
@@ -543,6 +599,7 @@ function openBurst(): void {
   burstState = createBurst(0);
   burstAcc = 0;
   burstEdge = blankBurstInput();
+  burstTouch.clear();
   syncBurstChrome();
 }
 
@@ -551,9 +608,7 @@ function syncBurstChrome(): void {
   const level = BURST_LEVELS[burstState.levelIndex];
   if (burstHeading) burstHeading.textContent = burstState.phase === "done" ? "Berry Burst" : level.name;
   const live = burstState.phase === "playing" || burstState.phase === "paused";
-  burstPad?.querySelectorAll<HTMLButtonElement>("button[data-burst]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (burstPad) burstPad.hidden = live;
   if (burstNext) {
     burstNext.hidden = live;
     burstNext.textContent = burstState.phase === "done" ? "Play again" : burstState.phase === "retry" ? "Try again" : burstState.levelIndex >= BURST_LEVELS.length - 1 ? "The last garden" : "Next garden";
@@ -568,6 +623,7 @@ function openHunt(): void {
   huntState = startHunt();
   huntAcc = 0;
   huntEdge = blankHuntInput();
+  huntTouch.clear();
   huntDrag = null;
   syncHuntChrome();
 }
@@ -577,9 +633,7 @@ function syncHuntChrome(): void {
   const level = huntState.levels[huntState.levelIndex];
   if (huntHeading) huntHeading.textContent = huntState.phase === "done" ? "Word Hunt" : level.name;
   const live = huntState.phase === "playing" || huntState.phase === "paused";
-  huntPad?.querySelectorAll<HTMLButtonElement>("button[data-hunt]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (huntPad) huntPad.hidden = live;
   if (huntNext) {
     huntNext.hidden = live;
     huntNext.textContent = huntState.phase === "done" ? "Play again" : huntState.levelIndex >= huntState.levels.length - 1 ? "The last puzzle" : "Next puzzle";
@@ -645,8 +699,8 @@ function canvasPoint(surface: HTMLCanvasElement, event: PointerEvent): { x: numb
 
 function fishInput(): PondInput {
   return {
-    dx: (fishKeys.right ? 1 : 0) - (fishKeys.left ? 1 : 0),
-    dy: (fishKeys.down ? 1 : 0) - (fishKeys.up ? 1 : 0),
+    dx: (fishKeys.right || fishTouch.held("right") ? 1 : 0) - (fishKeys.left || fishTouch.held("left") ? 1 : 0),
+    dy: (fishKeys.down || fishTouch.held("down") ? 1 : 0) - (fishKeys.up || fishTouch.held("up") ? 1 : 0),
     catch: fishEdge.catch,
     pause: fishEdge.pause,
     confirm: fishEdge.confirm,
@@ -658,12 +712,21 @@ function startRace(): void {
   raceScreen = "play";
   raceAcc = 0;
   raceEdge = blankRaceInput();
+  raceTouch.clear();
+  raceFingers.clear();
   syncRaceChrome();
   requestAnimationFrame(() => fit());
 }
 
 function raceSteer(): number {
-  return (raceKeys.right ? 1 : 0) - (raceKeys.left ? 1 : 0);
+  let steer = (raceKeys.right || raceTouch.held("right") ? 1 : 0) - (raceKeys.left || raceTouch.held("left") ? 1 : 0);
+  if (raceState?.phase === "racing") {
+    for (const finger of raceFingers.values()) {
+      const side = sideSteer(finger.x);
+      if (side) steer += side;
+    }
+  }
+  return steer;
 }
 
 function holdRaceButton(button: HTMLButtonElement, event: PointerEvent): void {
@@ -1290,8 +1353,132 @@ document.querySelectorAll<HTMLButtonElement>("button[data-race]").forEach((butto
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 
+function bindPad(
+  surface: HTMLCanvasElement,
+  pad: TouchPad,
+  opts: {
+    active: () => boolean;
+    armed: () => boolean;
+    paused: () => boolean;
+    resume: () => void;
+    fingers?: Map<number, RunnerFinger>;
+    allow?: (x: number, y: number) => boolean;
+    onTap?: () => void;
+  },
+): void {
+  surface.addEventListener("pointerdown", (event) => {
+    if (!opts.active()) return;
+    if (opts.paused()) {
+      opts.resume();
+      touchClaims.add(event.pointerId);
+      event.preventDefault();
+      return;
+    }
+    if (!opts.armed()) return;
+    const point = canvasPoint(surface, event);
+    if (pad.down(event.pointerId, point.x, point.y)) {
+      touchClaims.add(event.pointerId);
+      if (!surface.hasPointerCapture(event.pointerId)) surface.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
+    if (opts.fingers && (opts.allow?.(point.x, point.y) ?? true)) {
+      opts.fingers.set(event.pointerId, { id: event.pointerId, x: point.x, y: point.y, x0: point.x, y0: point.y, t0: performance.now() });
+    }
+  }, true);
+  surface.addEventListener("pointermove", (event) => {
+    const finger = opts.fingers?.get(event.pointerId);
+    if (!finger) return;
+    const point = canvasPoint(surface, event);
+    finger.x = point.x;
+    finger.y = point.y;
+  }, true);
+  const end = (event: PointerEvent) => {
+    const finger = opts.fingers?.get(event.pointerId);
+    pad.up(event.pointerId);
+    opts.fingers?.delete(event.pointerId);
+    if (finger && opts.armed() && opts.onTap && runnerTap(finger, performance.now())) opts.onTap();
+    if (touchClaims.delete(event.pointerId) && surface.hasPointerCapture(event.pointerId)) surface.releasePointerCapture(event.pointerId);
+  };
+  surface.addEventListener("pointerup", end, true);
+  surface.addEventListener("pointercancel", end, true);
+  surface.addEventListener("contextmenu", (event) => event.preventDefault());
+}
+
+bindPad(canvas, crabTouch, {
+  active: () => mode === "crab",
+  armed: () => state.phase === "playing",
+  paused: () => state.phase === "paused",
+  resume: () => queue({ ...blankInput(), pause: true }),
+});
+bindPad(raceSurface, raceTouch, {
+  active: () => mode === "race" && raceScreen === "play" && !!raceState,
+  armed: () => raceState?.phase === "racing",
+  paused: () => raceState?.phase === "paused",
+  resume: () => { raceEdge = { ...raceEdge, pause: true }; },
+  fingers: raceFingers,
+});
+bindPad(fishSurface, fishTouch, {
+  active: () => mode === "fish" && !!fishState,
+  armed: () => fishState?.phase === "playing",
+  paused: () => fishState?.phase === "paused",
+  resume: () => { fishEdge = { ...fishEdge, pause: true }; },
+});
+bindPad(axoSurface, axoTouch, {
+  active: () => mode === "axo" && !!axoState,
+  armed: () => axoState?.phase === "playing",
+  paused: () => axoState?.phase === "paused",
+  resume: () => { axoEdge = { ...axoEdge, pause: true }; },
+});
+bindPad(rascalSurface, rascalTouch, {
+  active: () => mode === "rascal" && !!rascalState,
+  armed: () => rascalState?.phase === "playing",
+  paused: () => rascalState?.phase === "paused",
+  resume: () => { rascalEdge = { ...rascalEdge, pause: true }; },
+  fingers: rascalFingers,
+  allow: (x, y) => !(rascalState && hookAtPoint(rascalState, x + rascalCameraX(rascalState), y)),
+  onTap: () => { rascalEdge = { ...rascalEdge, jump: true }; },
+});
+bindPad(capySurface, capyTouch, {
+  active: () => mode === "capy" && !!capyState,
+  armed: () => capyState?.phase === "playing",
+  paused: () => capyState?.phase === "paused",
+  resume: () => { capyEdge = { ...capyEdge, pause: true }; },
+  fingers: capyFingers,
+  onTap: () => { capyEdge = { ...capyEdge, jump: true }; },
+});
+bindPad(waddleSurface, waddleTouch, {
+  active: () => mode === "waddle" && !!waddleState,
+  armed: () => waddleState?.phase === "playing",
+  paused: () => waddleState?.phase === "paused",
+  resume: () => { waddleEdge = { ...waddleEdge, pause: true }; },
+  fingers: waddleFingers,
+});
+bindPad(spotSurface, spotTouch, {
+  active: () => mode === "spot" && !!spotState,
+  armed: () => spotState?.phase === "playing",
+  paused: () => spotState?.phase === "paused",
+  resume: () => { spotEdge = { ...spotEdge, pause: true }; },
+});
+bindPad(burstSurface, burstTouch, {
+  active: () => mode === "burst" && !!burstState,
+  armed: () => burstState?.phase === "playing",
+  paused: () => burstState?.phase === "paused",
+  resume: () => { burstEdge = { ...burstEdge, pause: true }; },
+});
+bindPad(huntSurface, huntTouch, {
+  active: () => mode === "hunt" && !!huntState,
+  armed: () => huntState?.phase === "playing",
+  paused: () => huntState?.phase === "paused",
+  resume: () => { huntEdge = { ...huntEdge, pause: true }; },
+});
+
 canvas.addEventListener("pointerdown", () => {
   if (mode === "crab" && state.phase !== "playing") queue({ ...blankInput(), confirm: true, start: true });
+});
+
+document.querySelectorAll<HTMLElement>("#pad .dpad, #pad .actions").forEach((el) => {
+  el.hidden = true;
 });
 
 waddleSurface.addEventListener("pointerdown", () => {
@@ -1303,6 +1490,7 @@ waddleSurface.addEventListener("pointerdown", () => {
 });
 
 spotSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (mode !== "spot" || !spotState) return;
   if (spotState.phase === "clear" || spotState.phase === "done") {
     spotState = advanceSpot(spotState);
@@ -1319,6 +1507,7 @@ spotSurface.addEventListener("pointerdown", (event) => {
 });
 
 burstSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (mode !== "burst" || !burstState) return;
   if (burstState.phase === "clear" || burstState.phase === "retry" || burstState.phase === "done") {
     burstState = advanceBurst(burstState);
@@ -1335,6 +1524,7 @@ burstSurface.addEventListener("pointerdown", (event) => {
 });
 
 huntSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (mode !== "hunt" || !huntState) return;
   if (huntState.phase === "clear" || huntState.phase === "done") {
     huntState = advanceHunt(huntState);
@@ -1346,12 +1536,14 @@ huntSurface.addEventListener("pointerdown", (event) => {
   if (!huntSurface.hasPointerCapture(event.pointerId)) huntSurface.setPointerCapture(event.pointerId);
 });
 huntSurface.addEventListener("pointermove", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt") return;
   const point = canvasPoint(huntSurface, event);
   huntDrag.x2 = point.x;
   huntDrag.y2 = point.y;
 });
 const finishHuntDrag = (event: PointerEvent) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (!huntDrag || huntDrag.pointer !== event.pointerId || mode !== "hunt" || !huntState) return;
   const point = canvasPoint(huntSurface, event);
   const tile = huntMetrics(huntState.levels[huntState.levelIndex].size).tile;
@@ -1375,6 +1567,7 @@ capySurface.addEventListener("pointerdown", () => {
 });
 
 rascalSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
   if (mode !== "rascal" || !rascalState) return;
   if (rascalState.phase === "clear" || rascalState.phase === "retry" || rascalState.phase === "done") {
     rascalState = advanceRascal(rascalState);
@@ -1412,7 +1605,7 @@ raceSurface.addEventListener("pointerdown", () => {
 function raceInput(): RaceInput {
   return {
     steer: raceSteer(),
-    brake: raceKeys.brake,
+    brake: raceKeys.brake || raceTouch.held("brake"),
     use: raceEdge.use,
     pause: raceEdge.pause,
     confirm: raceEdge.confirm,
@@ -1423,6 +1616,10 @@ function frame(now: number): void {
   const delta = Math.min(100, now - last);
   last = now;
   if (mode === "crab") {
+    const touchX = ((crabTouch.held("right") ? 1 : 0) - (crabTouch.held("left") ? 1 : 0)) as -1 | 0 | 1;
+    const touchY = ((crabTouch.held("down") ? 1 : 0) - (crabTouch.held("up") ? 1 : 0)) as -1 | 0 | 1;
+    if (touchX || touchY) held = { ...blankInput(), dx: touchX, dy: touchY };
+    else if (!pending.dx && !pending.dy) held = { ...held, dx: 0, dy: 0 };
     acc += delta;
     let steps = 0;
     while (acc >= STEP_MS && steps < 5) {
@@ -1438,6 +1635,7 @@ function frame(now: number): void {
     const target = cameraTop(state.crab.y, state.level.height, VIEW_H);
     cam += (target - cam) * 0.12;
     drawFrame(context, state, cam, now);
+    if (state.phase === "playing") drawTouchPad(context, crabTouch.spots, (name) => crabTouch.pressed(name));
   }
   if (mode === "race") {
     if (raceScreen === "select") {
@@ -1462,6 +1660,11 @@ function frame(now: number): void {
       }
       if (raceScreen === "play" && raceState) {
         drawRace(raceGfx, raceState, now);
+        if (raceState.phase === "racing" && raceState.goMs <= 0) {
+          const item = raceState.racers[raceState.playerIndex]?.item;
+          const use = item === "acorn" ? "Acorn" : item === "leaf" ? "Leaf" : item === "honey" ? "Honey" : "Use";
+          drawTouchPad(raceGfx, raceTouch.spots, (name) => raceTouch.pressed(name), { use });
+        }
         syncRaceChrome();
       }
     }
@@ -1478,6 +1681,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawPond(fishGfx, fishState, now);
+    if (fishState.phase === "playing") drawTouchPad(fishGfx, fishTouch.spots, (name) => fishTouch.pressed(name));
     syncFishChrome();
   }
   if (mode === "axo" && axoState) {
@@ -1492,6 +1696,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawAxo(axoGfx, axoState, now);
+    if (axoState.phase === "playing") drawTouchPad(axoGfx, axoTouch.spots, (name) => axoTouch.pressed(name));
     syncAxoChrome();
   }
   if (mode === "rascal" && rascalState) {
@@ -1506,6 +1711,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawRascal(rascalGfx, rascalState, now);
+    if (rascalState.phase === "playing") drawTouchPad(rascalGfx, rascalTouch.spots, (name) => rascalTouch.pressed(name));
     syncRascalChrome();
   }
   if (mode === "capy" && capyState) {
@@ -1520,6 +1726,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawCapy(capyGfx, capyState, now);
+    if (capyState.phase === "playing") drawTouchPad(capyGfx, capyTouch.spots, (name) => capyTouch.pressed(name));
     syncCapyChrome();
   }
   if (mode === "waddle" && waddleState) {
@@ -1534,6 +1741,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawWaddle(waddleGfx, waddleState, now);
+    if (waddleState.phase === "playing") drawTouchPad(waddleGfx, waddleTouch.spots, (name) => waddleTouch.pressed(name));
     syncWaddleChrome();
   }
   if (mode === "spot" && spotState) {
@@ -1548,6 +1756,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawSpot(spotGfx, spotState, now);
+    if (spotState.phase === "playing") drawTouchPad(spotGfx, spotTouch.spots, (name) => spotTouch.pressed(name));
     syncSpotChrome();
   }
   if (mode === "burst" && burstState) {
@@ -1562,6 +1771,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawBurst(burstGfx, burstState, now);
+    if (burstState.phase === "playing") drawTouchPad(burstGfx, burstTouch.spots, (name) => burstTouch.pressed(name));
     syncBurstChrome();
   }
   if (mode === "hunt" && huntState) {
@@ -1576,6 +1786,7 @@ function frame(now: number): void {
       steps += 1;
     }
     drawHunt(huntGfx, huntState, now);
+    if (huntState.phase === "playing") drawTouchPad(huntGfx, huntTouch.spots, (name) => huntTouch.pressed(name));
     syncHuntChrome();
   }
   if (mode === "skate" && skateState) {

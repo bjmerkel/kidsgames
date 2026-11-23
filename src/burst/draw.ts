@@ -66,7 +66,7 @@ export function drawBurst(ctx: CanvasRenderingContext2D, state: BurstState, nowM
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, GRID_Y + 30);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to match again.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to match.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "The garden is happy.");
   if (state.phase === "retry") banner(ctx, "Try again.", "The moves ran out.");
   if (state.phase === "done") banner(ctx, `You finished all ${BURST_LEVELS.length} levels.`, "Every garden is picked.");

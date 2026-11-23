@@ -21,7 +21,7 @@ export type IceLevel = {
 export const ICE_LEVELS: IceLevel[] = [
   {
     name: "Snow Start",
-    blurb: "Eat every fish.",
+    blurb: "Slide a finger to waddle.",
     night: false,
     sealStep: 230,
     scareMs: 7000,

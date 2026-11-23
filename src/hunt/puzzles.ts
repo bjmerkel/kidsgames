@@ -25,7 +25,7 @@ export type WordPuzzle = {
   placed: Placement[];
 };
 
-const SPAN = 456;
+const SPAN = 408;
 export const GRID_TOP = 196;
 
 export function metrics(size: number): { tile: number; originX: number; originY: number } {

@@ -45,7 +45,7 @@ export function drawRace(ctx: CanvasRenderingContext2D, state: RaceState, nowMs:
   drawHud(ctx, state, track);
   if (state.phase === "countdown") drawBanner(ctx, countdownText(state.countdownMs), track.blurb);
   else if (state.goMs > 0 && state.phase === "racing") drawBanner(ctx, "Go!", "");
-  else if (state.phase === "paused") drawBanner(ctx, "Paused", "Tap Pause to roll again.");
+  else if (state.phase === "paused") drawBanner(ctx, "Paused", "Tap the picture to roll.");
   else if (state.phase === "results") drawBanner(ctx, "You finished the race!", `${placeLabel(player.place)} place. ${state.points[player.id] ?? 0} cup points.`);
   else if (state.phase === "cup") drawCup(ctx, state);
 }
@@ -359,7 +359,7 @@ function drawHud(ctx: CanvasRenderingContext2D, state: RaceState, track: Track):
     ctx.textAlign = "left";
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillStyle = "#1c1915";
-    ctx.fillText(itemLabel(player.item), 24, VIEW_H - 24);
+    ctx.fillText(itemLabel(player.item), 24, 96);
   }
 }
 

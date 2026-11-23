@@ -51,7 +51,7 @@ export function drawPond(ctx: CanvasRenderingContext2D, state: PondState, nowMs:
     ctx.font = "700 20px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, 210);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to fish again.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to fish.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", level.blurb);
   if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every fish on the list is in the creel.");
 }

@@ -85,19 +85,19 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 
 ## Controls
 
-- Arrow keys or WASD, or the on-screen pad: hop one step. Hold a direction to keep hopping. The picture and the pad fit the phone screen, in portrait or landscape.
-- In Woodland Grand Prix, Left and Right steer, Down or Brake slows the kart, and Use spends the item from a yellow box.
-- In Pond Fishing, move the hook with the arrows or the pad, then tap Catch for the fish the level asks for.
-- In Axolotl Patrol, Left and Right slide the axolotl. Hold Space or Bubble to shoot. Pop every diving bug.
-- In Web Rascal, Left and Right run. Space or Jump hops. F, Web, or a tap on the web mark shoots a web. You hang on it, then jump.
-- In Capy Swing, Left and Right run. Space or Jump hops. Jump into a vine to swing across a river, and jump over the rolling logs.
-- In Ice Waddle, the arrows or the pad waddle through the maze. Eat every fish. A big fish makes the seals sleepy.
-- In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
-- In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
-- In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. H or Hint glows a starting letter.
-- In Ollie Cat, touch the picture. Hold a finger on the street to push, tap to ollie, and slide down to crouch. The on-screen Brake, Push, Ollie, and Crouch buttons do the same, and two fingers can hold Push and Crouch together. Right also pushes, Left brakes, and Down crouches. Ollie again in the air does a kickflip, then a grab. Tap Pause, or the picture while paused, to stop and roll.
-- Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
-- Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
+- Touch the picture. Every game paints its buttons on the picture, and the keyboard still works.
+- In Hermit Crab Crossing, hold Up, Down, Left, or Right on the picture to keep hopping. Tap Tuck to pull into the shell. Arrow keys or WASD hop one step. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
+- In Woodland Grand Prix, hold Left or Right, or the left or right side of the picture, to steer. Hold Brake to slow down. Tap Use to spend the item from a yellow box. The button name changes to Acorn, Leaf, or Honey.
+- In Pond Fishing, hold the arrows on the picture to move the hook, then tap Catch for the fish the level asks for.
+- In Axolotl Patrol, hold Left or Right to slide. Hold Bubble to shoot. Pop every diving bug.
+- In Web Rascal, hold Left or Right, hold the street to run right, or tap the street to jump. Tap Web, or a web mark, to shoot a web. You hang on it, then jump.
+- In Capy Swing, hold Left or Right, hold the trail to run, or tap the trail to jump. Jump into a vine to swing across a river, and jump over the rolling logs.
+- In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
+- In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
+- In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
+- In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.
+- In Ollie Cat, hold a finger on the street to push, tap to ollie, and slide down to crouch. The on-screen Brake, Push, Ollie, and Crouch buttons do the same, and two fingers can hold Push and Crouch together. Right also pushes, Left brakes, and Down crouches. Ollie again in the air does a kickflip, then a grab.
+- Esc, or Pause on the picture: pause. Tap the picture while paused, press Enter, or tap the big button: start, skip the intro, and continue.
 - Up is toward the burrow.
 
 ## Levels

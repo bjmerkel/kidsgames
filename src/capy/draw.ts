@@ -79,7 +79,7 @@ export function drawCapy(ctx: CanvasRenderingContext2D, state: CapyState, nowMs:
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, 124);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to play again.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to swing.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", level.blurb);
   if (state.phase === "retry") banner(ctx, "Try again.", "Back to the last safe bank.");
   if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "The jungle pool is yours.");

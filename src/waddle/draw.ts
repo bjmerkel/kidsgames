@@ -64,7 +64,7 @@ export function drawWaddle(ctx: CanvasRenderingContext2D, state: WaddleState, no
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, 118);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to waddle again.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to waddle.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", level.blurb);
   if (state.phase === "retry") banner(ctx, "Try again.", "The seals got there first.");
   if (state.phase === "done") banner(ctx, "You finished all 5 levels.", "Every fish is eaten.");

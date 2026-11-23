@@ -84,7 +84,7 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
   if (state.hint) ring(ctx, state.hint.x, state.hint.y, box, "#f2c14e", 3 + Math.sin(nowMs / 140));
 
   if (state.toastMs > 0 && state.phase === "playing") {
-    const toastY = Math.min(VIEW_H - 46, box.originY + level.size * box.tile + 12);
+    const toastY = Math.min(636, box.originY + level.size * box.tile + 12);
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(28, 25, 21, 0.55)";
     roundRect(ctx, 70, toastY, VIEW_W - 140, 32, 10);
@@ -93,7 +93,7 @@ export function drawHunt(ctx: CanvasRenderingContext2D, state: HuntState, nowMs:
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, toastY + 22);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to keep looking.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to keep looking.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "Every word is circled.");
   if (state.phase === "done") banner(ctx, `You finished all ${state.levels.length} levels.`, "Every puzzle is solved.");
 }

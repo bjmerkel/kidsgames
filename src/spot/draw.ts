@@ -35,7 +35,7 @@ export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs:
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, PANEL_TOP + 30);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to look again.");
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to look again.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "You found every change.");
   if (state.phase === "done") banner(ctx, `You finished all ${state.levels.length} levels.`, "Every picture is solved.");
 }
