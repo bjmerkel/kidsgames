@@ -25,6 +25,7 @@ import { advanceRascal, blankRascalInput, createRascal, hookAtPoint, rascalCamer
 import { drawCapy } from "./capy/draw";
 import { JUNGLE_LEVELS } from "./capy/levels";
 import { advanceCapy, blankCapyInput, createCapy, tickCapy, type CapyInput, type CapyState } from "./capy/sim";
+import { capyTouchRead } from "./capy/touch";
 import { drawWaddle } from "./waddle/draw";
 import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
@@ -217,6 +218,7 @@ let capyState: CapyState | null = null;
 let capyAcc = 0;
 const capyKeys = { left: false, right: false, jump: false };
 let capyEdge = blankCapyInput();
+let capyFieldJump = false;
 let waddleState: WaddleState | null = null;
 let waddleAcc = 0;
 const waddleKeys = { left: false, right: false, up: false, down: false };
@@ -517,6 +519,7 @@ function openCapy(): void {
   capyState = createCapy(0);
   capyAcc = 0;
   capyEdge = blankCapyInput();
+  capyFieldJump = false;
   capyTouch.clear();
   capyFingers.clear();
   capyKeys.left = false;
@@ -539,10 +542,17 @@ function syncCapyChrome(): void {
 
 function capyInput(): CapyInput {
   const running = runnerPush([...capyFingers.values()], performance.now());
+  const touch = capyTouchRead({
+    edgeJump: capyEdge.jump,
+    keyHeld: capyKeys.jump,
+    buttonHeld: capyTouch.held("jump"),
+    fieldDown: capyFieldJump,
+    fieldHeld: capyFingers.size > 0,
+  });
   return {
     dx: (capyKeys.right || capyTouch.held("right") || running ? 1 : 0) - (capyKeys.left || capyTouch.held("left") ? 1 : 0),
-    jump: capyEdge.jump,
-    jumpHeld: capyKeys.jump || capyTouch.held("jump"),
+    jump: touch.jump,
+    jumpHeld: touch.jumpHeld,
     pause: capyEdge.pause,
     confirm: capyEdge.confirm,
   };
@@ -1419,6 +1429,7 @@ function bindPad(
     resume: () => void;
     fingers?: Map<number, RunnerFinger>;
     allow?: (x: number, y: number) => boolean;
+    onDown?: () => void;
     onTap?: () => void;
   },
 ): void {
@@ -1440,6 +1451,7 @@ function bindPad(
     }
     if (opts.fingers && (opts.allow?.(point.x, point.y) ?? true)) {
       opts.fingers.set(event.pointerId, { id: event.pointerId, x: point.x, y: point.y, x0: point.x, y0: point.y, t0: performance.now() });
+      opts.onDown?.();
     }
   }, true);
   surface.addEventListener("pointermove", (event) => {
@@ -1502,7 +1514,7 @@ bindPad(capySurface, capyTouch, {
   paused: () => capyState?.phase === "paused",
   resume: () => { capyEdge = { ...capyEdge, pause: true }; },
   fingers: capyFingers,
-  onTap: () => { capyEdge = { ...capyEdge, jump: true }; },
+  onDown: () => { capyFieldJump = true; },
 });
 bindPad(waddleSurface, waddleTouch, {
   active: () => mode === "waddle" && !!waddleState,
@@ -1780,6 +1792,7 @@ function frame(now: number): void {
       if (input.confirm && (capyState.phase === "clear" || capyState.phase === "retry" || capyState.phase === "done")) capyState = advanceCapy(capyState);
       else capyState = tickCapy(capyState, input, STEP_MS);
       capyEdge = blankCapyInput();
+      capyFieldJump = false;
       capyAcc -= STEP_MS;
       steps += 1;
     }
