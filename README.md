@@ -34,7 +34,7 @@ You have a set number of moves. The score carries from garden to garden. Running
 
 Two pictures of the same rooftop. Web Rascal, the raccoon in the red shirt and blue pants, is in both. Tap a change in either picture. A ring shows what you found. A wrong tap says to look again, and three wrong taps (or the Hint button) circles one change you have not found yet. There is no way to lose.
 
-The score carries from picture to picture. The twenty pictures are Rooftop Morning, Park Swing, Night Windows, Snack Alley, Moon Nest, Chimney Puff, Kite Roof, Bakery Dusk, Star Porch, Puddle Lane, Lantern Row, Owl Windows, Flower Boxes, Flag Parade, Cat Nap, Balloon Bunch, Web Corner, Moonlit Steps, Snack Window, and Nest Party. Each new game shuffles pictures that have the same number of changes, and moves those changes to a new place. Pictures with fewer changes still come first.
+The score carries from picture to picture. The twenty-five pictures are Rooftop Morning, Park Swing, Night Windows, Snack Alley, Moon Nest, Chimney Puff, Kite Roof, Bakery Dusk, Star Porch, Puddle Lane, Lantern Row, Owl Windows, Flower Boxes, Flag Parade, Cat Nap, Balloon Bunch, Web Corner, Moonlit Steps, Snack Window, Nest Party, Science Fair, Planetarium, Class Garden, Field Day, and Observatory. Each new game shuffles pictures that have the same number of changes, and moves those changes to a new place. Pictures with fewer changes still come first. Science Fair, Planetarium, Class Garden, Field Day, and Observatory each hide eight changes, and several of those changes are the same kind of thing.
 
 ## Ice Waddle
 

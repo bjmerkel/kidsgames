@@ -9,7 +9,7 @@ function tap(state: ReturnType<typeof createSpot>, x: number, y: number) {
 }
 
 describe("silk spot", () => {
-  it("has twenty pictures and separated changes", () => {
+  it("has twenty-five pictures and separated changes", () => {
     expect(SPOT_LEVELS.map((level) => level.name)).toEqual([
       "Rooftop Morning",
       "Park Swing",
@@ -31,8 +31,13 @@ describe("silk spot", () => {
       "Moonlit Steps",
       "Snack Window",
       "Nest Party",
+      "Science Fair",
+      "Planetarium",
+      "Class Garden",
+      "Field Day",
+      "Observatory",
     ]);
-    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7]);
+    expect(SPOT_LEVELS.map((level) => level.diffs.length)).toEqual([3, 4, 5, 5, 6, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8]);
     expect(SPOT_LEVELS.filter((level) => level.sky === "night").map((level) => level.name)).toEqual([
       "Night Windows",
       "Moon Nest",
@@ -40,6 +45,8 @@ describe("silk spot", () => {
       "Owl Windows",
       "Moonlit Steps",
       "Nest Party",
+      "Planetarium",
+      "Observatory",
     ]);
     for (const level of SPOT_LEVELS) {
       expect(level.blurb).toBe(`Find ${level.diffs.length} changes.`);
