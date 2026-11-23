@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ROAD_HALF } from "../src/skate/course";
+import { ROAD_HALF, courseTreats } from "../src/skate/course";
 import { courseWidth, pieceAt, SKATE_LEVELS, surfaceAt } from "../src/skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "../src/skate/sim";
 
@@ -232,6 +232,61 @@ describe("ollie cat", () => {
       expect(done.phase, SKATE_LEVELS[index].name).toBe("clear");
       expect(done.bails, SKATE_LEVELS[index].name).toBe(0);
     }
+  });
+
+  it("puts fish on the street for every park", () => {
+    for (const [index, level] of SKATE_LEVELS.entries()) {
+      const treats = courseTreats(level, index);
+      expect(treats.length, level.name).toBeGreaterThanOrEqual(2);
+      for (const treat of treats) {
+        expect(Math.abs(treat.lane)).toBeGreaterThan(40);
+        expect(Math.abs(treat.lane)).toBeLessThan(ROAD_HALF - 40);
+        expect(treat.s).toBeGreaterThan(80);
+        expect(treat.s).toBeLessThan(courseWidth(level) - 40);
+      }
+    }
+  });
+
+  it("grabs a fish when the board slides over to it", () => {
+    const treat = courseTreats(SKATE_LEVELS[0], 0)[0];
+    let state = createSkate(0);
+    state.x = treat.s;
+    state.lane = treat.lane;
+    state.vx = 200;
+    state = tickSkate(state, blankSkateInput(), STEP);
+    expect(state.treats).toContain(treat.id);
+    expect(state.score).toBeGreaterThanOrEqual(50);
+    expect(state.toast).toBe("Fish!");
+
+    const missed = createSkate(0);
+    missed.x = treat.s;
+    missed.lane = 0;
+    missed.vx = 200;
+    const still = tickSkate(missed, blankSkateInput(), STEP);
+    expect(still.treats).toEqual([]);
+  });
+
+  it("boosts when a turn is held and then let go", () => {
+    let state = createSkate(0);
+    state.vx = 260;
+    state.grounded = true;
+    const tapped = hold(state, 8, { steer: 1 });
+    const early = tickSkate(tapped, blankSkateInput(), STEP);
+    expect(early.toast).not.toBe("Boost!");
+
+    const held = hold(state, 40, { steer: 1 });
+    const boosted = tickSkate(held, blankSkateInput(), STEP);
+    expect(boosted.toast).toBe("Boost!");
+    expect(boosted.vx).toBeGreaterThan(held.vx);
+    expect(boosted.boostMs).toBeGreaterThan(0);
+    expect(Math.abs(boosted.lane)).toBeLessThan(ROAD_HALF);
+
+    let air = hold(state, 40, { steer: 1 });
+    air.grounded = false;
+    air.y -= 40;
+    const airBoost = tickSkate(air, blankSkateInput(), STEP);
+    expect(airBoost.toast).toBe("Boost!");
+    expect(airBoost.boostMs).toBeGreaterThan(0);
   });
 
   it("pauses without rolling", () => {

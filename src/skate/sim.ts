@@ -1,4 +1,4 @@
-import { RAIL_REACH, ROAD_HALF } from "./course";
+import { RAIL_REACH, ROAD_HALF, courseTreats, type CourseTreat } from "./course";
 import { SKATE_LEVELS, surfaceAt, type SkateLevel } from "./levels";
 
 export type SkatePhase = "playing" | "paused" | "clear" | "retry" | "done";
@@ -39,6 +39,9 @@ export type SkateState = {
   tunnelIndex: number;
   tunnelCrouched: boolean;
   awarded: number[];
+  treats: number[];
+  steerHoldMs: number;
+  boostMs: number;
   toast: string;
   toastMs: number;
 };
@@ -58,6 +61,22 @@ const STAND_H = 58;
 const CROUCH_H = 34;
 const BAILS = 3;
 const CLEAR_BONUS = 500;
+export const BOOST_HOLD = 450;
+const BOOST_TIME = 700;
+const TREAT_REACH = 26;
+const TREAT_LANE_REACH = 40;
+
+const TREATS: CourseTreat[][] = [];
+
+function treatsFor(levelIndex: number): CourseTreat[] {
+  if (!TREATS[levelIndex]) TREATS[levelIndex] = courseTreats(SKATE_LEVELS[levelIndex], levelIndex);
+  return TREATS[levelIndex];
+}
+
+export function boostCharge(state: SkateState): number {
+  if (state.boostMs > 0) return 1;
+  return Math.max(0, Math.min(1, state.steerHoldMs / BOOST_HOLD));
+}
 
 export function blankSkateInput(): SkateInput {
   return { dx: 0, steer: 0, crouch: false, jump: false, pause: false, confirm: false };
@@ -101,6 +120,9 @@ export function createSkate(levelIndex = 0, score = 0): SkateState {
     tunnelIndex: -1,
     tunnelCrouched: true,
     awarded: [],
+    treats: [],
+    steerHoldMs: 0,
+    boostMs: 0,
     toast: level.blurb,
     toastMs: 2200,
   };
@@ -119,6 +141,8 @@ function wipeout(state: SkateState, level: SkateLevel, message: string): void {
   state.grinding = false;
   state.grindMs = 0;
   state.slope = 0;
+  state.steerHoldMs = 0;
+  state.boostMs = 0;
   if (state.bails >= BAILS) {
     state.phase = "retry";
     state.grounded = true;
@@ -209,6 +233,31 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
   next.lane += next.vx * Math.sin(next.steerAngle) * dt;
   if (input.steer === 0) next.lane -= next.lane * 2.4 * dt;
   if (Math.abs(next.lane) > ROAD_HALF) next.vx = Math.max(80, next.vx - 420 * dt);
+  if (input.steer !== 0 && (next.grounded || next.grinding) && Math.abs(next.lane) < ROAD_HALF) {
+    next.steerHoldMs = Math.min(BOOST_HOLD, next.steerHoldMs + step);
+  } else if (input.steer === 0 && next.steerHoldMs >= BOOST_HOLD) {
+    next.boostMs = BOOST_TIME;
+    next.vx = Math.min(FAST, next.vx + 180);
+    next.toast = "Boost!";
+    next.toastMs = 700;
+    next.steerHoldMs = 0;
+  } else if (input.steer === 0) {
+    next.steerHoldMs = 0;
+  }
+  if (next.boostMs > 0) {
+    next.boostMs = Math.max(0, next.boostMs - step);
+    if (next.grounded || next.grinding) next.vx = Math.min(FAST, next.vx + 240 * dt);
+  }
+  for (const treat of treatsFor(next.levelIndex)) {
+    if (next.treats.includes(treat.id)) continue;
+    if (Math.abs(next.x - treat.s) > TREAT_REACH || Math.abs(next.lane - treat.lane) > TREAT_LANE_REACH) continue;
+    next.treats.push(treat.id);
+    next.combo = Math.min(8, next.combo + 1);
+    next.comboMs = 1400;
+    next.score += 50 * next.combo;
+    next.toast = next.combo > 1 ? `Fish x${next.combo}` : "Fish!";
+    next.toastMs = 700;
+  }
 
   const here = surfaceAt(level, next.x);
   const height = catHeight(next.crouched);

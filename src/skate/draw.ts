@@ -1,6 +1,6 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
 import { SKATE_LEVELS } from "./levels";
-import type { SkateState } from "./sim";
+import { boostCharge, type SkateState } from "./sim";
 import { SKATE_SPOTS, type SkateSpot, type SkateTouchHeld } from "./touch";
 
 function banner(ctx: CanvasRenderingContext2D, title: string, body: string): void {
@@ -40,10 +40,20 @@ export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, _now
   ctx.fillText(level.name, 16, 32);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
   ctx.fillText(`Level ${state.levelIndex + 1} of ${SKATE_LEVELS.length}`, 16, 54);
-  ctx.fillText(`Score ${state.score}`, 16, 74);
-  ctx.textAlign = "right";
-  ctx.fillText(state.combo > 1 ? `Combo x${state.combo}` : `${state.bails} wipeouts`, VIEW_W - 16, 54);
+  ctx.fillText(`Score ${state.score}   Fish ${state.treats.length}`, 16, 74);
+  ctx.font = "700 12px Trebuchet MS, sans-serif";
+  ctx.fillText("Boost", 16, 96);
+  const charge = boostCharge(state);
+  for (let i = 0; i < 3; i += 1) {
+    ctx.fillStyle = charge >= (i + 1) / 3 ? (state.boostMs > 0 ? "#d64545" : "#f2c14e") : "rgba(28, 25, 21, 0.22)";
+    ctx.beginPath();
+    ctx.arc(56 + i * 14, 92, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.fillStyle = "#1c1915";
+  ctx.textAlign = "right";
+  ctx.font = "700 15px Trebuchet MS, sans-serif";
+  ctx.fillText(state.combo > 1 ? `Combo x${state.combo}` : `${state.bails} wipeouts`, VIEW_W - 16, 54);
   round(ctx, VIEW_W - 132, 64, 116, 12, 6);
   ctx.fill();
   ctx.fillStyle = state.vx > 480 ? "#d64545" : "#f2c14e";

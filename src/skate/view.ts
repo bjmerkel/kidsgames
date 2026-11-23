@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { ROAD_HALF, buildCourse, coursePose, type CoursePoint } from "./course";
+import { ROAD_HALF, buildCourse, coursePose, courseTreats, type CoursePoint, type CourseTreat } from "./course";
 import { SKATE_LEVELS, type SkateLevel } from "./levels";
 import { skateChase, skateScreenY } from "./scene";
 import { catHeight, type SkateState } from "./sim";
@@ -60,6 +60,9 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
 
   let built = -1;
   let course: CoursePoint[] = [];
+  let treats: TreatMesh[] = [];
+  const sparks = makeSparks();
+  scene.add(sparks);
   const smooth = { x: 0, y: 0, z: 0, lookX: 0, lookY: 0, lookZ: 0, ready: false };
 
   return {
@@ -70,6 +73,7 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
         smooth.ready = false;
         course = buildCourse(level, state.levelIndex);
         buildPark(park, course, materials);
+        treats = addTreats(park, course, courseTreats(level, state.levelIndex));
         const palette = SKIES[level.sky ?? "day"];
         scene.background = new THREE.Color(palette.sky);
         materials.hill.color.set(palette.hill);
@@ -78,7 +82,11 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
       const road = coursePose(course, state.x, state.lane);
       const heading = road.heading + state.steerAngle;
       placeCat(cat, state, road.x, road.z, heading, nowMs);
+      placeTreats(treats, state, nowMs);
+      placeSparks(sparks, state, road.x, road.z, heading, nowMs);
       const chase = skateChase(road.x, skateScreenY(state.y), road.z, road.heading + state.steerAngle * 0.2);
+      const lift = state.grounded || state.grinding ? 0 : Math.min(70, 24 + state.airMs / 12);
+      chase.y += lift;
       if (!smooth.ready) {
         Object.assign(smooth, chase, { ready: true });
       } else {
@@ -240,6 +248,71 @@ function addDetails(park: THREE.Group, course: CoursePoint[], materials: Materia
   }
 }
 
+type TreatMesh = { id: number; mesh: THREE.Group; baseY: number };
+
+function addTreats(park: THREE.Group, course: CoursePoint[], treats: CourseTreat[]): TreatMesh[] {
+  return treats.flatMap((treat) => {
+    let index = 0;
+    while (index < course.length - 1 && course[index + 1].s < treat.s) index += 1;
+    const ground = course[index].ground;
+    if (ground == null) return [];
+    const pose = coursePose(course, treat.s, treat.lane);
+    const mesh = makeFish();
+    const baseY = skateScreenY(ground) + 20;
+    mesh.position.set(pose.x, baseY, pose.z);
+    park.add(mesh);
+    return [{ id: treat.id, mesh, baseY }];
+  });
+}
+
+function makeFish(): THREE.Group {
+  const fish = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 8), new THREE.MeshLambertMaterial({ color: "#f29a3a" }));
+  body.scale.set(1.8, 0.9, 0.85);
+  fish.scale.setScalar(1.35);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(6, 11, 6), new THREE.MeshLambertMaterial({ color: "#e07a28" }));
+  tail.rotation.z = Math.PI / 2;
+  tail.position.x = -13;
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(1.5, 6, 6), new THREE.MeshLambertMaterial({ color: "#1c1915" }));
+  eye.position.set(8, 2, 4);
+  fish.add(body, tail, eye);
+  return fish;
+}
+
+function placeTreats(treats: TreatMesh[], state: SkateState, nowMs: number): void {
+  for (const treat of treats) {
+    treat.mesh.visible = state.phase === "playing" && !state.treats.includes(treat.id);
+    treat.mesh.rotation.y = nowMs / 240 + treat.id;
+    treat.mesh.position.y = treat.baseY + Math.sin(nowMs / 170 + treat.id) * 5;
+  }
+}
+
+function makeSparks(): THREE.Group {
+  const group = new THREE.Group();
+  const material = new THREE.MeshLambertMaterial({ color: "#f2c14e" });
+  for (let i = 0; i < 14; i += 1) {
+    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(i % 3 === 0 ? 4.2 : 2.4), material));
+  }
+  group.visible = false;
+  return group;
+}
+
+function placeSparks(sparks: THREE.Group, state: SkateState, x: number, z: number, heading: number, nowMs: number): void {
+  const on = state.phase === "playing" && (state.boostMs > 0 || state.grinding);
+  sparks.visible = on;
+  if (!on) return;
+  const material = sparks.children[0] instanceof THREE.Mesh ? sparks.children[0].material : null;
+  if (material instanceof THREE.MeshLambertMaterial) material.color.set(state.boostMs > 0 ? "#f2c14e" : "#f7f4ef");
+  const backX = -Math.cos(heading);
+  const backZ = -Math.sin(heading);
+  sparks.children.forEach((spark, i) => {
+    const dist = 22 + ((nowMs / 10 + i * 19) % 48);
+    const side = Math.sin(i * 1.7 + nowMs / 70) * 10;
+    spark.position.set(x + backX * dist - Math.sin(heading) * side, skateScreenY(state.y) + 8 + (i % 4) * 4, z + backZ * dist + Math.cos(heading) * side);
+    spark.rotation.y = nowMs / 80 + i;
+  });
+}
+
 function edgePoint(point: CoursePoint, side: number, y: number): [number, number, number] {
   const nx = -Math.sin(point.heading);
   const nz = Math.cos(point.heading);
@@ -302,6 +375,7 @@ function placeCat(cat: CatParts, state: SkateState, x: number, z: number, headin
   cat.group.rotation.order = "YZX";
   cat.group.rotation.y = -heading;
   cat.group.rotation.z = state.grounded || state.grinding ? -Math.atan(state.slope) : 0;
+  cat.group.rotation.x = -state.steerAngle * 0.9;
   const spin = state.x / 8;
   for (const wheel of cat.wheels) wheel.rotation.z = spin;
   cat.board.rotation.x = state.airTrick === "kickflip" ? state.airMs / 70 : 0;
@@ -310,7 +384,8 @@ function placeCat(cat: CatParts, state: SkateState, x: number, z: number, headin
   cat.body.scale.y = 1.15 * crouched;
   cat.head.position.set(12, 18 + height * 0.72, 0);
   cat.head.rotation.z = state.airTrick === "grab" ? -0.5 : 0;
-  cat.tail.rotation.z = 0.8 + Math.sin(nowMs / 120) * 0.25;
+  const wag = state.boostMs > 0 ? 60 : 120;
+  cat.tail.rotation.z = 0.8 + Math.sin(nowMs / wag) * (state.boostMs > 0 ? 0.5 : 0.25);
 }
 
 function checkerTexture(): THREE.CanvasTexture {

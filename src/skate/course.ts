@@ -62,6 +62,27 @@ export function buildCourse(level: SkateLevel, levelIndex: number): CoursePoint[
 
 const COURSES: CoursePoint[][] = [];
 
+export type CourseTreat = { id: number; s: number; lane: number };
+
+const TREAT_LANE = 58;
+
+export function courseTreats(level: SkateLevel, levelIndex: number): CourseTreat[] {
+  const course = buildCourse(level, levelIndex);
+  const end = course[course.length - 1]?.s ?? 0;
+  const treats: CourseTreat[] = [];
+  let next = 280;
+  let side = levelIndex % 2 === 0 ? 1 : -1;
+  for (const point of course) {
+    if (point.s + 80 > end) break;
+    if (point.s < next) continue;
+    if (point.ground == null || point.kind === "tunnel" || point.kind === "finish") continue;
+    treats.push({ id: treats.length, s: point.s, lane: side * TREAT_LANE });
+    side *= -1;
+    next = point.s + 260;
+  }
+  return treats;
+}
+
 export function courseFor(levelIndex: number): CoursePoint[] {
   if (!COURSES[levelIndex]) COURSES[levelIndex] = buildCourse(SKATE_LEVELS[levelIndex], levelIndex);
   return COURSES[levelIndex];
