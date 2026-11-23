@@ -33,8 +33,8 @@ import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
 import { bindMenuCard } from "./game/menu";
 import { drawPattern } from "./pattern/draw";
-import { choiceAt, pauseAt, PATTERN_LEVELS } from "./pattern/levels";
-import { advancePattern, blankPatternInput, createPattern, tickPattern, type PatternInput, type PatternState } from "./pattern/sim";
+import { choiceAt, pauseAt } from "./pattern/levels";
+import { advancePattern, blankPatternInput, startPattern, tickPattern, type PatternInput, type PatternState } from "./pattern/sim";
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
@@ -664,7 +664,7 @@ function spotInput(): SpotInput {
 }
 
 function openPattern(): void {
-  patternState = createPattern(0);
+  patternState = startPattern();
   patternAcc = 0;
   patternEdge = blankPatternInput();
   syncPatternChrome();
@@ -672,13 +672,13 @@ function openPattern(): void {
 
 function syncPatternChrome(): void {
   if (!patternState) return;
-  const level = PATTERN_LEVELS[patternState.levelIndex];
+  const level = patternState.levels[patternState.levelIndex];
   if (patternHeading) patternHeading.textContent = patternState.phase === "done" ? "Pattern Pals" : level.name;
   const live = patternState.phase === "playing" || patternState.phase === "paused";
   if (patternPad) patternPad.hidden = live;
   if (patternNext) {
     patternNext.hidden = live;
-    patternNext.textContent = patternState.phase === "done" ? "Play again" : patternState.levelIndex >= PATTERN_LEVELS.length - 1 ? "The last row" : "Next row";
+    patternNext.textContent = patternState.phase === "done" ? "Play again" : patternState.levelIndex >= patternState.levels.length - 1 ? "The last row" : "Next row";
   }
 }
 

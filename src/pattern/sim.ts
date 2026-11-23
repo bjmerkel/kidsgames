@@ -1,4 +1,4 @@
-import { expectedNext, PATTERN_LEVELS, sameBead, type PatternLevel } from "./levels";
+import { dealPattern, expectedNext, sameBead, type PatternLevel } from "./levels";
 
 export type PatternPhase = "playing" | "paused" | "clear" | "done";
 
@@ -19,17 +19,19 @@ export type PatternState = {
   waitMs: number;
   pending: boolean;
   elapsedMs: number;
+  levels: PatternLevel[];
 };
 
 export function blankPatternInput(): PatternInput {
   return { choice: null, pause: false, confirm: false };
 }
 
-export function createPattern(levelIndex = 0, score = 0): PatternState {
-  const level = PATTERN_LEVELS[levelIndex] ?? PATTERN_LEVELS[0];
+export function createPattern(levelIndex = 0, score = 0, levels: PatternLevel[] = dealPattern(1)): PatternState {
+  const index = levels[levelIndex] ? levelIndex : 0;
+  const level = levels[index];
   return {
     phase: "playing",
-    levelIndex: PATTERN_LEVELS[levelIndex] ? levelIndex : 0,
+    levelIndex: index,
     roundIndex: 0,
     score,
     misses: 0,
@@ -38,11 +40,16 @@ export function createPattern(levelIndex = 0, score = 0): PatternState {
     waitMs: 0,
     pending: false,
     elapsedMs: 0,
+    levels,
   };
 }
 
+export function startPattern(seed = 1 + Math.floor(Math.random() * 2147483646)): PatternState {
+  return createPattern(0, 0, dealPattern(seed));
+}
+
 export function patternLevel(state: PatternState): PatternLevel {
-  return PATTERN_LEVELS[state.levelIndex];
+  return state.levels[state.levelIndex];
 }
 
 export function tickPattern(state: PatternState, input: PatternInput, dtMs: number): PatternState {
@@ -92,15 +99,15 @@ export function tickPattern(state: PatternState, input: PatternInput, dtMs: numb
 }
 
 export function advancePattern(state: PatternState): PatternState {
-  if (state.phase === "done") return createPattern(0);
+  if (state.phase === "done") return startPattern();
   if (state.phase !== "clear") return state;
-  if (state.levelIndex >= PATTERN_LEVELS.length - 1) {
+  if (state.levelIndex >= state.levels.length - 1) {
     return {
       ...state,
       phase: "done",
-      toast: "You finished all 5 rows.",
+      toast: `You finished all ${state.levels.length} rows.`,
       toastMs: 4000,
     };
   }
-  return createPattern(state.levelIndex + 1, state.score);
+  return createPattern(state.levelIndex + 1, state.score, state.levels);
 }

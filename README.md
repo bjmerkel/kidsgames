@@ -28,7 +28,7 @@ The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shu
 
 A matching game for a new reader. A row of big pictures ends with an empty spot. Three big pictures sit underneath. Tap the one that comes next. A right tap says "Yes!" A wrong tap says "Look again." and the row stays. There are no lives to lose.
 
-The score carries from row to row. A right tap on the first try is 100. A right tap after a miss is 50. The five rows are Color Twins, Shape Twins, Three Friends, Double Dots, and Big and Small. Each row has four patterns. Color Twins takes turns with colors. Shape Twins takes turns with shapes. Three Friends uses three pictures, then starts over. Double Dots uses two, then two. Big and Small takes turns with size.
+The score carries from row to row. A right tap on the first try is 100. A right tap after a miss is 50. There are 25 rows, and each new game deals them again. The first rows take turns with colors. The next rows take turns with shapes. Then come pairs, three pictures that repeat, and big and small. Each row has four patterns. The pictures, and which row comes first inside a group, change every game.
 
 ## Berry Burst
 
