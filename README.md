@@ -14,7 +14,7 @@ Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for
 
 ## Ollie Cat
 
-A skate ride with a white cat, seen from above and just behind the board. Each park is a street that turns, and the board rolls on its own. Hold the left or right side of the picture, or the arrow keys, to steer. Push goes faster and Brake slows down. Tap to ollie, and slide a finger down to crouch. Another ollie in the air does a kickflip, then a grab. Crouch fits through tunnels and jumps higher. Yellow marks are speed ramps. Red marks launch you. Stay near the middle of a rail to grind it. Leaving the street, missing a landing, or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
+A skate ride with a white cat, seen from just behind the board so the street ahead is easy to follow. Each park is a street that turns, and the board rolls on its own. Hold the left or right side of the picture, or the arrow keys, to steer. Let go and the board eases back toward the middle of the street. The grass slows you down. Push goes faster and Brake slows down. Tap to ollie, and slide a finger down to crouch. Another ollie in the air does a kickflip, then a grab. Crouch fits through tunnels and jumps higher. Yellow marks are speed ramps. Red marks launch you. Stay near the middle of a rail to grind it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
 
 The score carries from park to park. The fifteen parks are Milk Street, Alley Rail, Tunnel Run, Gap Park, Night Bowl, Switchback, Jump Gap, Double Gap, Low Roof, Stair Drop, Overpass, Wide Canyon, Pipe Run, Sky Rail, and Midnight Final. The later parks are longer, with wider gaps, low tunnels, and rails. Rolling off a gap drops you, so ollie before the edge.
 
@@ -96,7 +96,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.
-- In Ollie Cat, the board rolls on its own. Hold the left or right side of the picture, or the arrow keys, to steer. Hold Push to go faster, and Brake to slow down. Tap the picture to ollie, and slide down to crouch. Down crouches too. Ollie again in the air does a kickflip, then a grab.
+- In Ollie Cat, the board rolls on its own. Hold the left or right side of the picture, or the arrow keys, to steer. Let go and the board eases back toward the middle. Hold Push to go faster, and Brake to slow down. Tap the picture to ollie, and slide down to crouch. Down crouches too. Ollie again in the air does a kickflip, then a grab.
 - Esc, or Pause on the picture: pause. Tap the picture while paused, press Enter, or tap the big button: start, skip the intro, and continue.
 - Up is toward the burrow.
 

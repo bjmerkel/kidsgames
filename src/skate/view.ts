@@ -30,7 +30,7 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
   renderer.setSize(VIEW_W, VIEW_H, false);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(46, VIEW_W / VIEW_H, 1, 8000);
+  const camera = new THREE.PerspectiveCamera(50, VIEW_W / VIEW_H, 1, 8000);
   scene.add(new THREE.AmbientLight(0xffffff, 0.78));
   const sun = new THREE.DirectionalLight(0xfff6e8, 1.25);
   sun.position.set(180, 520, 360);
@@ -78,16 +78,16 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
       const road = coursePose(course, state.x, state.lane);
       const heading = road.heading + state.steerAngle;
       placeCat(cat, state, road.x, road.z, heading, nowMs);
-      const chase = skateChase(road.x, skateScreenY(state.y), road.z, heading);
+      const chase = skateChase(road.x, skateScreenY(state.y), road.z, road.heading + state.steerAngle * 0.2);
       if (!smooth.ready) {
         Object.assign(smooth, chase, { ready: true });
       } else {
-        smooth.x += (chase.x - smooth.x) * 0.18;
-        smooth.y += (chase.y - smooth.y) * 0.18;
-        smooth.z += (chase.z - smooth.z) * 0.18;
-        smooth.lookX += (chase.lookX - smooth.lookX) * 0.18;
-        smooth.lookY += (chase.lookY - smooth.lookY) * 0.18;
-        smooth.lookZ += (chase.lookZ - smooth.lookZ) * 0.18;
+        smooth.x += (chase.x - smooth.x) * 0.28;
+        smooth.y += (chase.y - smooth.y) * 0.28;
+        smooth.z += (chase.z - smooth.z) * 0.28;
+        smooth.lookX += (chase.lookX - smooth.lookX) * 0.28;
+        smooth.lookY += (chase.lookY - smooth.lookY) * 0.28;
+        smooth.lookZ += (chase.lookZ - smooth.lookZ) * 0.28;
       }
       camera.position.set(smooth.x, smooth.y, smooth.z);
       camera.lookAt(smooth.lookX, smooth.lookY, smooth.lookZ);

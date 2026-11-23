@@ -48,7 +48,7 @@ const PUSH = 980;
 const BRAKE = 1500;
 const FRICTION = 220;
 const CRUISE = 260;
-const TURN = 1.8;
+const TURN = 0.7;
 const MAX_SPEED = 460;
 const FAST = 640;
 const OLLIE = -560;
@@ -204,14 +204,11 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
     next.airMs += step;
   }
   next.steerAngle += input.steer * TURN * dt;
-  next.steerAngle -= next.steerAngle * 2 * dt;
+  next.steerAngle -= next.steerAngle * 3.4 * dt;
   next.x += next.vx * Math.cos(next.steerAngle) * dt;
   next.lane += next.vx * Math.sin(next.steerAngle) * dt;
-  if (Math.abs(next.lane) > ROAD_HALF) next.vx = Math.max(0, next.vx - 640 * dt);
-  if (Math.abs(next.lane) > ROAD_HALF + 320) {
-    wipeout(next, level, "Left the street.");
-    return next;
-  }
+  if (input.steer === 0) next.lane -= next.lane * 2.4 * dt;
+  if (Math.abs(next.lane) > ROAD_HALF) next.vx = Math.max(80, next.vx - 420 * dt);
 
   const here = surfaceAt(level, next.x);
   const height = catHeight(next.crouched);

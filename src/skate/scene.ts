@@ -1,9 +1,9 @@
 import { VIEW_H } from "../game/constants";
 import { type Piece, type SkateLevel } from "./levels";
 
-const BEHIND = 90;
-const ABOVE = 520;
-const AHEAD = 70;
+const BEHIND = 190;
+const ABOVE = 230;
+const AHEAD = 110;
 
 export function skateChase(catX: number, catY: number, catZ: number, heading: number): {
   x: number;
@@ -20,7 +20,7 @@ export function skateChase(catX: number, catY: number, catZ: number, heading: nu
     y: catY + ABOVE,
     z: catZ - forwardZ * BEHIND,
     lookX: catX + forwardX * AHEAD,
-    lookY: catY - 6,
+    lookY: catY - 8,
     lookZ: catZ + forwardZ * AHEAD,
   };
 }

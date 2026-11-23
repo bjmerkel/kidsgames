@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ROAD_HALF } from "../src/skate/course";
 import { courseWidth, pieceAt, SKATE_LEVELS, surfaceAt } from "../src/skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "../src/skate/sim";
 
@@ -73,8 +74,12 @@ describe("ollie cat", () => {
     expect(rolling.vx).toBeGreaterThan(120);
 
     const steered = hold(rolling, 20, { steer: 1 });
-    expect(steered.steerAngle).toBeGreaterThan(0.25);
-    expect(Math.abs(steered.lane)).toBeGreaterThan(4);
+    expect(steered.steerAngle).toBeGreaterThan(0.12);
+    expect(Math.abs(steered.lane)).toBeGreaterThan(2);
+    expect(Math.abs(steered.lane)).toBeLessThan(ROAD_HALF);
+    const back = hold(steered, 40, { dx: 0, steer: 0 });
+    expect(Math.abs(back.lane)).toBeLessThan(Math.abs(steered.lane));
+    expect(Math.abs(back.steerAngle)).toBeLessThan(Math.abs(steered.steerAngle));
 
     const stopped = hold(steered, 40, { dx: -1 });
     expect(stopped.vx).toBe(0);
@@ -90,7 +95,7 @@ describe("ollie cat", () => {
     grind.grounded = false;
     let grinding = false;
     for (let i = 0; i < 80; i += 1) {
-      grind = tickSkate(grind, { ...blankSkateInput(), dx: 1 }, STEP);
+      grind = tickSkate(grind, { ...blankSkateInput(), dx: 1, steer: 1 }, STEP);
       if (grind.grinding) grinding = true;
     }
     expect(grinding).toBe(false);

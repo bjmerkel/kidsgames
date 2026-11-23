@@ -1,6 +1,6 @@
 import { SKATE_LEVELS, type Piece, type SkateLevel } from "./levels";
 
-export const ROAD_HALF = 110;
+export const ROAD_HALF = 150;
 export const RAIL_REACH = 36;
 
 export type CoursePoint = {
