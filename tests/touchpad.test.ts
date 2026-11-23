@@ -19,8 +19,11 @@ describe("touch pads", () => {
       expect(spotsInside(spots)).toBe(true);
       apart(spots);
     }
-    const axoLeft = AXO_SPOTS[0];
-    expect(axoLeft.y + axoLeft.h).toBeLessThanOrEqual(560);
+    const axoLeft = AXO_SPOTS.find((spot) => spot.name === "left");
+    const axoFire = AXO_SPOTS.find((spot) => spot.name === "fire");
+    expect(axoLeft && axoFire).toBeTruthy();
+    expect(axoLeft!.y).toBeGreaterThanOrEqual(620);
+    expect(axoFire!.y).toBeGreaterThanOrEqual(620);
     expect(WADDLE_SPOTS[0].y + WADDLE_SPOTS[0].h).toBeLessThanOrEqual(88);
     expect(LOOK_SPOTS[0].y).toBeGreaterThanOrEqual(670);
     for (const spot of [...RASCAL_SPOTS, ...CAPY_SPOTS]) {
