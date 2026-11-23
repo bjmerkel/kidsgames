@@ -235,6 +235,7 @@ button:focus-visible {
   flex-direction: column;
   justify-content: center;
   gap: 4px;
+  touch-action: pan-y;
 }
 
 .game-card small,

@@ -31,6 +31,7 @@ import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
 import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
+import { bindMenuCard } from "./game/menu";
 import { drawPattern } from "./pattern/draw";
 import { choiceAt, pauseAt, PATTERN_LEVELS } from "./pattern/levels";
 import { advancePattern, blankPatternInput, createPattern, tickPattern, type PatternInput, type PatternState } from "./pattern/sim";
@@ -881,58 +882,23 @@ if (picker) {
   picker.append(start);
 }
 
-document.querySelector<HTMLButtonElement>("#play-pattern")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("pattern");
-});
-document.querySelector<HTMLButtonElement>("#play-crab")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("crab");
-});
-document.querySelector<HTMLButtonElement>("#play-race")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("race");
-});
-document.querySelector<HTMLButtonElement>("#play-fish")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("fish");
-});
-document.querySelector<HTMLButtonElement>("#play-axo")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("axo");
-});
-document.querySelector<HTMLButtonElement>("#play-rascal")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("rascal");
-});
-document.querySelector<HTMLButtonElement>("#play-capy")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("capy");
-});
-document.querySelector<HTMLButtonElement>("#play-waddle")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("waddle");
-});
-document.querySelector<HTMLButtonElement>("#play-spot")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("spot");
-});
-document.querySelector<HTMLButtonElement>("#play-burst")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("burst");
-});
-document.querySelector<HTMLButtonElement>("#play-hunt")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("hunt");
-});
-document.querySelector<HTMLButtonElement>("#play-skate")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("skate");
-});
-document.querySelector("#open-settings")?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  show("settings");
-});
+function menuCard(id: string, next: Mode): void {
+  const button = document.querySelector<HTMLElement>(id);
+  if (button) bindMenuCard(button, () => show(next));
+}
+menuCard("#play-pattern", "pattern");
+menuCard("#play-crab", "crab");
+menuCard("#play-race", "race");
+menuCard("#play-fish", "fish");
+menuCard("#play-axo", "axo");
+menuCard("#play-rascal", "rascal");
+menuCard("#play-capy", "capy");
+menuCard("#play-waddle", "waddle");
+menuCard("#play-spot", "spot");
+menuCard("#play-burst", "burst");
+menuCard("#play-hunt", "hunt");
+menuCard("#play-skate", "skate");
+menuCard("#open-settings", "settings");
 document.querySelector("#crab-settings")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("settings");
