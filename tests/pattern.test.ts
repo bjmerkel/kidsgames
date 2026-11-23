@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHOICE_BOXES, expectedNext, PAUSE_BOX, PATTERN_LEVELS, pauseAt, choiceAt, sameBead } from "../src/pattern/levels";
+import { CHOICE_BOXES, dealPattern, expectedNext, PAUSE_BOX, pauseAt, choiceAt, sameBead } from "../src/pattern/levels";
 import { advancePattern, blankPatternInput, createPattern, tickPattern, type PatternState } from "../src/pattern/sim";
 
 function wait(state: PatternState, ms: number): PatternState {
@@ -14,15 +14,23 @@ function wait(state: PatternState, ms: number): PatternState {
 }
 
 describe("pattern pals", () => {
-  it("has five short rows and one right picture in each", () => {
-    expect(PATTERN_LEVELS.map((level) => level.name)).toEqual([
-      "Color Twins",
-      "Shape Twins",
-      "Three Friends",
-      "Double Dots",
-      "Big and Small",
+  it("deals 25 rows, keeps the easy ones first, and changes the pictures", () => {
+    const first = dealPattern(1);
+    const again = dealPattern(1);
+    const other = dealPattern(2);
+    expect(first).toHaveLength(25);
+    expect(again).toEqual(first);
+    expect(JSON.stringify(other)).not.toBe(JSON.stringify(first));
+    expect(first.map((level) => level.focus)).toEqual([
+      "color", "color", "color", "color", "color",
+      "shape", "shape", "shape", "shape", "shape",
+      "pair", "pair", "pair", "pair", "pair",
+      "three", "three", "three", "three", "three",
+      "size", "size", "size", "size", "size",
     ]);
-    for (const level of PATTERN_LEVELS) {
+    expect(new Set(first.map((level) => level.name)).size).toBe(25);
+    expect(first.slice(0, 5).map((level) => level.name).join()).not.toBe(other.slice(0, 5).map((level) => level.name).join());
+    for (const level of first) {
       expect(level.blurb.length).toBeGreaterThan(0);
       expect(level.blurb.length).toBeLessThan(32);
       expect(level.rounds).toHaveLength(4);
@@ -40,28 +48,29 @@ describe("pattern pals", () => {
 
   it("keeps a miss on the same picture and scores a clean pick higher", () => {
     const start = createPattern(0);
-    const wrong = tickPattern(start, { choice: (start && PATTERN_LEVELS[0].rounds[0].answer + 1) % 3, pause: false, confirm: false }, 16);
+    const opening = start.levels[0].rounds[0];
+    const wrong = tickPattern(start, { choice: (opening.answer + 1) % 3, pause: false, confirm: false }, 16);
     expect(wrong.roundIndex).toBe(0);
     expect(wrong.score).toBe(0);
     expect(wrong.toast).toBe("Look again.");
     expect(wrong.misses).toBe(1);
 
     const ready = wait(wrong, 300);
-    const fixed = tickPattern(ready, { choice: PATTERN_LEVELS[0].rounds[0].answer, pause: false, confirm: false }, 16);
+    const fixed = tickPattern(ready, { choice: opening.answer, pause: false, confirm: false }, 16);
     expect(fixed.roundIndex).toBe(0);
     expect(fixed.score).toBe(50);
     expect(fixed.toast).toBe("Yes!");
     expect(wait(fixed, 500).roundIndex).toBe(1);
 
-    const fresh = tickPattern(start, { choice: PATTERN_LEVELS[0].rounds[0].answer, pause: false, confirm: false }, 16);
+    const fresh = tickPattern(start, { choice: opening.answer, pause: false, confirm: false }, 16);
     expect(fresh.score).toBe(100);
     expect(start.roundIndex).toBe(0);
   });
 
-  it("finishes a row, then all five rows, then starts over", () => {
+  it("finishes a row, then all 25 rows, then deals a new game", () => {
     let state = createPattern(0);
     for (let round = 0; round < 4; round += 1) {
-      const answer = PATTERN_LEVELS[0].rounds[round].answer;
+      const answer = state.levels[0].rounds[round].answer;
       state = wait(state, 500);
       state = tickPattern(state, { choice: answer, pause: false, confirm: false }, 16);
     }
@@ -73,18 +82,20 @@ describe("pattern pals", () => {
     expect(next.levelIndex).toBe(1);
     expect(next.score).toBe(400);
     expect(next.phase).toBe("playing");
+    expect(next.levels).toBe(state.levels);
 
-    let last = createPattern(4, 1000);
+    let last = createPattern(24, 1000);
     for (let round = 0; round < 4; round += 1) {
       last = wait(last, 500);
-      last = tickPattern(last, { choice: PATTERN_LEVELS[4].rounds[round].answer, pause: false, confirm: false }, 16);
+      last = tickPattern(last, { choice: last.levels[24].rounds[round].answer, pause: false, confirm: false }, 16);
     }
     const done = advancePattern(last);
     expect(done.phase).toBe("done");
-    expect(done.toast).toBe("You finished all 5 rows.");
+    expect(done.toast).toBe("You finished all 25 rows.");
     const again = advancePattern(done);
     expect(again.levelIndex).toBe(0);
     expect(again.score).toBe(0);
+    expect(again.levels).toHaveLength(25);
   });
 
   it("pauses and finds the three big pictures", () => {

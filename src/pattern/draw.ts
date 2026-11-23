@@ -156,7 +156,7 @@ export function drawPattern(ctx: CanvasRenderingContext2D, state: PatternState, 
     ctx.fillStyle = INK;
     ctx.textAlign = "center";
     ctx.font = "700 28px Georgia, serif";
-    ctx.fillText(state.phase === "done" ? "All 5 rows!" : "Nice row!", VIEW_W / 2, 320);
+    ctx.fillText(state.phase === "done" ? `All ${state.levels.length} rows!` : "Nice row!", VIEW_W / 2, 320);
     ctx.font = "600 18px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, 360);
   }
