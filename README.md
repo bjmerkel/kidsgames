@@ -14,7 +14,7 @@ Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for
 
 ## Ollie Cat
 
-A side-view skate park with a white cat. Hold Push or Right to build speed. Brake slows the board. Ollie jumps, and another press in the air does a kickflip, then a grab. Crouch to fit through tunnels and to jump higher. Yellow marks are speed ramps. Red marks launch you. Grind a rail by landing on it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
+A side-view skate park with a white cat. Touch the picture: hold to push, tap to ollie, and slide a finger down to crouch. Brake, Push, Ollie, and Crouch are on the screen too. Another ollie in the air does a kickflip, then a grab. Crouch fits through tunnels and jumps higher. Yellow marks are speed ramps. Red marks launch you. Grind a rail by landing on it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
 
 The score carries from park to park. The fifteen parks are Milk Street, Alley Rail, Tunnel Run, Gap Park, Night Bowl, Switchback, Jump Gap, Double Gap, Low Roof, Stair Drop, Overpass, Wide Canyon, Pipe Run, Sky Rail, and Midnight Final. The later parks are longer, with wider gaps, low tunnels, and rails. Rolling off a gap drops you, so ollie before the edge.
 
@@ -95,7 +95,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Silk Spot, tap a change in either picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. H or Hint glows a starting letter.
-- In Ollie Cat, Right or Push builds speed and Left or Brake slows down. Ollie jumps, and pressing it again in the air does a kickflip, then a grab. Hold Crouch or Down in tunnels.
+- In Ollie Cat, touch the picture. Hold a finger on the street to push, tap to ollie, and slide down to crouch. The on-screen Brake, Push, Ollie, and Crouch buttons do the same, and two fingers can hold Push and Crouch together. Right also pushes, Left brakes, and Down crouches. Ollie again in the air does a kickflip, then a grab. Tap Pause, or the picture while paused, to stop and roll.
 - Space, or Tuck: pull into the shell. A tucked crab is harder to clip. You cannot hop while tucked, and the tuck has to cool down.
 - Esc, or Pause: pause. Enter, a tap on the picture, or the big button: start, skip the intro, and continue.
 - Up is toward the burrow.

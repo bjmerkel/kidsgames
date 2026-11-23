@@ -200,6 +200,7 @@ button:focus-visible {
 #hunt-next[hidden],
 #hunt-pad button[hidden],
 #skate-next[hidden],
+#skate-pad[hidden],
 #skate-pad button[hidden] {
   display: none !important;
 }
@@ -593,31 +594,11 @@ button:focus-visible {
 #skate-pad {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-#skate-pad button[data-skate="crouch"],
-#skate-pad button[data-skate="jump"],
-#skate-pad button[data-skate="pause"],
-#skate-next {
-  grid-column: 1 / -1;
-}
-
-#skate-pad button[data-skate="jump"],
 #skate-next {
   background: #f2c14e;
-}
-
-#skate-pad button[data-skate="crouch"] {
-  background: #24357a;
-  color: #f7f1e6;
-}
-
-#skate-pad button[data-skate="crouch"].is-held,
-#skate-pad button[data-skate="crouch"]:active {
-  background: #18264f;
-  color: #f7f1e6;
 }
 
 .slim-head {
@@ -1060,8 +1041,12 @@ button:focus-visible {
     height: 100%;
     flex: 0 1 auto;
     aspect-ratio: 480 / 720;
-    max-width: calc(100% - 200px);
+    max-width: 100%;
     max-height: 100%;
+  }
+
+  #skate-board:has(#skate-pad:not([hidden])) #skate-stage {
+    max-width: calc(100% - 200px);
   }
 
   #skate-pad {

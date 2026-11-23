@@ -38,6 +38,7 @@ import { advanceHunt, blankHuntInput, startHunt, tickHunt, type HuntInput, type 
 import { drawSkate } from "./skate/draw";
 import { SKATE_LEVELS } from "./skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "./skate/sim";
+import { blankSkateTouch, readSkateTouch, skateOriginAt, skateTapJump, type SkatePointer, type SkateTouchHeld } from "./skate/touch";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 if (!canvas) throw new Error("missing canvas");
@@ -216,6 +217,8 @@ let skateState: SkateState | null = null;
 let skateAcc = 0;
 const skateKeys = { left: false, right: false, crouch: false, jump: false };
 let skateEdge = blankSkateInput();
+let skatePointers: SkatePointer[] = [];
+let skateTouchHeld: SkateTouchHeld = blankSkateTouch();
 
 function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
@@ -591,7 +594,17 @@ function openSkate(): void {
   skateKeys.right = false;
   skateKeys.crouch = false;
   skateKeys.jump = false;
+  skatePointers = [];
+  skateTouchHeld = blankSkateTouch();
   syncSkateChrome();
+}
+
+function syncSkateTouch(now = performance.now()): void {
+  const reading = readSkateTouch(skatePointers, now);
+  skatePointers = reading.pointers;
+  skateTouchHeld = reading.held;
+  if (reading.jump) skateEdge = { ...skateEdge, jump: true };
+  if (reading.pause) skateEdge = { ...skateEdge, pause: true };
 }
 
 function syncSkateChrome(): void {
@@ -599,9 +612,7 @@ function syncSkateChrome(): void {
   const level = SKATE_LEVELS[skateState.levelIndex];
   if (skateHeading) skateHeading.textContent = skateState.phase === "done" ? "Ollie Cat" : level.name;
   const live = skateState.phase === "playing" || skateState.phase === "paused";
-  skatePad?.querySelectorAll<HTMLButtonElement>("button[data-skate]").forEach((button) => {
-    button.hidden = !live;
-  });
+  if (skatePad) skatePad.hidden = live;
   if (skateNext) {
     skateNext.hidden = live;
     skateNext.textContent = skateState.phase === "done" ? "Play again" : skateState.phase === "retry" ? "Try again" : skateState.levelIndex >= SKATE_LEVELS.length - 1 ? "The park" : "Next level";
@@ -609,9 +620,10 @@ function syncSkateChrome(): void {
 }
 
 function skateInput(): SkateInput {
+  syncSkateTouch();
   return {
-    dx: (skateKeys.right ? 1 : 0) - (skateKeys.left ? 1 : 0),
-    crouch: skateKeys.crouch,
+    dx: (skateKeys.right || skateTouchHeld.right ? 1 : 0) - (skateKeys.left || skateTouchHeld.left ? 1 : 0),
+    crouch: skateKeys.crouch || skateTouchHeld.crouch,
     jump: skateEdge.jump,
     pause: skateEdge.pause,
     confirm: skateEdge.confirm,
@@ -1044,36 +1056,56 @@ document.querySelectorAll<HTMLButtonElement>("button[data-input]").forEach((butt
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 
-document.querySelectorAll<HTMLButtonElement>("button[data-skate]").forEach((button) => {
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    const name = button.dataset.skate ?? "";
-    if (name === "left") skateKeys.left = true;
-    if (name === "right") skateKeys.right = true;
-    if (name === "crouch") skateKeys.crouch = true;
-    if (name === "jump") {
-      skateKeys.jump = true;
-      skateEdge = { ...skateEdge, jump: true };
-    }
-    if (name === "pause") skateEdge = { ...skateEdge, pause: true };
-    if (name === "left" || name === "right" || name === "crouch" || name === "jump") {
-      button.classList.add("is-held");
-      if (!button.hasPointerCapture(event.pointerId)) button.setPointerCapture(event.pointerId);
-    }
-  });
-  const release = (event: PointerEvent) => {
-    const name = button.dataset.skate ?? "";
-    if (name === "left") skateKeys.left = false;
-    if (name === "right") skateKeys.right = false;
-    if (name === "crouch") skateKeys.crouch = false;
-    if (name === "jump") skateKeys.jump = false;
-    button.classList.remove("is-held");
-    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+function beginSkatePointer(event: PointerEvent): void {
+  if (mode !== "skate" || !skateState) return;
+  event.preventDefault();
+  if (skateState.phase === "clear" || skateState.phase === "retry" || skateState.phase === "done") {
+    skateEdge = { ...skateEdge, confirm: true };
+    return;
+  }
+  if (skateState.phase === "paused") {
+    skateEdge = { ...skateEdge, pause: true };
+    return;
+  }
+  const point = canvasPoint(skateSurface, event);
+  const pointer: SkatePointer = {
+    id: event.pointerId,
+    x: point.x,
+    y: point.y,
+    x0: point.x,
+    y0: point.y,
+    t0: performance.now(),
+    origin: skateOriginAt(point.x, point.y),
+    jumpSent: false,
+    pauseSent: false,
   };
-  button.addEventListener("pointerup", release);
-  button.addEventListener("pointercancel", release);
-  button.addEventListener("contextmenu", (event) => event.preventDefault());
-});
+  skatePointers = skatePointers.filter((item) => item.id !== event.pointerId).concat(pointer);
+  if (!skateSurface.hasPointerCapture(event.pointerId)) skateSurface.setPointerCapture(event.pointerId);
+  syncSkateTouch();
+}
+
+function moveSkatePointer(event: PointerEvent): void {
+  const pointer = skatePointers.find((item) => item.id === event.pointerId);
+  if (!pointer || mode !== "skate") return;
+  const point = canvasPoint(skateSurface, event);
+  pointer.x = point.x;
+  pointer.y = point.y;
+  syncSkateTouch();
+}
+
+function endSkatePointer(event: PointerEvent): void {
+  const pointer = skatePointers.find((item) => item.id === event.pointerId);
+  skatePointers = skatePointers.filter((item) => item.id !== event.pointerId);
+  if (pointer && skateState?.phase === "playing" && skateTapJump(pointer, performance.now())) skateEdge = { ...skateEdge, jump: true };
+  if (skateSurface.hasPointerCapture(event.pointerId)) skateSurface.releasePointerCapture(event.pointerId);
+  syncSkateTouch();
+}
+
+skateSurface.addEventListener("pointerdown", beginSkatePointer);
+skateSurface.addEventListener("pointermove", moveSkatePointer);
+skateSurface.addEventListener("pointerup", endSkatePointer);
+skateSurface.addEventListener("pointercancel", endSkatePointer);
+skateSurface.addEventListener("contextmenu", (event) => event.preventDefault());
 
 document.querySelectorAll<HTMLButtonElement>("button[data-hunt]").forEach((button) => {
   button.addEventListener("pointerdown", (event) => {
@@ -1557,7 +1589,7 @@ function frame(now: number): void {
       skateAcc -= STEP_MS;
       steps += 1;
     }
-    drawSkate(skateGfx, skateState, now);
+    drawSkate(skateGfx, skateState, now, skateTouchHeld);
     syncSkateChrome();
   }
   requestAnimationFrame(frame);

@@ -1,6 +1,7 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
 import { courseWidth, SKATE_LEVELS, type Piece } from "./levels";
 import { catHeight, type SkateState } from "./sim";
+import { SKATE_SPOTS, type SkateSpot, type SkateTouchHeld } from "./touch";
 
 function cameraX(state: SkateState, width: number): number {
   return Math.max(0, Math.min(Math.max(0, width - VIEW_W), state.x - 160));
@@ -33,7 +34,7 @@ function round(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
   ctx.closePath();
 }
 
-export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, nowMs: number): void {
+export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, nowMs: number, touch?: SkateTouchHeld): void {
   const level = SKATE_LEVELS[state.levelIndex];
   const width = courseWidth(level);
   const cam = cameraX(state, width);
@@ -86,10 +87,37 @@ export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, nowM
     ctx.font = "700 16px Trebuchet MS, sans-serif";
     ctx.fillText(state.toast, VIEW_W / 2, 118);
   }
-  if (state.phase === "paused") banner(ctx, "Paused", "Tap Pause to roll.");
+  if (state.phase === "playing") drawTouch(ctx, touch);
+  if (state.phase === "paused") banner(ctx, "Paused", "Tap the picture to roll.");
   if (state.phase === "clear") banner(ctx, "You finished the level!", "Every ramp is behind you.");
   if (state.phase === "retry") banner(ctx, "Three wipeouts.", "Try the park again.");
   if (state.phase === "done") banner(ctx, `You finished all ${SKATE_LEVELS.length} levels.`, "The white cat owns the park.");
+}
+
+function spotHeld(spot: SkateSpot, touch?: SkateTouchHeld): boolean {
+  if (!touch) return false;
+  if (spot.name === "left") return touch.left;
+  if (spot.name === "right") return touch.right;
+  if (spot.name === "crouch") return touch.crouch;
+  if (spot.name === "jump") return touch.ollie;
+  return false;
+}
+
+function drawTouch(ctx: CanvasRenderingContext2D, touch?: SkateTouchHeld): void {
+  for (const spot of SKATE_SPOTS) {
+    const on = spotHeld(spot, touch);
+    const crouch = spot.name === "crouch";
+    ctx.fillStyle = crouch ? (on ? "#18264f" : "#24357a") : on ? "#e0b03a" : spot.name === "left" || spot.name === "pause" ? "#f7f1e6" : "#f2c14e";
+    round(ctx, spot.x, spot.y, spot.w, spot.h, 14);
+    ctx.fill();
+    ctx.strokeStyle = "#1c1915";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = crouch ? "#f7f1e6" : "#1c1915";
+    ctx.textAlign = "center";
+    ctx.font = spot.name === "pause" ? "700 15px Trebuchet MS, sans-serif" : "700 18px Trebuchet MS, sans-serif";
+    ctx.fillText(spot.label, spot.x + spot.w / 2, spot.y + spot.h / 2 + 6);
+  }
 }
 
 function drawPiece(ctx: CanvasRenderingContext2D, piece: Piece, x: number): void {
