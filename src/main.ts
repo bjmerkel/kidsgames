@@ -31,6 +31,9 @@ import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
 import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
+import { drawPattern } from "./pattern/draw";
+import { choiceAt, pauseAt, PATTERN_LEVELS } from "./pattern/levels";
+import { advancePattern, blankPatternInput, createPattern, tickPattern, type PatternInput, type PatternState } from "./pattern/sim";
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
@@ -145,6 +148,17 @@ const spotAll = document.querySelector<HTMLButtonElement>("#spot-all");
 const spotHard = document.querySelector<HTMLButtonElement>("#spot-hard");
 const spotNext = document.querySelector<HTMLButtonElement>("#spot-next");
 const spotPad = document.querySelector<HTMLElement>("#spot-pad");
+const patternCanvas = document.querySelector<HTMLCanvasElement>("#pattern-canvas");
+if (!patternCanvas) throw new Error("missing pattern canvas");
+const patternSurface: HTMLCanvasElement = patternCanvas;
+const patternContext = patternCanvas.getContext("2d");
+if (!patternContext) throw new Error("missing pattern context");
+const patternGfx: CanvasRenderingContext2D = patternContext;
+const patternStage = document.querySelector<HTMLElement>("#pattern-stage");
+const patternSection = document.querySelector<HTMLElement>("#pattern");
+const patternHeading = document.querySelector<HTMLElement>("#pattern-heading");
+const patternNext = document.querySelector<HTMLButtonElement>("#pattern-next");
+const patternPad = document.querySelector<HTMLElement>("#pattern-pad");
 const burstCanvas = document.querySelector<HTMLCanvasElement>("#burst-canvas");
 if (!burstCanvas) throw new Error("missing burst canvas");
 const burstSurface: HTMLCanvasElement = burstCanvas;
@@ -194,7 +208,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "pattern" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -226,6 +240,9 @@ let waddleEdge = blankWaddleInput();
 let spotState: SpotState | null = null;
 let spotAcc = 0;
 let spotEdge = blankSpotInput();
+let patternState: PatternState | null = null;
+let patternAcc = 0;
+let patternEdge = blankPatternInput();
 let burstState: BurstState | null = null;
 let burstAcc = 0;
 let burstEdge = blankBurstInput();
@@ -314,6 +331,7 @@ function fit(): void {
   fitBox(capyStage, capySurface);
   fitBox(waddleStage, waddleSurface);
   fitBox(spotStage, spotSurface);
+  fitBox(patternStage, patternSurface);
   fitBox(burstStage, burstSurface);
   fitBox(huntStage, huntSurface);
   fitBox(skateStage, skateFrame);
@@ -331,6 +349,7 @@ if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).ob
 if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(capyStage);
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
+if (patternStage) new ResizeObserver(() => fitBox(patternStage, patternSurface)).observe(patternStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
 if (skateStage) new ResizeObserver(() => fitBox(skateStage, skateFrame)).observe(skateStage);
@@ -346,6 +365,7 @@ function show(next: Mode): void {
   if (capySection) capySection.hidden = next !== "capy";
   if (waddleSection) waddleSection.hidden = next !== "waddle";
   if (spotSection) spotSection.hidden = next !== "spot";
+  if (patternSection) patternSection.hidden = next !== "pattern";
   if (burstSection) burstSection.hidden = next !== "burst";
   if (huntSection) huntSection.hidden = next !== "hunt";
   if (skateSection) skateSection.hidden = next !== "skate";
@@ -360,6 +380,7 @@ function show(next: Mode): void {
     capy: "Capy Swing",
     waddle: "Ice Waddle",
     spot: "Silk Spot",
+    pattern: "Pattern Pals",
     burst: "Berry Burst",
     hunt: "Word Hunt",
     skate: "Ollie Cat",
@@ -380,6 +401,7 @@ function show(next: Mode): void {
   if (next === "capy") openCapy();
   if (next === "waddle") openWaddle();
   if (next === "spot") openSpot();
+  if (next === "pattern") openPattern();
   if (next === "burst") openBurst();
   if (next === "hunt") openHunt();
   if (next === "skate") openSkate();
@@ -640,6 +662,29 @@ function spotInput(): SpotInput {
   return spotEdge;
 }
 
+function openPattern(): void {
+  patternState = createPattern(0);
+  patternAcc = 0;
+  patternEdge = blankPatternInput();
+  syncPatternChrome();
+}
+
+function syncPatternChrome(): void {
+  if (!patternState) return;
+  const level = PATTERN_LEVELS[patternState.levelIndex];
+  if (patternHeading) patternHeading.textContent = patternState.phase === "done" ? "Pattern Pals" : level.name;
+  const live = patternState.phase === "playing" || patternState.phase === "paused";
+  if (patternPad) patternPad.hidden = live;
+  if (patternNext) {
+    patternNext.hidden = live;
+    patternNext.textContent = patternState.phase === "done" ? "Play again" : patternState.levelIndex >= PATTERN_LEVELS.length - 1 ? "The last row" : "Next row";
+  }
+}
+
+function patternInput(): PatternInput {
+  return patternEdge;
+}
+
 function openBurst(): void {
   burstState = createBurst(0);
   burstAcc = 0;
@@ -836,6 +881,10 @@ if (picker) {
   picker.append(start);
 }
 
+document.querySelector<HTMLButtonElement>("#play-pattern")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("pattern");
+});
 document.querySelector<HTMLButtonElement>("#play-crab")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("crab");
@@ -928,6 +977,10 @@ document.querySelector("#spot-games")?.addEventListener("pointerdown", (event) =
   event.preventDefault();
   show("menu");
 });
+document.querySelector("#pattern-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
 document.querySelector("#burst-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
@@ -991,6 +1044,12 @@ spotNext?.addEventListener("pointerdown", (event) => {
   spotState = advanceSpot(spotState);
   syncSpotChrome();
 });
+patternNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!patternState) return;
+  patternState = advancePattern(patternState);
+  syncPatternChrome();
+});
 burstNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!burstState) return;
@@ -1020,6 +1079,15 @@ if (tuneTabs && tuneForm) {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+  if (mode === "pattern") {
+    if (event.code === "Digit1" || event.code === "Numpad1") patternEdge = { ...patternEdge, choice: 0 };
+    if (event.code === "Digit2" || event.code === "Numpad2") patternEdge = { ...patternEdge, choice: 1 };
+    if (event.code === "Digit3" || event.code === "Numpad3") patternEdge = { ...patternEdge, choice: 2 };
+    if (event.code === "Escape") patternEdge = { ...patternEdge, pause: true };
+    if (event.code === "Enter") patternEdge = { ...patternEdge, confirm: true };
+    if (["Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "hunt") {
     if (event.code === "KeyH") huntEdge = { ...huntEdge, hint: true };
     if (event.code === "Escape") huntEdge = { ...huntEdge, pause: true };
@@ -1575,6 +1643,28 @@ spotSurface.addEventListener("pointerdown", (event) => {
   };
 });
 
+patternSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
+  if (mode !== "pattern" || !patternState) return;
+  if (patternState.phase === "paused") {
+    patternEdge = { ...patternEdge, pause: true };
+    return;
+  }
+  if (patternState.phase === "clear" || patternState.phase === "done") {
+    patternState = advancePattern(patternState);
+    syncPatternChrome();
+    return;
+  }
+  const rect = patternSurface.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) * patternSurface.width) / rect.width;
+  const y = ((event.clientY - rect.top) * patternSurface.height) / rect.height;
+  if (pauseAt(x, y)) {
+    patternEdge = { ...patternEdge, pause: true };
+    return;
+  }
+  const choice = choiceAt(x, y);
+  if (choice != null) patternEdge = { ...patternEdge, choice };
+});
 burstSurface.addEventListener("pointerdown", (event) => {
   if (touchClaims.has(event.pointerId)) return;
   if (mode !== "burst" || !burstState) return;
@@ -1834,6 +1924,20 @@ function frame(now: number): void {
       if (spotState.phase === "playing") drawTouchPad(spotGfx, spotTouch.spots, (name) => spotTouch.pressed(name));
       syncSpotChrome();
     }
+  }
+  if (mode === "pattern" && patternState) {
+    patternAcc += delta;
+    let steps = 0;
+    while (patternAcc >= STEP_MS && steps < 5) {
+      const input = patternInput();
+      if (input.confirm && (patternState.phase === "clear" || patternState.phase === "done")) patternState = advancePattern(patternState);
+      else patternState = tickPattern(patternState, input, STEP_MS);
+      patternEdge = blankPatternInput();
+      patternAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawPattern(patternGfx, patternState, now);
+    syncPatternChrome();
   }
   if (mode === "burst" && burstState) {
     burstAcc += delta;

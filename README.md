@@ -1,6 +1,6 @@
 # Kids Games
 
-Eleven games live here. From the first screen, pick one.
+Twelve games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -23,6 +23,12 @@ The score carries from park to park. The fifteen parks are Milk Street, Alley Ra
 A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. The highlight snaps onto a straight line while you drag, and a near miss still counts. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
 
 The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shuffles them inside three groups and hides the words in a new place. The first group goes across or down. The next group adds diagonals. The last group can run any straight line, including backwards, in science, math, history, and reading.
+
+## Pattern Pals
+
+A matching game for a new reader. A row of big pictures ends with an empty spot. Three big pictures sit underneath. Tap the one that comes next. A right tap says "Yes!" A wrong tap says "Look again." and the row stays. There are no lives to lose.
+
+The score carries from row to row. A right tap on the first try is 100. A right tap after a miss is 50. The five rows are Color Twins, Shape Twins, Three Friends, Double Dots, and Big and Small. Each row has four patterns. Color Twins takes turns with colors. Shape Twins takes turns with shapes. Three Friends uses three pictures, then starts over. Double Dots uses two, then two. Big and Small takes turns with size.
 
 ## Berry Burst
 
@@ -94,6 +100,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Capy Swing, tap the picture to jump. Hold Left or Right, or hold the trail, to run. The Jump button works too. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
+- In Pattern Pals, tap the picture that comes next. The three big pictures are the choices. 1, 2, and 3 pick them too. Pause sits on the picture.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.
 - In Ollie Cat, the board rolls on its own. Tap Left or Right, the matching side of the picture, or the arrow keys, and the cat turns that way. Let go and the board eases back toward the middle. Hold a side, then let go, for a boost. Steer into the yellow stars. Tap Jump to ollie, and Crouch or a downward slide to duck. Down crouches too. Shift slows the board. Ollie again in the air does a kickflip, then a grab.

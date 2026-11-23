@@ -13,6 +13,10 @@
     <section id="menu">
       <p class="emery">Emery is awesome</p>
       <h1>Kids Games</h1>
+      <button type="button" id="play-pattern" class="game-card">
+        Pattern Pals
+        <small>What comes next? 5 rows.</small>
+      </button>
       <button type="button" id="play-crab" class="game-card">
         Hermit Crab Crossing
         <small>Hop the yard. 5 levels.</small>
@@ -236,6 +240,20 @@
         </div>
         <div id="skate-pad">
           <button type="button" id="skate-next" hidden>Next level</button>
+        </div>
+      </div>
+    </section>
+    <section id="pattern" hidden>
+      <header class="slim-head">
+        <button type="button" id="pattern-games">Games</button>
+        <p id="pattern-heading">Pattern Pals</p>
+      </header>
+      <div id="pattern-board">
+        <div id="pattern-stage">
+          <canvas id="pattern-canvas" width="480" height="720" aria-label="Pattern Pals"></canvas>
+        </div>
+        <div id="pattern-pad">
+          <button type="button" id="pattern-next" hidden>Next row</button>
         </div>
       </div>
     </section>
