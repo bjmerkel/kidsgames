@@ -40,7 +40,7 @@ export function drawSkate(ctx: CanvasRenderingContext2D, state: SkateState, _now
   ctx.fillText(level.name, 16, 32);
   ctx.font = "700 15px Trebuchet MS, sans-serif";
   ctx.fillText(`Level ${state.levelIndex + 1} of ${SKATE_LEVELS.length}`, 16, 54);
-  ctx.fillText(`Score ${state.score}   Fish ${state.treats.length}`, 16, 74);
+  ctx.fillText(`Score ${state.score}   Stars ${state.treats.length}`, 16, 74);
   ctx.font = "700 12px Trebuchet MS, sans-serif";
   ctx.fillText("Boost", 16, 96);
   const charge = boostCharge(state);
@@ -85,19 +85,26 @@ function spotHeld(spot: SkateSpot, touch?: SkateTouchHeld): boolean {
   return false;
 }
 
+function buttonFill(name: SkateSpot["name"], on: boolean): string {
+  if (name === "pause") return on ? "#e7eef8" : "#f7fbff";
+  if (name === "jump") return on ? "#2eaf58" : "#3dcc6a";
+  if (name === "crouch") return on ? "#e06a22" : "#ff8a3d";
+  return on ? "#1d7ed4" : "#2f9bff";
+}
+
 function drawTouch(ctx: CanvasRenderingContext2D, touch?: SkateTouchHeld): void {
   for (const spot of SKATE_SPOTS) {
     const on = spotHeld(spot, touch);
-    const crouch = spot.name === "crouch";
-    ctx.fillStyle = crouch ? (on ? "#18264f" : "#24357a") : on ? "#e0b03a" : spot.name === "left" || spot.name === "pause" ? "#f7f1e6" : "#f2c14e";
-    round(ctx, spot.x, spot.y, spot.w, spot.h, 14);
+    ctx.fillStyle = buttonFill(spot.name, on);
+    round(ctx, spot.x, spot.y, spot.w, spot.h, spot.name === "pause" ? 12 : 18);
     ctx.fill();
-    ctx.strokeStyle = "#1c1915";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#1c2430";
+    ctx.lineWidth = 4;
     ctx.stroke();
-    ctx.fillStyle = crouch ? "#f7f1e6" : "#1c1915";
+    ctx.fillStyle = spot.name === "pause" ? "#1c2430" : "#ffffff";
     ctx.textAlign = "center";
-    ctx.font = spot.name === "pause" ? "700 15px Trebuchet MS, sans-serif" : "700 18px Trebuchet MS, sans-serif";
-    ctx.fillText(spot.label, spot.x + spot.w / 2, spot.y + spot.h / 2 + 6);
+    ctx.font = spot.name === "pause" ? "700 15px Trebuchet MS, sans-serif" : "700 22px Trebuchet MS, sans-serif";
+    const label = spot.name === "left" ? "◀ Left" : spot.name === "right" ? "Right ▶" : spot.label;
+    ctx.fillText(label, spot.x + spot.w / 2, spot.y + spot.h / 2 + 7);
   }
 }

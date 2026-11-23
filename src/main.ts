@@ -708,7 +708,7 @@ function syncSkateChrome(): void {
 function skateInput(): SkateInput {
   syncSkateTouch();
   return {
-    dx: (skateTouchHeld.right ? 1 : 0) - (skateKeys.brake || skateTouchHeld.left ? 1 : 0),
+    dx: skateKeys.brake ? -1 : 0,
     steer: skateSteer(),
     crouch: skateKeys.crouch || skateTouchHeld.crouch,
     jump: skateEdge.jump,
@@ -718,7 +718,7 @@ function skateInput(): SkateInput {
 }
 
 function skateSteer(): number {
-  let steer = (skateKeys.right ? 1 : 0) - (skateKeys.left ? 1 : 0);
+  let steer = (skateKeys.right || skateTouchHeld.right ? 1 : 0) - (skateKeys.left || skateTouchHeld.left ? 1 : 0);
   for (const pointer of skatePointers) {
     if (pointer.origin !== "field") continue;
     steer += sideSteer(pointer.x);

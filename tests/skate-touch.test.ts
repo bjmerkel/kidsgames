@@ -31,8 +31,17 @@ function pointer(partial: Partial<SkatePointer> & Pick<SkatePointer, "origin">):
 }
 
 describe("ollie cat touch", () => {
-  it("puts brake, push, ollie, and crouch on the screen below the riding line", () => {
-    expect(SKATE_SPOTS.map((spot) => spot.label)).toEqual(["Brake", "Push", "Ollie", "Crouch", "Pause"]);
+  it("puts left, right, jump, and crouch on the screen below the riding line", () => {
+    expect(SKATE_SPOTS.map((spot) => spot.label)).toEqual(["Crouch", "Jump", "Left", "Right", "Pause"]);
+    const left = SKATE_SPOTS.find((spot) => spot.name === "left");
+    const right = SKATE_SPOTS.find((spot) => spot.name === "right");
+    const jump = SKATE_SPOTS.find((spot) => spot.name === "jump");
+    expect(left && right && jump).toBeTruthy();
+    expect(left!.x + left!.w).toBeLessThan(VIEW_W / 2);
+    expect(right!.x).toBeGreaterThan(VIEW_W / 2);
+    expect(left!.y).toBe(right!.y);
+    expect(jump!.x).toBeGreaterThan(VIEW_W / 2);
+    expect(jump!.y).toBeLessThan(right!.y);
     for (const spot of SKATE_SPOTS) {
       expect(spot.x).toBeGreaterThanOrEqual(0);
       expect(spot.y).toBeGreaterThanOrEqual(0);
@@ -52,13 +61,13 @@ describe("ollie cat touch", () => {
   });
 
   it("reads each on-screen command from where the finger is", () => {
-    const brake = SKATE_SPOTS[0];
-    const push = SKATE_SPOTS[1];
-    const ollie = SKATE_SPOTS[2];
-    const crouch = SKATE_SPOTS[3];
-    const pause = SKATE_SPOTS[4];
-    expect(skateSpotAt(brake.x + 4, brake.y + 4)).toBe("left");
-    expect(skateSpotAt(push.x + 4, push.y + 4)).toBe("right");
+    const left = SKATE_SPOTS.find((spot) => spot.name === "left")!;
+    const right = SKATE_SPOTS.find((spot) => spot.name === "right")!;
+    const ollie = SKATE_SPOTS.find((spot) => spot.name === "jump")!;
+    const crouch = SKATE_SPOTS.find((spot) => spot.name === "crouch")!;
+    const pause = SKATE_SPOTS.find((spot) => spot.name === "pause")!;
+    expect(skateSpotAt(left.x + 4, left.y + 4)).toBe("left");
+    expect(skateSpotAt(right.x + 4, right.y + 4)).toBe("right");
     expect(skateSpotAt(ollie.x + 4, ollie.y + 4)).toBe("jump");
     expect(skateSpotAt(crouch.x + 4, crouch.y + 4)).toBe("crouch");
     expect(skateSpotAt(pause.x + 4, pause.y + 4)).toBe("pause");
@@ -66,17 +75,15 @@ describe("ollie cat touch", () => {
     expect(skateOriginAt(VIEW_W / 2, 300)).toBe("field");
   });
 
-  it("holds push on the street, crouches when the finger slides down, and ollies on a tap or flick", () => {
-    const early = readSkateTouch([pointer({ origin: "field", t0: 0 })], SKATE_HOLD_MS - 1);
-    expect(early.held).toEqual(blankSkateTouch());
-    const pushing = readSkateTouch([pointer({ origin: "field", t0: 0 })], SKATE_HOLD_MS);
-    expect(pushing.held.right).toBe(true);
-    expect(pushing.jump).toBe(false);
+  it("leaves a hold on the street alone, crouches when the finger slides down, and jumps on a tap or flick", () => {
+    const holding = readSkateTouch([pointer({ origin: "field", t0: 0 })], SKATE_HOLD_MS + 40);
+    expect(holding.held).toEqual(blankSkateTouch());
+    expect(holding.jump).toBe(false);
 
     const low = pointer({ origin: "field", y: 200 + SKATE_CROUCH_DY, y0: 200 });
     const crouched = readSkateTouch([low], 20);
     expect(crouched.held.crouch).toBe(true);
-    expect(crouched.held.right).toBe(true);
+    expect(crouched.held.right).toBe(false);
 
     const flicked = readSkateTouch([pointer({ origin: "field", y: 200 + SKATE_FLICK_DY, y0: 200 })], 30);
     expect(flicked.jump).toBe(true);

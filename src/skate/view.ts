@@ -14,9 +14,9 @@ type Palette = {
 };
 
 const SKIES: Record<NonNullable<SkateLevel["sky"]> | "day", Palette> = {
-  day: { sky: "#9fd4ee", hill: "#b7d39a", ground: "#6d727c" },
-  dusk: { sky: "#f0a06a", hill: "#c48b62", ground: "#6a5a68" },
-  night: { sky: "#1c2a4a", hill: "#243044", ground: "#4a5260" },
+  day: { sky: "#79c6ff", hill: "#5ec45a", ground: "#8d96a3" },
+  dusk: { sky: "#ffb07a", hill: "#d98a55", ground: "#7a6a78" },
+  night: { sky: "#24386a", hill: "#2f4460", ground: "#5c6678" },
 };
 
 export type SkateView = {
@@ -84,7 +84,7 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
       placeCat(cat, state, road.x, road.z, heading, nowMs);
       placeTreats(treats, state, nowMs);
       placeSparks(sparks, state, road.x, road.z, heading, nowMs);
-      const chase = skateChase(road.x, skateScreenY(state.y), road.z, road.heading + state.steerAngle * 0.2);
+      const chase = skateChase(road.x, skateScreenY(state.y), road.z, road.heading + state.steerAngle * 0.55);
       const lift = state.grounded || state.grinding ? 0 : Math.min(70, 24 + state.airMs / 12);
       chase.y += lift;
       if (!smooth.ready) {
@@ -213,7 +213,7 @@ function addDetails(park: THREE.Group, course: CoursePoint[], materials: Materia
     if (a.ground == null || b.ground == null) continue;
     const y = skateScreenY(a.ground) + 2;
     if (index % 2 === 0) {
-      const dash = new THREE.Mesh(new THREE.BoxGeometry(Math.min(14, length * 0.45), 2, 5), materials.rail);
+      const dash = new THREE.Mesh(new THREE.BoxGeometry(Math.min(18, length * 0.5), 3, 8), materials.gold);
       dash.position.set((a.x + b.x) / 2, y, (a.z + b.z) / 2);
       dash.rotation.y = -heading;
       park.add(dash);
@@ -228,10 +228,10 @@ function addDetails(park: THREE.Group, course: CoursePoint[], materials: Materia
     if (index % 8 === 0) {
       for (const side of [-1, 1]) {
         const tree = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 30, 6), materials.post);
+        const trunk = new THREE.Mesh(new THREE.BoxGeometry(8, 28, 8), materials.post);
         trunk.position.y = FLOOR + 18;
-        const crown = new THREE.Mesh(new THREE.SphereGeometry(24, 8, 6), materials.hill);
-        crown.position.y = FLOOR + 46;
+        const crown = new THREE.Mesh(new THREE.BoxGeometry(36, 28, 36), materials.hill);
+        crown.position.y = FLOOR + 44;
         tree.add(trunk, crown);
         const nx = -Math.sin(a.heading) * side;
         const nz = Math.cos(a.heading) * side;
@@ -266,17 +266,12 @@ function addTreats(park: THREE.Group, course: CoursePoint[], treats: CourseTreat
 }
 
 function makeFish(): THREE.Group {
-  const fish = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 8), new THREE.MeshLambertMaterial({ color: "#f29a3a" }));
-  body.scale.set(1.8, 0.9, 0.85);
-  fish.scale.setScalar(1.35);
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(6, 11, 6), new THREE.MeshLambertMaterial({ color: "#e07a28" }));
-  tail.rotation.z = Math.PI / 2;
-  tail.position.x = -13;
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(1.5, 6, 6), new THREE.MeshLambertMaterial({ color: "#1c1915" }));
-  eye.position.set(8, 2, 4);
-  fish.add(body, tail, eye);
-  return fish;
+  const star = new THREE.Group();
+  const gold = new THREE.MeshLambertMaterial({ color: "#ffe14a" });
+  star.add(new THREE.Mesh(new THREE.BoxGeometry(10, 34, 10), gold));
+  star.add(new THREE.Mesh(new THREE.BoxGeometry(34, 10, 10), gold));
+  star.add(new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), gold));
+  return star;
 }
 
 function placeTreats(treats: TreatMesh[], state: SkateState, nowMs: number): void {
@@ -342,29 +337,27 @@ function makeCat(): CatParts {
       return wheel;
     }),
   );
-  const fur = new THREE.MeshLambertMaterial({ color: "#f7f4ef" });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(16, 16, 12), fur);
-  body.scale.set(1.05, 1.15, 0.85);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(13, 16, 12), fur);
-  const earGeo = new THREE.ConeGeometry(5, 12, 6);
-  const earMat = new THREE.MeshLambertMaterial({ color: "#f2b6c6" });
+  const fur = new THREE.MeshLambertMaterial({ color: "#f4f7fb" });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(22, 26, 18), fur);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(20, 18, 18), fur);
+  const earMat = new THREE.MeshLambertMaterial({ color: "#ff9eb5" });
   for (const side of [-1, 1]) {
-    const ear = new THREE.Mesh(earGeo, earMat);
-    ear.position.set(2, 10, side * 7);
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 6), earMat);
+    ear.position.set(2, 12, side * 6);
     head.add(ear);
   }
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(1.8, 8, 8), new THREE.MeshLambertMaterial({ color: "#1c1915" }));
-  const leftEye = eye.clone();
-  leftEye.position.set(11, 1, -4);
-  const rightEye = eye.clone();
-  rightEye.position.set(11, 1, 4);
-  head.add(leftEye, rightEye);
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(1.6, 8, 8), new THREE.MeshLambertMaterial({ color: "#e0899a" }));
-  nose.position.set(12, -3, 0);
+  const eyeMat = new THREE.MeshLambertMaterial({ color: "#1c1915" });
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 4), eyeMat);
+    eye.position.set(10, 1, side * 5);
+    head.add(eye);
+  }
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 4), new THREE.MeshLambertMaterial({ color: "#ff8aa0" }));
+  nose.position.set(11, -4, 0);
   head.add(nose);
-  const tail = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.4, 22, 8), fur);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 6), fur);
   tail.position.set(-18, 16, 0);
-  tail.rotation.z = 0.9;
+  tail.rotation.z = 0.5;
   group.add(board, ...wheels, body, head, tail);
   return { group, board, wheels, body, head, tail };
 }
@@ -381,7 +374,7 @@ function placeCat(cat: CatParts, state: SkateState, x: number, z: number, headin
   cat.board.rotation.x = state.airTrick === "kickflip" ? state.airMs / 70 : 0;
   const crouched = state.crouched ? 0.62 : 1;
   cat.body.position.set(2, 18 + height * 0.28, 0);
-  cat.body.scale.y = 1.15 * crouched;
+  cat.body.scale.y = crouched;
   cat.head.position.set(12, 18 + height * 0.72, 0);
   cat.head.rotation.z = state.airTrick === "grab" ? -0.5 : 0;
   const wag = state.boostMs > 0 ? 60 : 120;

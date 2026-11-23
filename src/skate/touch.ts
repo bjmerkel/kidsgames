@@ -24,10 +24,10 @@ export const SKATE_CROUCH_DY = 36;
 export const SKATE_FLICK_DY = -48;
 
 export const SKATE_SPOTS: readonly SkateSpot[] = [
-  { name: "left", label: "Brake", x: 16, y: DECK_Y, w: BUTTON_W, h: BUTTON_H },
-  { name: "right", label: "Push", x: 16, y: DECK_Y + BUTTON_H + GAP, w: BUTTON_W, h: BUTTON_H },
-  { name: "jump", label: "Ollie", x: VIEW_W - 16 - BUTTON_W, y: DECK_Y, w: BUTTON_W, h: BUTTON_H },
-  { name: "crouch", label: "Crouch", x: VIEW_W - 16 - BUTTON_W, y: DECK_Y + BUTTON_H + GAP, w: BUTTON_W, h: BUTTON_H },
+  { name: "crouch", label: "Crouch", x: 16, y: DECK_Y, w: BUTTON_W, h: BUTTON_H },
+  { name: "jump", label: "Jump", x: VIEW_W - 16 - BUTTON_W, y: DECK_Y, w: BUTTON_W, h: BUTTON_H },
+  { name: "left", label: "Left", x: 16, y: DECK_Y + BUTTON_H + GAP, w: BUTTON_W, h: BUTTON_H },
+  { name: "right", label: "Right", x: VIEW_W - 16 - BUTTON_W, y: DECK_Y + BUTTON_H + GAP, w: BUTTON_W, h: BUTTON_H },
   { name: "pause", label: "Pause", x: VIEW_W - 108, y: 140, w: 92, h: 40 },
 ];
 
@@ -101,10 +101,7 @@ export function readSkateTouch(pointers: readonly SkatePointer[], now: number): 
     }
     if (pointer.origin === "field") {
       const dy = pointer.y - pointer.y0;
-      if (dy >= SKATE_CROUCH_DY) {
-        held.crouch = true;
-        held.right = true;
-      } else if (now - pointer.t0 >= SKATE_HOLD_MS) held.right = true;
+      if (dy >= SKATE_CROUCH_DY) held.crouch = true;
       if (dy <= SKATE_FLICK_DY && !pointer.jumpSent) {
         pointer.jumpSent = true;
         jump = true;

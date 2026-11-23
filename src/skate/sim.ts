@@ -255,7 +255,7 @@ export function tickSkate(state: SkateState, input: SkateInput, dtMs: number): S
     next.combo = Math.min(8, next.combo + 1);
     next.comboMs = 1400;
     next.score += 50 * next.combo;
-    next.toast = next.combo > 1 ? `Fish x${next.combo}` : "Fish!";
+    next.toast = next.combo > 1 ? `Star x${next.combo}` : "Star!";
     next.toastMs = 700;
   }
 

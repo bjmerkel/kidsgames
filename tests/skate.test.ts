@@ -256,7 +256,7 @@ describe("ollie cat", () => {
     state = tickSkate(state, blankSkateInput(), STEP);
     expect(state.treats).toContain(treat.id);
     expect(state.score).toBeGreaterThanOrEqual(50);
-    expect(state.toast).toBe("Fish!");
+    expect(state.toast).toBe("Star!");
 
     const missed = createSkate(0);
     missed.x = treat.s;
