@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { VIEW_H, VIEW_W } from "../game/constants";
 import { courseWidth, SKATE_LEVELS, type SkateLevel } from "./levels";
-import { skateCameraX, skateProps, skateScreenY, type SkateProp } from "./scene";
+import { skateChase, skateProps, skateScreenY, type SkateProp } from "./scene";
 import { catHeight, type SkateState } from "./sim";
 
-const STREET = 78;
+const STREET = 220;
 const HALF = STREET / 2;
 const FLOOR = -36;
 
@@ -31,7 +31,7 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
   renderer.setSize(VIEW_W, VIEW_H, false);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(40, VIEW_W / VIEW_H, 1, 4000);
+  const camera = new THREE.PerspectiveCamera(46, VIEW_W / VIEW_H, 1, 8000);
   scene.add(new THREE.AmbientLight(0xffffff, 0.78));
   const sun = new THREE.DirectionalLight(0xfff6e8, 1.25);
   sun.position.set(180, 520, 360);
@@ -54,7 +54,7 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
     rail: new THREE.MeshLambertMaterial({ color: "#e4e7ec" }),
     post: new THREE.MeshLambertMaterial({ color: "#8d93a0" }),
     tunnel: new THREE.MeshLambertMaterial({ color: "#2c3442" }),
-    roof: new THREE.MeshLambertMaterial({ color: "#3a4250" }),
+    roof: new THREE.MeshLambertMaterial({ color: "#3a4250", transparent: true, opacity: 0.55 }),
     hill: new THREE.MeshLambertMaterial({ color: SKIES.day.hill }),
     checker: new THREE.MeshLambertMaterial({ map: checkerTexture(), color: "#ffffff" }),
   };
@@ -73,12 +73,9 @@ export function mountSkateView(canvas: HTMLCanvasElement): SkateView {
         materials.ground.color.set(palette.ground);
       }
       placeCat(cat, state, nowMs);
-      const width = courseWidth(level);
-      const origin = skateCameraX(state.x, width);
-      const lookX = origin + VIEW_W / 2;
-      const lookY = VIEW_H * 0.46;
-      camera.position.set(lookX - 48, lookY + 86, 860);
-      camera.lookAt(lookX + 18, lookY - 24, 0);
+      const chase = skateChase(state.x, skateScreenY(state.y));
+      camera.position.set(chase.x, chase.y, chase.z);
+      camera.lookAt(chase.lookX, chase.lookY, chase.lookZ);
       renderer.render(scene, camera);
     },
   };
@@ -89,9 +86,12 @@ function buildPark(park: THREE.Group, level: SkateLevel, materials: Materials): 
     park.remove(child);
     disposeObject(child);
   }
-  const hills = new THREE.Mesh(new THREE.BoxGeometry(courseWidth(level) + 800, 220, 40), materials.hill);
-  hills.position.set(courseWidth(level) / 2, 250, -160);
-  park.add(hills);
+  const span = courseWidth(level);
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(span + 1800, 1600), materials.hill);
+  grass.rotation.x = -Math.PI / 2;
+  grass.position.set(span / 2, FLOOR - 8, 0);
+  park.add(grass);
+  addTrees(park, span, materials);
 
   for (const prop of skateProps(level)) addProp(park, prop, materials);
 }
@@ -121,9 +121,18 @@ function addProp(park: THREE.Group, prop: SkateProp, materials: Materials): void
   const body = new THREE.Mesh(wedgeGeometry(prop.w, top0, top1, FLOOR, STREET), materials.ground);
   body.position.set(prop.x, 0, 0);
   park.add(body);
-  const lip = new THREE.Mesh(wedgeGeometry(prop.w, top0 + 3, top1 + 3, top0, 10), materials.edge);
-  lip.position.set(prop.x, 0, HALF - 5);
-  park.add(lip);
+  for (const side of [-1, 1]) {
+    const lip = new THREE.Mesh(wedgeGeometry(prop.w, top0 + 3, top1 + 3, top0, 12), materials.edge);
+    lip.position.set(prop.x, 0, side * (HALF - 6));
+    park.add(lip);
+  }
+  for (let step = 16; step < prop.w - 10; step += 40) {
+    const t = step / prop.w;
+    const y = top0 + (top1 - top0) * t;
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(16, 2, 5), materials.rail);
+    dash.position.set(prop.x + step, y + 2, 0);
+    park.add(dash);
+  }
 
   if (prop.kind === "ramp") {
     const uphill = prop.y1 < prop.y0;
@@ -141,25 +150,28 @@ function addProp(park: THREE.Group, prop: SkateProp, materials: Materials): void
   if (prop.kind === "tunnel") {
     const floorY = skateScreenY(prop.y0);
     const opening = prop.gap;
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(prop.w, 28, STREET + 6), materials.roof);
-    roof.position.set(prop.x + prop.w / 2, floorY + opening + 14, 0);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(prop.w, 16, STREET + 8), materials.roof);
+    roof.position.set(prop.x + prop.w / 2, floorY + opening + 10, 0);
     park.add(roof);
-    const back = new THREE.Mesh(new THREE.BoxGeometry(prop.w, opening, 10), materials.tunnel);
-    back.position.set(prop.x + prop.w / 2, floorY + opening / 2, -HALF + 6);
-    park.add(back);
-    for (const end of [8, prop.w - 8]) {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(12, opening + 28, 16), materials.tunnel);
-      post.position.set(prop.x + end, floorY + (opening + 28) / 2, 0);
-      park.add(post);
+    for (const side of [-1, 1]) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(prop.w, opening, 12), materials.tunnel);
+      wall.position.set(prop.x + prop.w / 2, floorY + opening / 2, side * (HALF - 8));
+      park.add(wall);
+      for (const end of [8, prop.w - 8]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(14, opening + 24, 16), materials.tunnel);
+        post.position.set(prop.x + end, floorY + (opening + 24) / 2, side * (HALF - 8));
+        park.add(post);
+      }
     }
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(prop.w - 20, 6, 8), materials.gold);
-    trim.position.set(prop.x + prop.w / 2, floorY + opening + 26, HALF - 2);
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(prop.w - 24, 4, 14), materials.gold);
+    trim.position.set(prop.x + prop.w / 2, floorY + opening + 20, 0);
     park.add(trim);
   }
 
   if (prop.kind === "finish") {
-    const banner = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(prop.w, 96), 48), materials.checker);
-    banner.position.set(prop.x + prop.w / 2, skateScreenY(prop.y0) + 56, HALF - 1);
+    const banner = new THREE.Mesh(new THREE.PlaneGeometry(STREET * 0.7, 42), materials.checker);
+    banner.position.set(prop.x + prop.w / 2, skateScreenY(prop.y0) + 48, 0);
+    banner.rotation.y = -Math.PI / 2;
     park.add(banner);
   }
 }
@@ -190,39 +202,41 @@ type CatParts = {
 
 function makeCat(): CatParts {
   const group = new THREE.Group();
-  const board = new THREE.Mesh(new THREE.BoxGeometry(50, 6, 16), new THREE.MeshLambertMaterial({ color: "#20242b" }));
+  const board = new THREE.Mesh(new THREE.BoxGeometry(52, 6, 24), new THREE.MeshLambertMaterial({ color: "#20242b" }));
   board.position.y = 7;
   const wheelGeo = new THREE.CylinderGeometry(5, 5, 6, 12);
   wheelGeo.rotateX(Math.PI / 2);
   const wheelMat = new THREE.MeshLambertMaterial({ color: "#d64545" });
-  const wheels = [-16, 16].map((x) => {
-    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-    wheel.position.set(x, 5, 0);
-    return wheel;
-  });
+  const wheels = ([-16, 16] as const).flatMap((x) =>
+    ([-11, 11] as const).map((z) => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(x, 5, z);
+      return wheel;
+    }),
+  );
   const fur = new THREE.MeshLambertMaterial({ color: "#f7f4ef" });
   const body = new THREE.Mesh(new THREE.SphereGeometry(16, 16, 12), fur);
-  body.scale.set(1, 1.15, 0.8);
+  body.scale.set(1.05, 1.15, 0.85);
   const head = new THREE.Mesh(new THREE.SphereGeometry(13, 16, 12), fur);
   const earGeo = new THREE.ConeGeometry(5, 12, 6);
   const earMat = new THREE.MeshLambertMaterial({ color: "#f2b6c6" });
   for (const side of [-1, 1]) {
     const ear = new THREE.Mesh(earGeo, earMat);
-    ear.position.set(side * 7, 10, 0);
+    ear.position.set(2, 10, side * 7);
     head.add(ear);
   }
   const eye = new THREE.Mesh(new THREE.SphereGeometry(1.8, 8, 8), new THREE.MeshLambertMaterial({ color: "#1c1915" }));
   const leftEye = eye.clone();
-  leftEye.position.set(-4, 1, 11);
+  leftEye.position.set(11, 1, -4);
   const rightEye = eye.clone();
-  rightEye.position.set(4, 1, 11);
+  rightEye.position.set(11, 1, 4);
   head.add(leftEye, rightEye);
   const nose = new THREE.Mesh(new THREE.SphereGeometry(1.6, 8, 8), new THREE.MeshLambertMaterial({ color: "#e0899a" }));
-  nose.position.set(0, -3, 12);
+  nose.position.set(12, -3, 0);
   head.add(nose);
   const tail = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.4, 22, 8), fur);
-  tail.position.set(-20, 18, -4);
-  tail.rotation.z = 0.8;
+  tail.position.set(-18, 16, 0);
+  tail.rotation.z = 0.9;
   group.add(board, ...wheels, body, head, tail);
   return { group, board, wheels, body, head, tail };
 }
@@ -235,11 +249,26 @@ function placeCat(cat: CatParts, state: SkateState, nowMs: number): void {
   for (const wheel of cat.wheels) wheel.rotation.z = spin;
   cat.board.rotation.x = state.airTrick === "kickflip" ? state.airMs / 70 : 0;
   const crouched = state.crouched ? 0.62 : 1;
-  cat.body.position.set(0, 18 + height * 0.28, 0);
+  cat.body.position.set(2, 18 + height * 0.28, 0);
   cat.body.scale.y = 1.15 * crouched;
-  cat.head.position.set(0, 18 + height * 0.72, 8);
+  cat.head.position.set(12, 18 + height * 0.72, 0);
   cat.head.rotation.z = state.airTrick === "grab" ? -0.5 : 0;
   cat.tail.rotation.z = 0.8 + Math.sin(nowMs / 120) * 0.25;
+}
+
+function addTrees(park: THREE.Group, width: number, materials: Materials): void {
+  for (let x = 90; x < width; x += 210) {
+    for (const side of [-1, 1]) {
+      const tree = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 30, 6), materials.post);
+      trunk.position.y = FLOOR + 18;
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(26, 8, 6), materials.hill);
+      crown.position.y = FLOOR + 48;
+      tree.add(trunk, crown);
+      tree.position.set(x + (side === 1 ? 30 : 0), 0, side * (HALF + 78));
+      park.add(tree);
+    }
+  }
 }
 
 function checkerTexture(): THREE.CanvasTexture {

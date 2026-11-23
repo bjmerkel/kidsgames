@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { VIEW_H, VIEW_W } from "../src/game/constants";
+import { VIEW_H } from "../src/game/constants";
 import { courseWidth, SKATE_LEVELS } from "../src/skate/levels";
-import { skateCameraX, skateProps, skateScreenY } from "../src/skate/scene";
+import { skateChase, skateProps, skateScreenY } from "../src/skate/scene";
 import { createSkate } from "../src/skate/sim";
 
 describe("ollie cat scene", () => {
-  it("keeps the cat 160 pixels from the left and inside the park", () => {
-    expect(skateCameraX(0, 5000)).toBe(0);
-    expect(skateCameraX(160, 5000)).toBe(0);
-    expect(skateCameraX(400, 5000)).toBe(240);
-    expect(skateCameraX(10000, 800)).toBe(800 - VIEW_W);
+  it("looks down the street from above and behind the cat", () => {
+    const chase = skateChase(400, 160);
+    expect(chase.x).toBeLessThan(400);
+    expect(chase.y).toBeGreaterThan(160 + 200);
+    expect(chase.lookX).toBeGreaterThan(400);
+    expect(chase.lookY).toBeLessThan(chase.y);
+    expect(Math.abs(chase.z)).toBeLessThan(chase.y - 160);
   });
 
   it("lifts canvas heights so the ground sits above the bottom of the screen", () => {

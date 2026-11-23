@@ -18,7 +18,7 @@ const GROUND = 560;
 export const SKATE_LEVELS: SkateLevel[] = [
   {
     name: "Milk Street",
-    blurb: "Push right, ollie, and crouch in the tunnel.",
+    blurb: "Hold Push, ollie, and crouch in the tunnel.",
     pieces: [
       { kind: "flat", w: 240, y: GROUND },
       { kind: "ramp", w: 150, y0: GROUND, y1: 470 },

@@ -1,8 +1,26 @@
-import { VIEW_H, VIEW_W } from "../game/constants";
+import { VIEW_H } from "../game/constants";
 import { type Piece, type SkateLevel } from "./levels";
 
-export function skateCameraX(catX: number, width: number): number {
-  return Math.max(0, Math.min(Math.max(0, width - VIEW_W), catX - 160));
+const BEHIND = 90;
+const ABOVE = 520;
+const AHEAD = 70;
+
+export function skateChase(catX: number, catY: number): {
+  x: number;
+  y: number;
+  z: number;
+  lookX: number;
+  lookY: number;
+  lookZ: number;
+} {
+  return {
+    x: catX - BEHIND,
+    y: catY + ABOVE,
+    z: 8,
+    lookX: catX + AHEAD,
+    lookY: catY - 6,
+    lookZ: 0,
+  };
 }
 
 export function skateScreenY(canvasY: number): number {
