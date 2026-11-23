@@ -419,10 +419,13 @@ function layoutDiffs(diffs: SpotDiff[], random: () => number): SpotDiff[] {
   return diffs.map((diff) => ({ ...diff }));
 }
 
-export function dealSpot(seed: number): SpotLevel[] {
+export const HARD_CHANGES = 8;
+
+export function dealSpot(seed: number, minChanges = 0): SpotLevel[] {
   const random = rng(seed);
   const groups = new Map<number, SpotLevel[]>();
   for (const picture of SPOT_LEVELS) {
+    if (picture.diffs.length < minChanges) continue;
     const group = groups.get(picture.diffs.length) ?? [];
     group.push(picture);
     groups.set(picture.diffs.length, group);

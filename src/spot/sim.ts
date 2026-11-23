@@ -1,4 +1,4 @@
-import { dealSpot, PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, type SpotDiff, type SpotLevel } from "./scenes";
+import { HARD_CHANGES, dealSpot, PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, SPOT_LEVELS, type SpotDiff, type SpotLevel } from "./scenes";
 
 export type SpotPhase = "playing" | "paused" | "clear" | "done";
 
@@ -25,6 +25,7 @@ export type SpotState = {
   elapsedMs: number;
   levels: SpotLevel[];
   reshuffle: boolean;
+  hard: boolean;
 };
 
 const CLEAR_BONUS = 250;
@@ -50,12 +51,14 @@ export function createSpot(levelIndex = 0, score = 0, levels: SpotLevel[] = SPOT
     elapsedMs: 0,
     levels: list,
     reshuffle: false,
+    hard: false,
   };
 }
 
-export function startSpot(seed = 1 + Math.floor(Math.random() * 2147483646)): SpotState {
-  const state = createSpot(0, 0, dealSpot(seed));
+export function startSpot(seed = 1 + Math.floor(Math.random() * 2147483646), hard = false): SpotState {
+  const state = createSpot(0, 0, dealSpot(seed, hard ? HARD_CHANGES : 0));
   state.reshuffle = true;
+  state.hard = hard;
   return state;
 }
 
@@ -130,7 +133,7 @@ export function tickSpot(state: SpotState, input: SpotInput, dt: number): SpotSt
 }
 
 export function advanceSpot(state: SpotState): SpotState {
-  if (state.phase === "done") return state.reshuffle ? startSpot() : createSpot(0, 0);
+  if (state.phase === "done") return state.reshuffle ? startSpot(undefined, state.hard) : createSpot(0, 0);
   if (state.phase !== "clear") return state;
   if (state.levelIndex >= state.levels.length - 1) {
     const done = structuredClone(state);
@@ -141,5 +144,6 @@ export function advanceSpot(state: SpotState): SpotState {
   }
   const next = createSpot(state.levelIndex + 1, state.score, state.levels);
   next.reshuffle = state.reshuffle;
+  next.hard = state.hard;
   return next;
 }

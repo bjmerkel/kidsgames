@@ -27,7 +27,7 @@ import { advanceCapy, blankCapyInput, createCapy, tickCapy, type CapyInput, type
 import { drawWaddle } from "./waddle/draw";
 import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
-import { drawSpot } from "./spot/draw";
+import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
@@ -132,6 +132,8 @@ const spotGfx: CanvasRenderingContext2D = spotContext;
 const spotStage = document.querySelector<HTMLElement>("#spot-stage");
 const spotSection = document.querySelector<HTMLElement>("#spot");
 const spotHeading = document.querySelector<HTMLElement>("#spot-heading");
+const spotAll = document.querySelector<HTMLButtonElement>("#spot-all");
+const spotHard = document.querySelector<HTMLButtonElement>("#spot-hard");
 const spotNext = document.querySelector<HTMLButtonElement>("#spot-next");
 const spotPad = document.querySelector<HTMLElement>("#spot-pad");
 const burstCanvas = document.querySelector<HTMLCanvasElement>("#burst-canvas");
@@ -572,7 +574,15 @@ function waddleInput(): WaddleInput {
 }
 
 function openSpot(): void {
-  spotState = startSpot();
+  spotState = null;
+  spotAcc = 0;
+  spotEdge = blankSpotInput();
+  spotTouch.clear();
+  syncSpotChrome();
+}
+
+function beginSpot(hard: boolean): void {
+  spotState = startSpot(undefined, hard);
   spotAcc = 0;
   spotEdge = blankSpotInput();
   spotTouch.clear();
@@ -580,11 +590,18 @@ function openSpot(): void {
 }
 
 function syncSpotChrome(): void {
-  if (!spotState) return;
+  const live = !!spotState && (spotState.phase === "playing" || spotState.phase === "paused");
+  const showSets = !spotState || spotState.phase === "done";
+  if (spotPad) spotPad.hidden = live;
+  if (spotAll) spotAll.hidden = !showSets;
+  if (spotHard) spotHard.hidden = !showSets;
+  if (!spotState) {
+    if (spotHeading) spotHeading.textContent = "Silk Spot";
+    if (spotNext) spotNext.hidden = true;
+    return;
+  }
   const level = spotState.levels[spotState.levelIndex];
   if (spotHeading) spotHeading.textContent = spotState.phase === "done" ? "Silk Spot" : level.name;
-  const live = spotState.phase === "playing" || spotState.phase === "paused";
-  if (spotPad) spotPad.hidden = live;
   if (spotNext) {
     spotNext.hidden = live;
     spotNext.textContent = spotState.phase === "done" ? "Play again" : spotState.levelIndex >= spotState.levels.length - 1 ? "The last picture" : "Next picture";
@@ -920,6 +937,14 @@ waddleNext?.addEventListener("pointerdown", (event) => {
   if (!waddleState) return;
   waddleState = advanceWaddle(waddleState);
   syncWaddleChrome();
+});
+spotAll?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  beginSpot(false);
+});
+spotHard?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  beginSpot(true);
 });
 spotNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
@@ -1744,20 +1769,25 @@ function frame(now: number): void {
     if (waddleState.phase === "playing") drawTouchPad(waddleGfx, waddleTouch.spots, (name) => waddleTouch.pressed(name));
     syncWaddleChrome();
   }
-  if (mode === "spot" && spotState) {
-    spotAcc += delta;
-    let steps = 0;
-    while (spotAcc >= STEP_MS && steps < 5) {
-      const input = spotInput();
-      if (input.confirm && (spotState.phase === "clear" || spotState.phase === "done")) spotState = advanceSpot(spotState);
-      else spotState = tickSpot(spotState, input, STEP_MS);
-      spotEdge = blankSpotInput();
-      spotAcc -= STEP_MS;
-      steps += 1;
+  if (mode === "spot") {
+    if (!spotState) {
+      drawSpotPick(spotGfx);
+      syncSpotChrome();
+    } else {
+      spotAcc += delta;
+      let steps = 0;
+      while (spotAcc >= STEP_MS && steps < 5) {
+        const input = spotInput();
+        if (input.confirm && (spotState.phase === "clear" || spotState.phase === "done")) spotState = advanceSpot(spotState);
+        else spotState = tickSpot(spotState, input, STEP_MS);
+        spotEdge = blankSpotInput();
+        spotAcc -= STEP_MS;
+        steps += 1;
+      }
+      drawSpot(spotGfx, spotState, now);
+      if (spotState.phase === "playing") drawTouchPad(spotGfx, spotTouch.spots, (name) => spotTouch.pressed(name));
+      syncSpotChrome();
     }
-    drawSpot(spotGfx, spotState, now);
-    if (spotState.phase === "playing") drawTouchPad(spotGfx, spotTouch.spots, (name) => spotTouch.pressed(name));
-    syncSpotChrome();
   }
   if (mode === "burst" && burstState) {
     burstAcc += delta;

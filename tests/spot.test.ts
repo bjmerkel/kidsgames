@@ -190,6 +190,37 @@ describe("silk spot", () => {
     expect(replay.levelIndex).toBe(0);
     expect(replay.score).toBe(0);
     expect(stamp(replay.levels)).toEqual(stamp(dealSpot(seed)));
+    expect(replay.hard).toBe(false);
+  });
+
+  it("can start on the hard five and play them again", () => {
+    const hard = startSpot(11, true);
+    expect(hard.hard).toBe(true);
+    expect(hard.levels).toHaveLength(5);
+    expect(hard.levels.map((level) => level.name).sort()).toEqual(["Class Garden", "Field Day", "Observatory", "Planetarium", "Science Fair"]);
+    expect(hard.levels.every((level) => level.diffs.length === 8)).toBe(true);
+    expect(startSpot(11).levels).toHaveLength(SPOT_LEVELS.length);
+
+    let state = hard;
+    for (const diff of state.diffs) state = tap(state, PANEL_X + diff.x, PANEL_TOP + diff.y);
+    state = advanceSpot(state);
+    expect(state.hard).toBe(true);
+    expect(state.levelIndex).toBe(1);
+    expect(state.levels).toHaveLength(5);
+
+    const last = startSpot(11, true);
+    last.levelIndex = last.levels.length - 1;
+    last.phase = "clear";
+    const done = advanceSpot(last);
+    expect(done.phase).toBe("done");
+    expect(done.hard).toBe(true);
+    expect(done.toast).toBe("You finished all 5 levels.");
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.2);
+    const again = advanceSpot(done);
+    random.mockRestore();
+    const seed = 1 + Math.floor(0.2 * 2147483646);
+    expect(again.hard).toBe(true);
+    expect(again.levels.map((level) => level.name)).toEqual(dealSpot(seed, 8).map((level) => level.name));
   });
 
   it("pauses and maps both pictures", () => {

@@ -2,6 +2,18 @@ import { VIEW_H, VIEW_W } from "../game/constants";
 import { PANEL_BOTTOM, PANEL_H, PANEL_TOP, PANEL_W, PANEL_X, type SpotLevel } from "./scenes";
 import type { SpotState } from "./sim";
 
+export function drawSpotPick(ctx: CanvasRenderingContext2D): void {
+  ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "#d7ecf3";
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "#1c1915";
+  ctx.textAlign = "center";
+  ctx.font = "700 32px Georgia, serif";
+  ctx.fillText("Silk Spot", VIEW_W / 2, 300);
+  ctx.font = "700 18px Trebuchet MS, sans-serif";
+  ctx.fillText("All pictures, or the hard five.", VIEW_W / 2, 344);
+}
+
 export function drawSpot(ctx: CanvasRenderingContext2D, state: SpotState, nowMs: number): void {
   const level = state.levels[state.levelIndex];
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
