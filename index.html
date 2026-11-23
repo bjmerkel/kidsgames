@@ -97,7 +97,10 @@
       </header>
       <div id="race-board">
         <div id="race-stage">
-          <canvas id="race-canvas" width="480" height="720" aria-label="Woodland Grand Prix"></canvas>
+          <div id="race-frame">
+            <canvas id="race-world" width="480" height="720" aria-hidden="true"></canvas>
+            <canvas id="race-canvas" width="480" height="720" aria-label="Woodland Grand Prix"></canvas>
+          </div>
         </div>
         <div id="race-picker"></div>
         <div id="race-pad" hidden>

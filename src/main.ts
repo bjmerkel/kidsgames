@@ -10,6 +10,7 @@ import { mountLevelSettings } from "./settings/panel";
 import { drawFrame } from "./render/draw";
 import { CHARACTERS, characterById } from "./race/characters";
 import { drawGarage, drawRace } from "./race/draw";
+import { mountRaceView } from "./race/view";
 import { advanceCup, blankRaceInput, createRace, tickRace, type RaceInput, type RaceState } from "./race/sim";
 import { TRACKS } from "./race/tracks";
 import { drawPond } from "./fish/draw";
@@ -57,6 +58,12 @@ if (!raceContext) throw new Error("missing race context");
 const raceGfx: CanvasRenderingContext2D = raceContext;
 const continueButton = document.querySelector<HTMLButtonElement>("#continue");
 const stage = document.querySelector<HTMLElement>("#stage");
+const raceWorld = document.querySelector<HTMLCanvasElement>("#race-world");
+if (!raceWorld) throw new Error("missing race world");
+const raceView = mountRaceView(raceWorld);
+const raceFrameQuery = document.querySelector("#race-frame");
+if (!(raceFrameQuery instanceof HTMLElement)) throw new Error("missing race frame");
+const raceFrame: HTMLElement = raceFrameQuery;
 const raceStage = document.querySelector<HTMLElement>("#race-stage");
 const menu = document.querySelector<HTMLElement>("#menu");
 const crabSection = document.querySelector<HTMLElement>("#crab");
@@ -297,7 +304,7 @@ function fitShell(): void {
 function fit(): void {
   fitShell();
   fitBox(stage, gameCanvas);
-  fitBox(raceStage, raceSurface);
+  fitBox(raceStage, raceFrame);
   fitBox(fishStage, fishSurface);
   fitBox(axoStage, axoSurface);
   fitBox(rascalStage, rascalSurface);
@@ -314,7 +321,7 @@ window.addEventListener("resize", fit);
 window.visualViewport?.addEventListener("resize", fit);
 window.visualViewport?.addEventListener("scroll", fit);
 if (stage) new ResizeObserver(() => fitBox(stage, gameCanvas)).observe(stage);
-if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceSurface)).observe(raceStage);
+if (raceStage) new ResizeObserver(() => fitBox(raceStage, raceFrame)).observe(raceStage);
 if (fishStage) new ResizeObserver(() => fitBox(fishStage, fishSurface)).observe(fishStage);
 if (axoStage) new ResizeObserver(() => fitBox(axoStage, axoSurface)).observe(axoStage);
 if (rascalStage) new ResizeObserver(() => fitBox(rascalStage, rascalSurface)).observe(rascalStage);
@@ -1691,6 +1698,7 @@ function frame(now: number): void {
         steps += 1;
       }
       if (raceScreen === "play" && raceState) {
+        raceView.render(raceState, now);
         drawRace(raceGfx, raceState, now);
         if (raceState.phase === "racing" && raceState.goMs <= 0) {
           const item = raceState.racers[raceState.playerIndex]?.item;

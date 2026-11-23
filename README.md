@@ -6,7 +6,7 @@ Emery is awesome.
 
 ## Woodland Grand Prix
 
-A top-down kart race with 10 woodland racers. Woody the Wood Duck is the balanced racer. The others are a rabbit, squirrel, raccoon, fox, owl, deer, hedgehog, chipmunk, and beaver. Each one feels a little different: some are fast, some turn quicker, some take longer to get going.
+A kart race with 10 woodland racers, seen from just above and behind the kart. Woody the Wood Duck is the balanced racer. The others are a rabbit, squirrel, raccoon, fox, owl, deer, hedgehog, chipmunk, and beaver. Each one feels a little different: some are fast, some turn quicker, some take longer to get going.
 
 There are 5 tracks, three laps each: Lily Pond, Acorn Bend, Fern Switchbacks, Beaver Dam, and Starlit Hollow. The later tracks are narrower and the other racers drive faster. Stay on the road, drive over the green leaf pads to go faster, and avoid the blue puddles. Yellow boxes give an acorn, a leaf, or honey. Throw the acorn, use the leaf for a boost, or drop honey behind you.
 
