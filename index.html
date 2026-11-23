@@ -226,7 +226,10 @@
       </header>
       <div id="skate-board">
         <div id="skate-stage">
-          <canvas id="skate-canvas" width="480" height="720" aria-label="Ollie Cat"></canvas>
+          <div id="skate-frame">
+            <canvas id="skate-world" width="480" height="720" aria-hidden="true"></canvas>
+            <canvas id="skate-canvas" width="480" height="720" aria-label="Ollie Cat"></canvas>
+          </div>
         </div>
         <div id="skate-pad">
           <button type="button" id="skate-next" hidden>Next level</button>

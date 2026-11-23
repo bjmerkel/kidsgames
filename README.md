@@ -14,7 +14,7 @@ Hold Left or Right to steer. The kart rolls on its own. Brake slows you down for
 
 ## Ollie Cat
 
-A side-view skate park with a white cat. Touch the picture: hold to push, tap to ollie, and slide a finger down to crouch. Brake, Push, Ollie, and Crouch are on the screen too. Another ollie in the air does a kickflip, then a grab. Crouch fits through tunnels and jumps higher. Yellow marks are speed ramps. Red marks launch you. Grind a rail by landing on it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
+A side-view skate park with a white cat, drawn with depth so the ramps, rails, and tunnels have real shape. Touch the picture: hold to push, tap to ollie, and slide a finger down to crouch. Brake, Push, Ollie, and Crouch are on the screen too. Another ollie in the air does a kickflip, then a grab. Crouch fits through tunnels and jumps higher. Yellow marks are speed ramps. Red marks launch you. Grind a rail by landing on it. Missing a landing or hitting a tunnel roof is a wipeout. Three wipeouts let you try that park again.
 
 The score carries from park to park. The fifteen parks are Milk Street, Alley Rail, Tunnel Run, Gap Park, Night Bowl, Switchback, Jump Gap, Double Gap, Low Roof, Stair Drop, Overpass, Wide Canyon, Pipe Run, Sky Rail, and Midnight Final. The later parks are longer, with wider gaps, low tunnels, and rails. Rolling off a gap drops you, so ollie before the edge.
 

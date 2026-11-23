@@ -36,6 +36,7 @@ import { drawHunt } from "./hunt/draw";
 import { metrics as huntMetrics } from "./hunt/puzzles";
 import { advanceHunt, blankHuntInput, startHunt, tickHunt, type HuntInput, type HuntState } from "./hunt/sim";
 import { drawSkate } from "./skate/draw";
+import { mountSkateView } from "./skate/view";
 import { SKATE_LEVELS } from "./skate/levels";
 import { advanceSkate, blankSkateInput, createSkate, tickSkate, type SkateInput, type SkateState } from "./skate/sim";
 import { blankSkateTouch, readSkateTouch, skateOriginAt, skateTapJump, type SkatePointer, type SkateTouchHeld } from "./skate/touch";
@@ -164,7 +165,13 @@ const skateSurface: HTMLCanvasElement = skateCanvas;
 const skateContext = skateCanvas.getContext("2d");
 if (!skateContext) throw new Error("missing skate context");
 const skateGfx: CanvasRenderingContext2D = skateContext;
+const skateWorld = document.querySelector<HTMLCanvasElement>("#skate-world");
+if (!skateWorld) throw new Error("missing skate world");
+const skateView = mountSkateView(skateWorld);
 const skateStage = document.querySelector<HTMLElement>("#skate-stage");
+const skateFrameQuery = document.querySelector("#skate-frame");
+if (!(skateFrameQuery instanceof HTMLElement)) throw new Error("missing skate frame");
+const skateFrame: HTMLElement = skateFrameQuery;
 const skateSection = document.querySelector<HTMLElement>("#skate");
 const skateHeading = document.querySelector<HTMLElement>("#skate-heading");
 const skateNext = document.querySelector<HTMLButtonElement>("#skate-next");
@@ -273,7 +280,7 @@ function queue(input: InputFrame): void {
   pending = mergeInput(pending, input);
 }
 
-function fitBox(box: HTMLElement | null, target: HTMLCanvasElement): void {
+function fitBox(box: HTMLElement | null, target: HTMLElement): void {
   if (!box) return;
   const scale = Math.min(box.clientWidth / VIEW_W, box.clientHeight / VIEW_H);
   target.style.width = `${Math.max(1, Math.floor(VIEW_W * scale))}px`;
@@ -299,7 +306,7 @@ function fit(): void {
   fitBox(spotStage, spotSurface);
   fitBox(burstStage, burstSurface);
   fitBox(huntStage, huntSurface);
-  fitBox(skateStage, skateSurface);
+  fitBox(skateStage, skateFrame);
 }
 
 fit();
@@ -316,7 +323,7 @@ if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).ob
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
-if (skateStage) new ResizeObserver(() => fitBox(skateStage, skateSurface)).observe(skateStage);
+if (skateStage) new ResizeObserver(() => fitBox(skateStage, skateFrame)).observe(skateStage);
 
 function show(next: Mode): void {
   mode = next;
@@ -1830,6 +1837,7 @@ function frame(now: number): void {
       skateAcc -= STEP_MS;
       steps += 1;
     }
+    skateView.render(skateState, now);
     drawSkate(skateGfx, skateState, now, skateTouchHeld);
     syncSkateChrome();
   }
