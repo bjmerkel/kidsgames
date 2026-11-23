@@ -46,7 +46,7 @@ The five mazes are Snow Start, Ice Lanes, Fish Fort, Seal Slide, and Night Ice. 
 
 ## Capy Swing
 
-A jungle trail in the style of a classic pit runner. You play a capybara. Hold Right to run and Jump to hop. A short gap is a running jump. A wide river has a vine: jump into the vine and it swings you to the far bank. Jump over the rolling logs. On Driftwood, hop across the logs in the water. Mangoes add points. The pool at the end of the trail finishes the level.
+A jungle trail in the style of a classic pit runner. You play a capybara. Hold Right to run and Jump to hop. Tap the picture and the capybara jumps. A short gap is a running jump. A wide river has a vine: jump into the vine and it swings you to the far bank. Jump over the rolling logs. On Driftwood, hop across the logs in the water. Mangoes add points. The pool at the end of the trail finishes the level.
 
 You have 3 lives. Falling in the river or touching a rolling log says try again and sends you back to the last safe bank. The score carries, and lives come back on the next trail.
 
@@ -91,7 +91,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Pond Fishing, hold the arrows on the picture to move the hook, then tap Catch for the fish the level asks for.
 - In Axolotl Patrol, slide a finger across the tank and the axolotl follows and shoots. Hold Left, Right, or the arrow keys to slide. Hold Bubble or Space to shoot. Pop every diving bug.
 - In Web Rascal, hold Left or Right, hold the street to run right, or tap the street to jump. Tap Web, or a web mark, to shoot a web. You hang on it, then jump.
-- In Capy Swing, hold Left or Right, hold the trail to run, or tap the trail to jump. Jump into a vine to swing across a river, and jump over the rolling logs.
+- In Capy Swing, tap the picture to jump. Hold Left or Right, or hold the trail, to run. The Jump button works too. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.

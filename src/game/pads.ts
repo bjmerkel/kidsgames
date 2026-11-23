@@ -59,9 +59,9 @@ export const RASCAL_SPOTS: readonly PadSpot[] = [
 ];
 
 export const CAPY_SPOTS: readonly PadSpot[] = [
-  rail("left", "Left", 12, 0, "cream", true, false),
-  rail("right", "Right", 12, 1, "cream", true, false),
-  rail("jump", "Jump", RAIL_RIGHT, 0, "gold", true, true, true),
+  { name: "left", label: "Left", x: 12, y: 652, w: 108, h: 56, tone: "cream", hold: true, pulse: false },
+  { name: "right", label: "Right", x: 128, y: 652, w: 108, h: 56, tone: "cream", hold: true, pulse: false },
+  { name: "jump", label: "Jump", x: 252, y: 652, w: 216, h: 56, tone: "gold", hold: true, pulse: true },
   pauseSpot(),
 ];
 

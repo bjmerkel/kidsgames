@@ -34,7 +34,7 @@ const stand = GROUND_Y - CAPY_H;
 export const JUNGLE_LEVELS: JungleLevel[] = [
   {
     name: "River Bend",
-    blurb: "Jump into the vine.",
+    blurb: "Tap the picture to jump into the vine.",
     width: 2000,
     deep: false,
     platforms: [ground(0, 450), ground(520, 210), ground(1000, 1000)],
