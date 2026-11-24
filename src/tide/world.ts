@@ -34,53 +34,29 @@ export type Room = {
 };
 
 export const LAMP_ORDER = [0, 2, 1];
-export const MARK_ORDER = ["a", "c", "b"];
-export const WHEEL_TURNS = 3;
+export const MARK_ORDER = ["a", "c", "b", "d"];
+export const WHEEL_TURNS = 4;
 
-export const DOORS: Door[] = [
-  { id: "light", x: 8, y: 2, to: "light", need: "chart", lock: "Talk to the parrot first.", backX: 8, backY: 3 },
-  { id: "ruins", x: 2, y: 8, to: "ruins", need: "light", lock: "Light the lamps first.", backX: 3, backY: 8 },
-  { id: "cave", x: 12, y: 8, to: "cave", need: "cutlass", lock: "Cut the vines first.", backX: 11, backY: 8 },
-  { id: "wreck", x: 13, y: 16, to: "wreck", need: "cave", lock: "Wake the crystal first.", backX: 13, backY: 15 },
-  { id: "fort", x: 6, y: 18, to: "fort", need: "key", lock: "Turn the wheel first.", backX: 6, backY: 19 },
-  { id: "gold", x: 4, y: 20, to: "gold", need: "fort", lock: "Touch the fort marks first.", backX: 5, backY: 20 },
+export const TIDE_MISSIONS = [
+  { name: "Lamp Isle" },
+  { name: "Stone Isle" },
+  { name: "Vine Isle" },
+  { name: "Wreck Isle" },
+  { name: "Fort Isle" },
+] as const;
+
+export const DOORS: Door[] = [];
+
+const DOCK_ROWS = [
+  "~~~~~~~~~~~",
+  "~.........~",
+  "~.0.1.2...~",
+  "~..P.*....~",
+  "~...S.....~",
+  "~.........~",
+  "~...E.....~",
+  "~~~~~~~~~~~",
 ];
-
-const WIDTH = 20;
-const HEIGHT = 32;
-
-function paintIsle(): string[] {
-  const grid = Array.from({ length: HEIGHT }, () => Array(WIDTH).fill("~"));
-  const put = (x: number, y: number, ch: string) => {
-    if (y >= 0 && x >= 0 && y < HEIGHT && x < WIDTH) grid[y][x] = ch;
-  };
-  for (let y = 2; y <= 5; y += 1) {
-    for (let x = 6; x <= 11; x += 1) put(x, y, ",");
-  }
-  for (let y = 2; y <= 22; y += 1) put(8, y, ".");
-  put(8, 2, "D");
-  for (let x = 2; x <= 8; x += 1) put(x, 8, ".");
-  put(2, 8, "D");
-  put(9, 8, "V");
-  put(10, 8, "V");
-  put(11, 8, "V");
-  put(12, 8, "D");
-  for (let y = 13; y <= 15; y += 1) {
-    for (let x = 8; x <= 13; x += 1) put(x, y, ".");
-  }
-  put(13, 16, "D");
-  put(8, 16, ".");
-  for (let x = 6; x <= 8; x += 1) put(x, 18, ".");
-  put(6, 18, "D");
-  put(6, 19, ".");
-  put(8, 19, ".");
-  for (let x = 4; x <= 8; x += 1) put(x, 20, ".");
-  put(4, 20, "D");
-  put(7, 21, "P");
-  put(8, 21, ".");
-  put(8, 22, "S");
-  return grid.map((row) => row.join(""));
-}
 
 const LIGHT_ROWS = [
   "#########",
@@ -94,52 +70,56 @@ const LIGHT_ROWS = [
 ];
 
 const RUINS_ROWS = [
-  "###########",
-  "#.........#",
-  "#..B......#",
-  "#.........#",
-  "#..o......#",
-  "#......B..#",
-  "#.........#",
-  "#......o..#",
-  "#....*....#",
-  "#....S....#",
-  "#....E....#",
-  "###########",
+  "~~~~~~~~~~~~~~~",
+  "~.............~",
+  "~..B..........~",
+  "~.............~",
+  "~..o..........~",
+  "~..........B..~",
+  "~..........o..~",
+  "~..B..........~",
+  "~..o..........~",
+  "~....*........~",
+  "~.....S.......~",
+  "~.............~",
+  "~.....E.......~",
+  "~~~~~~~~~~~~~~~",
 ];
 
 const CAVE_ROWS = [
-  "#############",
-  "#L........K.#",
-  "#.#######.#.#",
-  "#.#.....#...#",
-  "#.#.###.###.#",
-  "#...#.......#",
-  "#.#####.###.#",
-  "#S..........#",
-  "#E..........#",
-  "#############",
+  "~~~~~~~~~~~~~",
+  "~.L.....K...~",
+  "~...........~",
+  "~VVVVVVVVVVV~",
+  "~...........~",
+  "~.....S.....~",
+  "~...........~",
+  "~.....E.....~",
+  "~~~~~~~~~~~~~",
 ];
 
 const WRECK_ROWS = [
   "############",
-  "#E.#.....~W#",
-  "#S.#.~.~.~.#",
-  "#..#.#.#.#.#",
-  "#..#.......#",
-  "#..#######.#",
   "#..........#",
+  "#..~.~.~.~.#",
+  "#..#.#.#.#.#",
+  "#..........#",
+  "#..W.......#",
+  "#S.........#",
+  "#..........#",
+  "#E.........#",
   "############",
 ];
 
 const FORT_ROWS = [
-  "#########",
-  "#.a.b.c.#",
-  "#.......#",
-  "#...*...#",
-  "#...S...#",
-  "#...E...#",
-  "#########",
+  "~~~~~~~~~~~~~",
+  "~.a...b.....~",
+  "~....c......~",
+  "~.......d...~",
+  "~...........~",
+  "~....*......~",
+  "~.....S.....~",
+  "~~~~~~~~~~~~~",
 ];
 
 const GOLD_ROWS = [
@@ -185,7 +165,7 @@ function parseRoom(id: RoomId, name: string, rows: string[]): Room {
       } else if (ch === "V") room.vineSpawns.push({ x, y });
       else if (ch === "P") room.parrot = { x, y };
       else if (ch === "0" || ch === "1" || ch === "2") room.lamps.push({ x, y, n: Number(ch) });
-      else if (ch === "a" || ch === "b" || ch === "c") room.marks.push({ x, y, id: ch });
+      else if (ch === "a" || ch === "b" || ch === "c" || ch === "d") room.marks.push({ x, y, id: ch });
       else if (ch === "L") room.chests.push({ x, y, id: "lantern" });
       else if (ch === "*") room.chests.push({ x, y, id });
       else if (ch === "W") room.wheel = { x, y };
@@ -197,12 +177,12 @@ function parseRoom(id: RoomId, name: string, rows: string[]): Room {
 }
 
 export const ROOMS: Record<RoomId, Room> = {
-  isle: parseRoom("isle", "Gull Isle", paintIsle()),
+  isle: parseRoom("isle", "Lamp Isle", DOCK_ROWS),
   light: parseRoom("light", "North Light", LIGHT_ROWS),
-  ruins: parseRoom("ruins", "Stone Sleep", RUINS_ROWS),
-  cave: parseRoom("cave", "Vine Cave", CAVE_ROWS),
-  wreck: parseRoom("wreck", "Wreck Wash", WRECK_ROWS),
-  fort: parseRoom("fort", "Skull Fort", FORT_ROWS),
+  ruins: parseRoom("ruins", "Stone Isle", RUINS_ROWS),
+  cave: parseRoom("cave", "Vine Isle", CAVE_ROWS),
+  wreck: parseRoom("wreck", "Wreck Isle", WRECK_ROWS),
+  fort: parseRoom("fort", "Fort Isle", FORT_ROWS),
   gold: parseRoom("gold", "Gold Beach", GOLD_ROWS),
 };
 

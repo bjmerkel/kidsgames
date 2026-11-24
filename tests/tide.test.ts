@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { advanceTide, blankTideInput, createTide, tickTide, tideClue, tideSafe, type TideState } from "../src/tide/sim";
-import { DOORS, ROOMS, type Spot } from "../src/tide/world";
+import { advanceTide, blankTideInput, createTide, tickTide, tideClue, tideExitOpen, tideSafe, type TideState } from "../src/tide/sim";
+import { MARK_ORDER, ROOMS, TIDE_MISSIONS, WHEEL_TURNS, type Spot } from "../src/tide/world";
 
 const DIRS = [
   { x: 1, y: 0 },
@@ -62,8 +62,9 @@ function walkTo(state: TideState, x: number, y: number, onto: boolean): TideStat
   steps.reverse();
   for (const step of steps) {
     const room = state.room;
+    const level = state.levelIndex;
     state = move(state, step.x - state.hero.x, step.y - state.hero.y);
-    if (state.room !== room) break;
+    if (state.room !== room || state.levelIndex !== level) break;
     if (state.hero.x !== step.x || state.hero.y !== step.y) {
       throw new Error(`stopped at ${state.hero.x},${state.hero.y} wanted ${step.x},${step.y} (${state.toast})`);
     }
@@ -80,78 +81,99 @@ function use(state: TideState, x: number, y: number): TideState {
   return act(lookAt(state, x, y));
 }
 
+function sail(state: TideState): TideState {
+  const exit = ROOMS[state.room].exit;
+  if (!exit) throw new Error(`no boat on ${state.room}`);
+  return walkTo(state, exit.x, exit.y, true);
+}
+
 describe("treasure tide", () => {
-  it("builds an island whose gates open in order", () => {
-    for (const room of Object.values(ROOMS)) {
-      const width = room.floor[0].length;
-      expect(room.floor.every((row) => row.length === width)).toBe(true);
-      expect(room.spawn.x).toBeGreaterThanOrEqual(0);
+  it("builds five islands, each with its own mission", () => {
+    expect(TIDE_MISSIONS.map((mission) => mission.name)).toEqual([
+      "Lamp Isle",
+      "Stone Isle",
+      "Vine Isle",
+      "Wreck Isle",
+      "Fort Isle",
+    ]);
+    for (const room of [ROOMS.isle, ROOMS.ruins, ROOMS.cave, ROOMS.fort]) {
+      expect(room.floor[0].includes("~")).toBe(true);
+      expect(room.floor[0].split("").every((tile) => tile === "~")).toBe(true);
     }
-    for (const door of DOORS) expect(ROOMS.isle.doors).toContainEqual({ x: door.x, y: door.y });
+    for (const room of [ROOMS.isle, ROOMS.ruins, ROOMS.cave, ROOMS.wreck]) {
+      expect(room.exit).not.toBeNull();
+      expect(room.exit).not.toEqual(room.spawn);
+    }
+    expect(ROOMS.fort.exit).toBeNull();
     const start = createTide();
-    expect(start.vines).toHaveLength(3);
-    expect(start.boulders).toHaveLength(2);
-    expect(ROOMS.light.lamps.map((lamp) => lamp.n).sort()).toEqual([0, 1, 2]);
-    expect(ROOMS.wreck.wheel).not.toBeNull();
+    expect(start.levelIndex).toBe(0);
+    expect(start.room).toBe("isle");
+    expect(start.vines).toHaveLength(0);
+    expect(ROOMS.isle.lamps.map((lamp) => lamp.n).sort()).toEqual([0, 1, 2]);
+    expect(createTide(1).boulders).toHaveLength(3);
+    expect(createTide(2).vines.length).toBeGreaterThan(3);
+    expect(ROOMS.fort.marks.map((mark) => mark.id).sort()).toEqual(["a", "b", "c", "d"]);
+    expect(WHEEL_TURNS).toBe(4);
   });
 
-  it("keeps the north light shut until the parrot shares the chart", () => {
+  it("keeps the Sail boat shut until the island's mission is done", () => {
     let state = createTide();
-    const light = DOORS[0];
-    state = lookAt(state, light.x, light.y);
+    const before = state.score;
+    state = move(state, 0, 1);
+    state = move(state, 0, 1);
+    expect(state.levelIndex).toBe(0);
     expect(state.room).toBe("isle");
-    expect(state.toast).toBe("Talk to the parrot first.");
+    expect(state.hero.x).toBe(ROOMS.isle.spawn.x);
+    expect(state.hero.y).toBe(ROOMS.isle.spawn.y + 1);
+    expect(state.toast).toBe("Walk to the parrot. Tap Look.");
+    expect(state.score).toBe(before);
+    expect(tideExitOpen(state)).toBe(false);
+  });
+
+  it("sails five islands and keeps the score", () => {
+    let state = createTide();
     const parrot = ROOMS.isle.parrot;
     if (!parrot) throw new Error("missing parrot");
     state = use(state, parrot.x, parrot.y);
     expect(state.chart).toBe(true);
     expect(state.toast).toBe("Lamps: 1, then 3, then 2.");
-    state = walkTo(state, light.x, light.y, true);
-    expect(state.room).toBe("light");
-  });
-
-  it("follows the chart from the parrot to the treasure", () => {
-    let state = createTide();
-    const parrot = ROOMS.isle.parrot;
-    if (!parrot) throw new Error("missing parrot");
-    state = use(state, parrot.x, parrot.y);
-    state = walkTo(state, DOORS[0].x, DOORS[0].y, true);
-    expect(state.room).toBe("light");
     for (const n of [0, 2, 1]) {
-      const lamp = ROOMS.light.lamps.find((item) => item.n === n);
+      const lamp = ROOMS.isle.lamps.find((item) => item.n === n);
       if (!lamp) throw new Error("missing lamp");
       state = use(state, lamp.x, lamp.y);
     }
     expect(state.lamps).toBe(3);
-    const lightChest = ROOMS.light.chests[0];
-    state = use(state, lightChest.x, lightChest.y);
+    state = use(state, ROOMS.isle.chests[0].x, ROOMS.isle.chests[0].y);
     expect(state.light).toBe(true);
-    expect(state.toast).toBe("Push stones onto the plates.");
-    const exit = ROOMS.light.exit;
-    if (!exit) throw new Error("missing exit");
-    state = walkTo(state, exit.x, exit.y, true);
-    expect(state.room).toBe("isle");
-
-    state = walkTo(state, DOORS[1].x, DOORS[1].y, true);
+    expect(tideClue(state)).toBe("Step on the green Sail boat.");
+    state = sail(state);
+    expect(state.levelIndex).toBe(1);
     expect(state.room).toBe("ruins");
-    state = walkTo(state, 3, 1, true);
-    state = move(state, 0, 1);
-    state = move(state, 0, 1);
-    state = walkTo(state, 7, 4, true);
-    state = move(state, 0, 1);
-    state = move(state, 0, 1);
-    const ruinsChest = ROOMS.ruins.chests[0];
-    state = use(state, ruinsChest.x, ruinsChest.y);
-    expect(state.cutlass).toBe(true);
-    const ruinsExit = ROOMS.ruins.exit;
-    if (!ruinsExit) throw new Error("missing ruins exit");
-    state = walkTo(state, ruinsExit.x, ruinsExit.y, true);
-    expect(state.room).toBe("isle");
+    expect(state.score).toBe(200);
+    expect(state.toast).toBe("Stone Isle. Push the stones.");
 
-    for (const vine of [...state.vines]) state = use(state, vine.x, vine.y);
-    expect(state.vines.every((vine) => vine.cut)).toBe(true);
-    state = walkTo(state, DOORS[2].x, DOORS[2].y, true);
+    const pushes = ROOMS.ruins.boulderSpawns
+      .map((boulder) => ({
+        boulder,
+        plate: ROOMS.ruins.plates.find((plate) => plate.x === boulder.x && plate.y > boulder.y),
+      }))
+      .sort((a, b) => a.boulder.y - b.boulder.y);
+    for (const push of pushes) {
+      if (!push.plate) throw new Error("missing plate");
+      state = walkTo(state, push.boulder.x, push.boulder.y - 1, true);
+      for (let step = push.boulder.y; step < push.plate.y; step += 1) state = move(state, 0, 1);
+    }
+    state = use(state, ROOMS.ruins.chests[0].x, ROOMS.ruins.chests[0].y);
+    expect(state.cutlass).toBe(true);
+    state = sail(state);
+    expect(state.levelIndex).toBe(2);
     expect(state.room).toBe("cave");
+    expect(state.score).toBe(350);
+
+    const gate = state.vines.find((vine) => vine.x === state.hero.x);
+    if (!gate) throw new Error("missing vine");
+    state = use(state, gate.x, gate.y);
+    expect(state.vines.find((vine) => vine.x === gate.x && vine.y === gate.y)?.cut).toBe(true);
     const lantern = ROOMS.cave.chests[0];
     state = use(state, lantern.x, lantern.y);
     expect(state.lantern).toBe(true);
@@ -159,54 +181,52 @@ describe("treasure tide", () => {
     if (!crystal) throw new Error("missing crystal");
     state = use(state, crystal.x, crystal.y);
     expect(state.cave).toBe(true);
-    const caveExit = ROOMS.cave.exit;
-    if (!caveExit) throw new Error("missing cave exit");
-    state = walkTo(state, caveExit.x, caveExit.y, true);
-    expect(state.room).toBe("isle");
-
-    state = walkTo(state, DOORS[3].x, DOORS[3].y, true);
+    state = sail(state);
+    expect(state.levelIndex).toBe(3);
     expect(state.room).toBe("wreck");
+    expect(state.score).toBe(500);
+
+    state = walkTo(state, 2, 2, true);
+    state = move(state, 1, 0);
+    expect(state.hero.x).toBe(ROOMS.wreck.spawn.x);
+    expect(state.hero.y).toBe(ROOMS.wreck.spawn.y);
+    expect(state.toast).toBe("Stay off the wavy water.");
     const wheel = ROOMS.wreck.wheel;
     if (!wheel) throw new Error("missing wheel");
     state = lookAt(state, wheel.x, wheel.y);
-    state = act(state);
-    state = act(state);
-    state = act(state);
+    for (let turn = 0; turn < WHEEL_TURNS; turn += 1) state = act(state);
     expect(state.key).toBe(true);
-    expect(state.toast).toBe("Marks: A, then C, then B.");
-    const wreckExit = ROOMS.wreck.exit;
-    if (!wreckExit) throw new Error("missing wreck exit");
-    state = walkTo(state, wreckExit.x, wreckExit.y, true);
-    expect(state.room).toBe("isle");
-
-    state = walkTo(state, DOORS[4].x, DOORS[4].y, true);
+    expect(state.toast).toBe("Step on the green Sail boat.");
+    state = sail(state);
+    expect(state.levelIndex).toBe(4);
     expect(state.room).toBe("fort");
-    for (const id of ["a", "c", "b"]) {
+    expect(state.score).toBe(650);
+
+    const wrong = ROOMS.fort.marks.find((mark) => mark.id === "b");
+    if (!wrong) throw new Error("missing mark");
+    state = use(state, wrong.x, wrong.y);
+    expect(state.marks).toBe(0);
+    expect(state.toast).toBe("Marks: A, then C, then B, then D.");
+    for (const id of MARK_ORDER) {
       const mark = ROOMS.fort.marks.find((item) => item.id === id);
       if (!mark) throw new Error("missing mark");
       state = use(state, mark.x, mark.y);
     }
-    expect(state.marks).toBe(3);
+    expect(state.marks).toBe(4);
+    expect(state.toast).toBe("Open the beach chest.");
     state = use(state, ROOMS.fort.chests[0].x, ROOMS.fort.chests[0].y);
-    expect(state.fort).toBe(true);
-    const fortExit = ROOMS.fort.exit;
-    if (!fortExit) throw new Error("missing fort exit");
-    state = walkTo(state, fortExit.x, fortExit.y, true);
-    expect(state.room).toBe("isle");
-
-    state = walkTo(state, DOORS[5].x, DOORS[5].y, true);
-    expect(state.room).toBe("gold");
-    state = use(state, ROOMS.gold.chests[0].x, ROOMS.gold.chests[0].y);
     expect(state.phase).toBe("done");
+    expect(state.gold).toBe(true);
     expect(state.toast).toBe("The treasure is yours.");
-    expect(state.score).toBe(100 + 100 + 150 + 50 + 100 + 150 + 100 + 500);
+    expect(state.score).toBe(100 + 100 + 150 + 50 + 100 + 150 + 500);
     const again = advanceTide(state);
-    expect(again.phase).toBe("playing");
+    expect(again.levelIndex).toBe(0);
+    expect(again.room).toBe("isle");
     expect(again.chart).toBe(false);
     expect(again.score).toBe(0);
   });
 
-  it("says the next step in plain words", () => {
+  it("says the next step for the island you are on", () => {
     let state = createTide();
     expect(tideClue(state)).toBe("Walk to the parrot. Tap Look.");
     state = move(state, 0, -1);
@@ -214,47 +234,18 @@ describe("treasure tide", () => {
     expect(state.chart).toBe(false);
     expect(state.toast).toBe("Tap Look.");
     expect(tideClue(state)).toBe("Tap Look.");
-    state.chart = true;
-    expect(tideClue(state)).toBe("Lamps: 1, then 3, then 2.");
-    state.light = true;
-    expect(tideClue(state)).toBe("Push stones onto the plates.");
-    state.cutlass = true;
-    expect(tideClue(state)).toBe("Cut the vines, then the cave.");
-    state.vines = state.vines.map((vine) => ({ ...vine, cut: true }));
-    expect(tideClue(state)).toBe("Take the lantern first.");
+
+    state = createTide(1);
+    expect(tideClue(state)).toBe("Push the stones onto the plates.");
+    state = createTide(2);
+    expect(tideClue(state)).toBe("Cut the vines.");
     state.lantern = true;
     expect(tideClue(state)).toBe("Tap the crystal.");
-    state.cave = true;
-    expect(tideClue(state)).toBe("Avoid wavy water. Turn the wheel.");
-    state.key = true;
-    expect(tideClue(state)).toBe("Marks: A, then C, then B.");
-    state.fort = true;
+    state = createTide(3);
+    expect(tideClue(state)).toBe("Stay off wavy water. Turn the wheel.");
+    state = createTide(4);
+    expect(tideClue(state)).toBe("Marks: A, then C, then B, then D.");
+    state.marks = MARK_ORDER.length;
     expect(tideClue(state)).toBe("Open the beach chest.");
-  });
-
-  it("resets a wrong lamp and sends a wash back to the deck", () => {
-    let state = createTide();
-    state.chart = true;
-    state = walkTo(state, DOORS[0].x, DOORS[0].y, true);
-    const lamp = ROOMS.light.lamps.find((item) => item.n === 1);
-    if (!lamp) throw new Error("missing lamp");
-    state = use(state, lamp.x, lamp.y);
-    expect(state.lamps).toBe(0);
-    expect(state.toast).toBe("Lamps: 1, then 3, then 2.");
-
-    state.light = true;
-    state.cutlass = true;
-    state.cave = true;
-    state.vines = state.vines.map((vine) => ({ ...vine, cut: true }));
-    const exit = ROOMS.light.exit;
-    if (!exit) throw new Error("missing exit");
-    state = walkTo(state, exit.x, exit.y, true);
-    state = walkTo(state, DOORS[3].x, DOORS[3].y, true);
-    expect(state.room).toBe("wreck");
-    state = walkTo(state, 8, 1, true);
-    state = move(state, 1, 0);
-    expect(state.hero.x).toBe(ROOMS.wreck.spawn.x);
-    expect(state.hero.y).toBe(ROOMS.wreck.spawn.y);
-    expect(state.toast).toBe("Stay off the wavy water.");
   });
 });

@@ -35,7 +35,7 @@ import { drawTide } from "./tide/draw";
 import { TIDE_SPOTS } from "./tide/pads";
 import { tideFingerCommand } from "./tide/touch";
 import { advanceTide, blankTideInput, createTide, tickTide, type TideInput, type TideState } from "./tide/sim";
-import { ROOMS } from "./tide/world";
+import { TIDE_MISSIONS } from "./tide/world";
 import { bindMenuCard } from "./game/menu";
 import { drawPattern } from "./pattern/draw";
 import { choiceAt, pauseAt } from "./pattern/levels";
@@ -709,7 +709,10 @@ function openTide(): void {
 
 function syncTideChrome(): void {
   if (!tideState) return;
-  if (tideHeading) tideHeading.textContent = tideState.phase === "done" ? "Treasure Tide" : ROOMS[tideState.room].name;
+  if (tideHeading) {
+    const mission = TIDE_MISSIONS[tideState.levelIndex];
+    tideHeading.textContent = tideState.phase === "done" || !mission ? "Treasure Tide" : `${tideState.levelIndex + 1}. ${mission.name}`;
+  }
   const live = tideState.phase === "playing" || tideState.phase === "paused";
   if (tidePad) tidePad.hidden = live;
   if (tideNext) {
