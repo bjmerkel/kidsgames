@@ -1,6 +1,6 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
 import { TIDE_STEP, tideClue, tideFloor, tideGoal, type TideState } from "./sim";
-import { LAMP_ORDER, ROOMS, type Spot } from "./world";
+import { LAMP_ORDER, MARK_ORDER, ROOMS, type Spot } from "./world";
 
 const TILE = 32;
 const INK = "#1c1915";
@@ -75,6 +75,14 @@ function paintFloor(ctx: CanvasRenderingContext2D, floor: string, x: number, y: 
   ctx.fillRect(x, y + TILE - 4, TILE, 4);
 }
 
+function ring(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.strokeStyle = "#c81d25";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y, 16, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 function paintActor(ctx: CanvasRenderingContext2D, x: number, y: number, fill: string, label: string): void {
   ctx.fillStyle = fill;
   ctx.beginPath();
@@ -131,13 +139,21 @@ export function drawTide(ctx: CanvasRenderingContext2D, state: TideState, now: n
       ctx.stroke();
     }
   }
+  const nextLamp = state.lamps < LAMP_ORDER.length ? LAMP_ORDER[state.lamps] : -1;
   for (const lamp of room.lamps) {
     const lit = LAMP_ORDER.indexOf(lamp.n) >= 0 && LAMP_ORDER.indexOf(lamp.n) < state.lamps;
-    paintActor(ctx, ox + lamp.x * TILE + 16, oy + lamp.y * TILE + 16, lit ? "#f2c14e" : "#f7f1e6", String(lamp.n + 1));
+    const x = ox + lamp.x * TILE + 16;
+    const y = oy + lamp.y * TILE + 16;
+    paintActor(ctx, x, y, lit || lamp.n === nextLamp ? "#f2c14e" : "#f7f1e6", String(lamp.n + 1));
+    if (lamp.n === nextLamp) ring(ctx, x, y);
   }
+  const nextMark = state.marks < MARK_ORDER.length ? MARK_ORDER[state.marks] : "";
   for (const mark of room.marks) {
     const names: Record<string, string> = { a: "A", b: "B", c: "C" };
-    paintActor(ctx, ox + mark.x * TILE + 16, oy + mark.y * TILE + 16, "#24357a", names[mark.id] ?? mark.id);
+    const x = ox + mark.x * TILE + 16;
+    const y = oy + mark.y * TILE + 16;
+    paintActor(ctx, x, y, mark.id === nextMark ? "#f2c14e" : "#24357a", names[mark.id] ?? mark.id);
+    if (mark.id === nextMark) ring(ctx, x, y);
   }
   for (const chest of room.chests) {
     const x = ox + chest.x * TILE + 4;
@@ -152,7 +168,15 @@ export function drawTide(ctx: CanvasRenderingContext2D, state: TideState, now: n
   }
   if (room.wheel) paintActor(ctx, ox + room.wheel.x * TILE + 16, oy + room.wheel.y * TILE + 16, "#d8d2c4", "W");
   if (room.crystal) paintActor(ctx, ox + room.crystal.x * TILE + 16, oy + room.crystal.y * TILE + 16, state.lantern ? "#f2c14e" : "#9ec9e0", "✦");
-  if (room.parrot) paintActor(ctx, ox + room.parrot.x * TILE + 16, oy + room.parrot.y * TILE + 16, "#2e7d32", "P");
+  if (room.parrot) {
+    const x = ox + room.parrot.x * TILE + 16;
+    const y = oy + room.parrot.y * TILE + 16;
+    paintActor(ctx, x, y, "#2e7d32", "");
+    ctx.fillStyle = INK;
+    ctx.font = "700 12px Trebuchet MS, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Parrot", x, y - 18);
+  }
 
   const hero = heroPixel(state, ox, oy);
   ctx.fillStyle = INK;

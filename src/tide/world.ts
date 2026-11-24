@@ -38,12 +38,12 @@ export const MARK_ORDER = ["a", "c", "b"];
 export const WHEEL_TURNS = 3;
 
 export const DOORS: Door[] = [
-  { id: "light", x: 8, y: 2, to: "light", need: "chart", lock: "The parrot has the chart.", backX: 8, backY: 3 },
-  { id: "ruins", x: 2, y: 8, to: "ruins", need: "light", lock: "The stones are still shut.", backX: 3, backY: 8 },
-  { id: "cave", x: 12, y: 8, to: "cave", need: "cutlass", lock: "Vines choke the cave.", backX: 11, backY: 8 },
-  { id: "wreck", x: 13, y: 16, to: "wreck", need: "cave", lock: "The wreck is still dark.", backX: 13, backY: 15 },
-  { id: "fort", x: 6, y: 18, to: "fort", need: "key", lock: "The fort wants the iron key.", backX: 6, backY: 19 },
-  { id: "gold", x: 4, y: 20, to: "gold", need: "fort", lock: "The beach gate is shut.", backX: 5, backY: 20 },
+  { id: "light", x: 8, y: 2, to: "light", need: "chart", lock: "Talk to the parrot first.", backX: 8, backY: 3 },
+  { id: "ruins", x: 2, y: 8, to: "ruins", need: "light", lock: "Light the lamps first.", backX: 3, backY: 8 },
+  { id: "cave", x: 12, y: 8, to: "cave", need: "cutlass", lock: "Cut the vines first.", backX: 11, backY: 8 },
+  { id: "wreck", x: 13, y: 16, to: "wreck", need: "cave", lock: "Wake the crystal first.", backX: 13, backY: 15 },
+  { id: "fort", x: 6, y: 18, to: "fort", need: "key", lock: "Turn the wheel first.", backX: 6, backY: 19 },
+  { id: "gold", x: 4, y: 20, to: "gold", need: "fort", lock: "Touch the fort marks first.", backX: 5, backY: 20 },
 ];
 
 const WIDTH = 20;

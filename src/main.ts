@@ -729,10 +729,10 @@ function tideFingerWalk(): { dx: number; dy: number } {
 
 function tideInput(): TideInput {
   const walk = tideFingerWalk();
-  const left = tideKeys.left || walk.dx < 0;
-  const right = tideKeys.right || walk.dx > 0;
-  const up = tideKeys.up || walk.dy < 0;
-  const down = tideKeys.down || walk.dy > 0;
+  const left = tideKeys.left || tideTouch.held("left") || walk.dx < 0;
+  const right = tideKeys.right || tideTouch.held("right") || walk.dx > 0;
+  const up = tideKeys.up || tideTouch.held("up") || walk.dy < 0;
+  const down = tideKeys.down || tideTouch.held("down") || walk.dy > 0;
   return {
     ...tideEdge,
     dx: (left ? -1 : 0) + (right ? 1 : 0),
@@ -1681,7 +1681,7 @@ bindPad(tideSurface, tideTouch, {
   paused: () => tideState?.phase === "paused",
   resume: () => { tideEdge = { ...tideEdge, pause: true }; },
   fingers: tideFingers,
-  allow: (_x, y) => y < 630,
+  allow: (_x, y) => y < 570,
   onTap: () => {
     if (!tideState || tideState.mapOpen || tideState.phase !== "playing") return;
     tideEdge = { ...tideEdge, action: true };
