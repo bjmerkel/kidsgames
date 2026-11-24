@@ -1,6 +1,6 @@
 # Kids Games
 
-Twelve games live here. From the first screen, pick one.
+Thirteen games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -23,6 +23,12 @@ The score carries from park to park. The fifteen parks are Milk Street, Alley Ra
 A word search for fifth grade. Each puzzle hides words from science, math, history, or reading. Tap the first letter, then the last letter. You can also drag from one to the other. The highlight snaps onto a straight line while you drag, and a near miss still counts. A colored line shows a word you found. Hint glows the first letter of a word that is still hidden.
 
 The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shuffles them inside three groups and hides the words in a new place. The first group goes across or down. The next group adds diagonals. The last group can run any straight line, including backwards, in science, math, history, and reading.
+
+## Treasure Tide
+
+A top-down treasure hunt. You walk Gull Isle with the arrows, or with Up, Down, Left, and Right on the picture. Look talks, pushes, cuts, and opens. Chart shows the map once the parrot gives it to you. The red mark is the next place.
+
+The parrot's chart sends you north. Light the lamps in the right order. In the ruins, push the stones onto the plates to earn a cutlass. Cut the vines, take the lantern through the dark cave, and wake the crystal. Cross the wreck without stepping in the wash, and turn the wheel three times for the iron key. In the fort, touch the marks in order, then open the beach gate. The last chest is the treasure.
 
 ## Pattern Pals
 
@@ -100,6 +106,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Capy Swing, tap the picture to jump. Hold Left or Right, or hold the trail, to run. The Jump button works too. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
+- In Treasure Tide, hold Up, Down, Left, or Right, or the arrow keys, to walk. Look, or Space, uses what is in front of you. Chart, or M, opens the map. The red mark is the next clue.
 - In Pattern Pals, tap the picture that comes next. The three big pictures are the choices. 1, 2, and 3 pick them too. Pause sits on the picture.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.

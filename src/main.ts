@@ -31,6 +31,10 @@ import { ICE_LEVELS } from "./waddle/mazes";
 import { advanceWaddle, blankWaddleInput, createWaddle, tickWaddle, type WaddleInput, type WaddleState } from "./waddle/sim";
 import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
+import { drawTide } from "./tide/draw";
+import { TIDE_SPOTS } from "./tide/pads";
+import { advanceTide, blankTideInput, createTide, tickTide, type TideInput, type TideState } from "./tide/sim";
+import { ROOMS } from "./tide/world";
 import { bindMenuCard } from "./game/menu";
 import { drawPattern } from "./pattern/draw";
 import { choiceAt, pauseAt } from "./pattern/levels";
@@ -149,6 +153,17 @@ const spotAll = document.querySelector<HTMLButtonElement>("#spot-all");
 const spotHard = document.querySelector<HTMLButtonElement>("#spot-hard");
 const spotNext = document.querySelector<HTMLButtonElement>("#spot-next");
 const spotPad = document.querySelector<HTMLElement>("#spot-pad");
+const tideCanvas = document.querySelector<HTMLCanvasElement>("#tide-canvas");
+if (!tideCanvas) throw new Error("missing tide canvas");
+const tideSurface: HTMLCanvasElement = tideCanvas;
+const tideContext = tideCanvas.getContext("2d");
+if (!tideContext) throw new Error("missing tide context");
+const tideGfx: CanvasRenderingContext2D = tideContext;
+const tideStage = document.querySelector<HTMLElement>("#tide-stage");
+const tideSection = document.querySelector<HTMLElement>("#tide");
+const tideHeading = document.querySelector<HTMLElement>("#tide-heading");
+const tideNext = document.querySelector<HTMLButtonElement>("#tide-next");
+const tidePad = document.querySelector<HTMLElement>("#tide-pad");
 const patternCanvas = document.querySelector<HTMLCanvasElement>("#pattern-canvas");
 if (!patternCanvas) throw new Error("missing pattern canvas");
 const patternSurface: HTMLCanvasElement = patternCanvas;
@@ -209,7 +224,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "pattern" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "pattern" | "tide" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -241,6 +256,10 @@ let waddleEdge = blankWaddleInput();
 let spotState: SpotState | null = null;
 let spotAcc = 0;
 let spotEdge = blankSpotInput();
+let tideState: TideState | null = null;
+let tideAcc = 0;
+let tideEdge = blankTideInput();
+const tideKeys = { up: false, down: false, left: false, right: false };
 let patternState: PatternState | null = null;
 let patternAcc = 0;
 let patternEdge = blankPatternInput();
@@ -299,6 +318,11 @@ const burstTouch = new TouchPad(LOOK_SPOTS, (name) => {
   if (name === "hint") burstEdge = { ...burstEdge, hint: true };
   if (name === "pause") burstEdge = { ...burstEdge, pause: true };
 });
+const tideTouch = new TouchPad(TIDE_SPOTS, (name) => {
+  if (name === "look") tideEdge = { ...tideEdge, action: true };
+  if (name === "chart") tideEdge = { ...tideEdge, map: true };
+  if (name === "pause") tideEdge = { ...tideEdge, pause: true };
+});
 const huntTouch = new TouchPad(LOOK_SPOTS, (name) => {
   if (name === "hint") huntEdge = { ...huntEdge, hint: true };
   if (name === "pause") huntEdge = { ...huntEdge, pause: true };
@@ -333,6 +357,7 @@ function fit(): void {
   fitBox(waddleStage, waddleSurface);
   fitBox(spotStage, spotSurface);
   fitBox(patternStage, patternSurface);
+  fitBox(tideStage, tideSurface);
   fitBox(burstStage, burstSurface);
   fitBox(huntStage, huntSurface);
   fitBox(skateStage, skateFrame);
@@ -351,6 +376,7 @@ if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 if (patternStage) new ResizeObserver(() => fitBox(patternStage, patternSurface)).observe(patternStage);
+if (tideStage) new ResizeObserver(() => fitBox(tideStage, tideSurface)).observe(tideStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
 if (skateStage) new ResizeObserver(() => fitBox(skateStage, skateFrame)).observe(skateStage);
@@ -367,6 +393,7 @@ function show(next: Mode): void {
   if (waddleSection) waddleSection.hidden = next !== "waddle";
   if (spotSection) spotSection.hidden = next !== "spot";
   if (patternSection) patternSection.hidden = next !== "pattern";
+  if (tideSection) tideSection.hidden = next !== "tide";
   if (burstSection) burstSection.hidden = next !== "burst";
   if (huntSection) huntSection.hidden = next !== "hunt";
   if (skateSection) skateSection.hidden = next !== "skate";
@@ -382,6 +409,7 @@ function show(next: Mode): void {
     waddle: "Ice Waddle",
     spot: "Silk Spot",
     pattern: "Pattern Pals",
+    tide: "Treasure Tide",
     burst: "Berry Burst",
     hunt: "Word Hunt",
     skate: "Ollie Cat",
@@ -403,6 +431,7 @@ function show(next: Mode): void {
   if (next === "waddle") openWaddle();
   if (next === "spot") openSpot();
   if (next === "pattern") openPattern();
+  if (next === "tide") openTide();
   if (next === "burst") openBurst();
   if (next === "hunt") openHunt();
   if (next === "skate") openSkate();
@@ -663,6 +692,41 @@ function spotInput(): SpotInput {
   return spotEdge;
 }
 
+function openTide(): void {
+  tideState = createTide();
+  tideAcc = 0;
+  tideEdge = blankTideInput();
+  tideKeys.up = false;
+  tideKeys.down = false;
+  tideKeys.left = false;
+  tideKeys.right = false;
+  tideTouch.clear();
+  syncTideChrome();
+}
+
+function syncTideChrome(): void {
+  if (!tideState) return;
+  if (tideHeading) tideHeading.textContent = tideState.phase === "done" ? "Treasure Tide" : ROOMS[tideState.room].name;
+  const live = tideState.phase === "playing" || tideState.phase === "paused";
+  if (tidePad) tidePad.hidden = live;
+  if (tideNext) {
+    tideNext.hidden = live;
+    tideNext.textContent = "Play again";
+  }
+}
+
+function tideInput(): TideInput {
+  const left = tideKeys.left || tideTouch.held("left");
+  const right = tideKeys.right || tideTouch.held("right");
+  const up = tideKeys.up || tideTouch.held("up");
+  const down = tideKeys.down || tideTouch.held("down");
+  return {
+    ...tideEdge,
+    dx: (left ? -1 : 0) + (right ? 1 : 0),
+    dy: (up ? -1 : 0) + (down ? 1 : 0),
+  };
+}
+
 function openPattern(): void {
   patternState = startPattern();
   patternAcc = 0;
@@ -887,6 +951,7 @@ function menuCard(id: string, next: Mode): void {
   if (button) bindMenuCard(button, () => show(next));
 }
 menuCard("#play-pattern", "pattern");
+menuCard("#play-tide", "tide");
 menuCard("#play-crab", "crab");
 menuCard("#play-race", "race");
 menuCard("#play-fish", "fish");
@@ -940,6 +1005,10 @@ document.querySelector("#waddle-games")?.addEventListener("pointerdown", (event)
   show("menu");
 });
 document.querySelector("#spot-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#tide-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -1010,6 +1079,12 @@ spotNext?.addEventListener("pointerdown", (event) => {
   spotState = advanceSpot(spotState);
   syncSpotChrome();
 });
+tideNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!tideState) return;
+  tideState = advanceTide(tideState);
+  syncTideChrome();
+});
 patternNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!patternState) return;
@@ -1045,6 +1120,18 @@ if (tuneTabs && tuneForm) {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+  if (mode === "tide") {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") tideKeys.left = true;
+    if (event.code === "ArrowRight" || event.code === "KeyD") tideKeys.right = true;
+    if (event.code === "ArrowUp" || event.code === "KeyW") tideKeys.up = true;
+    if (event.code === "ArrowDown" || event.code === "KeyS") tideKeys.down = true;
+    if (!event.repeat && (event.code === "Space" || event.code === "Enter" || event.code === "KeyF")) tideEdge = { ...tideEdge, action: true };
+    if (!event.repeat && event.code === "KeyM") tideEdge = { ...tideEdge, map: true };
+    if (event.code === "Escape") tideEdge = { ...tideEdge, pause: true };
+    if (event.code === "Enter") tideEdge = { ...tideEdge, confirm: true };
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
   if (mode === "pattern") {
     if (event.code === "Digit1" || event.code === "Numpad1") patternEdge = { ...patternEdge, choice: 0 };
     if (event.code === "Digit2" || event.code === "Numpad2") patternEdge = { ...patternEdge, choice: 1 };
@@ -1165,6 +1252,7 @@ window.addEventListener("keyup", (event) => {
     capyKeys.left = false;
     waddleKeys.left = false;
     skateKeys.left = false;
+    tideKeys.left = false;
   }
   if (event.code === "ArrowRight" || event.code === "KeyD") {
     raceKeys.right = false;
@@ -1174,11 +1262,16 @@ window.addEventListener("keyup", (event) => {
     capyKeys.right = false;
     waddleKeys.right = false;
     skateKeys.right = false;
+    tideKeys.right = false;
   }
-  if (event.code === "ArrowUp" || event.code === "KeyW") waddleKeys.up = false;
+  if (event.code === "ArrowUp" || event.code === "KeyW") {
+    waddleKeys.up = false;
+    tideKeys.up = false;
+  }
   if (event.code === "ArrowDown" || event.code === "KeyS") {
     waddleKeys.down = false;
     skateKeys.crouch = false;
+    tideKeys.down = false;
   }
   if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
     rascalKeys.jump = false;
@@ -1569,6 +1662,12 @@ bindPad(burstSurface, burstTouch, {
   paused: () => burstState?.phase === "paused",
   resume: () => { burstEdge = { ...burstEdge, pause: true }; },
 });
+bindPad(tideSurface, tideTouch, {
+  active: () => mode === "tide" && !!tideState,
+  armed: () => tideState?.phase === "playing",
+  paused: () => tideState?.phase === "paused",
+  resume: () => { tideEdge = { ...tideEdge, pause: true }; },
+});
 bindPad(huntSurface, huntTouch, {
   active: () => mode === "hunt" && !!huntState,
   armed: () => huntState?.phase === "playing",
@@ -1609,6 +1708,14 @@ spotSurface.addEventListener("pointerdown", (event) => {
   };
 });
 
+tideSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
+  if (mode !== "tide" || !tideState) return;
+  if (tideState.phase === "done") {
+    tideState = advanceTide(tideState);
+    syncTideChrome();
+  }
+});
 patternSurface.addEventListener("pointerdown", (event) => {
   if (touchClaims.has(event.pointerId)) return;
   if (mode !== "pattern" || !patternState) return;
@@ -1890,6 +1997,21 @@ function frame(now: number): void {
       if (spotState.phase === "playing") drawTouchPad(spotGfx, spotTouch.spots, (name) => spotTouch.pressed(name));
       syncSpotChrome();
     }
+  }
+  if (mode === "tide" && tideState) {
+    tideAcc += delta;
+    let steps = 0;
+    while (tideAcc >= STEP_MS && steps < 5) {
+      const input = tideInput();
+      if (input.confirm && tideState.phase === "done") tideState = advanceTide(tideState);
+      else tideState = tickTide(tideState, input, STEP_MS);
+      tideEdge = blankTideInput();
+      tideAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawTide(tideGfx, tideState, now);
+    if (tideState.phase === "playing") drawTouchPad(tideGfx, tideTouch.spots, (name) => tideTouch.pressed(name));
+    syncTideChrome();
   }
   if (mode === "pattern" && patternState) {
     patternAcc += delta;

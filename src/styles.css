@@ -157,6 +157,7 @@ button:focus-visible {
 #hunt,
 #skate,
 #pattern,
+#tide,
 #settings {
   flex: 1 1 auto;
   width: 100%;
@@ -180,6 +181,7 @@ button:focus-visible {
 #hunt[hidden],
 #skate[hidden],
 #pattern[hidden],
+#tide[hidden],
 #settings[hidden],
 #race-picker[hidden],
 #race-pad[hidden],
@@ -217,7 +219,10 @@ button:focus-visible {
 #skate-pad button[hidden],
 #pattern-next[hidden],
 #pattern-pad[hidden],
-#pattern-pad button[hidden] {
+#pattern-pad button[hidden],
+#tide-next[hidden],
+#tide-pad[hidden],
+#tide-pad button[hidden] {
   display: none !important;
 }
 
@@ -589,7 +594,8 @@ button:focus-visible {
   gap: 8px;
 }
 
-#pattern-board {
+#pattern-board,
+#tide-board {
   flex: 1 1 auto;
   min-height: 0;
   width: min(480px, 100%);
@@ -599,7 +605,8 @@ button:focus-visible {
   gap: 8px;
 }
 
-#pattern-stage {
+#pattern-stage,
+#tide-stage {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -608,13 +615,15 @@ button:focus-visible {
   justify-content: center;
 }
 
-#pattern-pad {
+#pattern-pad,
+#tide-pad {
   width: 100%;
   display: grid;
   gap: 8px;
 }
 
-#pattern-next {
+#pattern-next,
+#tide-next {
   background: #f2c14e;
 }
 
@@ -1133,7 +1142,8 @@ button:focus-visible {
     align-self: flex-end;
   }
 
-  #pattern-board {
+  #pattern-board,
+#tide-board {
     width: 100%;
     flex-direction: row;
     justify-content: center;
@@ -1141,7 +1151,8 @@ button:focus-visible {
     gap: 10px;
   }
 
-  #pattern-stage {
+  #pattern-stage,
+#tide-stage {
     width: auto;
     height: 100%;
     flex: 0 1 auto;
@@ -1150,7 +1161,8 @@ button:focus-visible {
     max-height: 100%;
   }
 
-  #pattern-pad {
+  #pattern-pad,
+#tide-pad {
     width: min(220px, 34vw);
     align-self: flex-end;
   }
