@@ -74,7 +74,7 @@ export function createTide(): TideState {
     room: "isle",
     hero: heroAt("isle"),
     score: 0,
-    toast: "Find the parrot.",
+    toast: "Walk to the parrot. Tap Look.",
     toastMs: 2400,
     mapOpen: false,
     elapsedMs: 0,
@@ -94,14 +94,45 @@ export function createTide(): TideState {
   };
 }
 
+function canLook(state: TideState, spot: Spot): boolean {
+  const room = ROOMS[state.room];
+  if (room.parrot && sameSpot(room.parrot, spot.x, spot.y)) return true;
+  if (room.lamps.some((lamp) => sameSpot(lamp, spot.x, spot.y))) return true;
+  if (room.marks.some((mark) => sameSpot(mark, spot.x, spot.y))) return true;
+  if (room.chests.some((chest) => sameSpot(chest, spot.x, spot.y))) return true;
+  if (room.wheel && sameSpot(room.wheel, spot.x, spot.y)) return true;
+  if (room.crystal && sameSpot(room.crystal, spot.x, spot.y)) return true;
+  if (state.vines.some((vine) => !vine.cut && sameSpot(vine, spot.x, spot.y))) return true;
+  return false;
+}
+
+function lookHelps(state: TideState): boolean {
+  const spot = { x: state.hero.x + state.hero.dirX, y: state.hero.y + state.hero.dirY };
+  const room = ROOMS[state.room];
+  if (!state.chart && room.parrot && sameSpot(room.parrot, spot.x, spot.y)) return true;
+  if (!state.light && room.lamps.some((lamp) => sameSpot(lamp, spot.x, spot.y))) return true;
+  if (!state.cutlass && room.chests.some((chest) => chest.id === "ruins" && sameSpot(chest, spot.x, spot.y))) return true;
+  if (state.cutlass && state.vines.some((vine) => !vine.cut && sameSpot(vine, spot.x, spot.y))) return true;
+  if (!state.lantern && room.chests.some((chest) => chest.id === "lantern" && sameSpot(chest, spot.x, spot.y))) return true;
+  if (state.lantern && !state.cave && room.crystal && sameSpot(room.crystal, spot.x, spot.y)) return true;
+  if (!state.key && room.wheel && sameSpot(room.wheel, spot.x, spot.y)) return true;
+  if (state.key && !state.fort && room.marks.some((mark) => sameSpot(mark, spot.x, spot.y))) return true;
+  if (state.marks >= MARK_ORDER.length && !state.fort && room.chests.some((chest) => chest.id === "fort" && sameSpot(chest, spot.x, spot.y))) return true;
+  if (state.fort && !state.gold && room.chests.some((chest) => chest.id === "gold" && sameSpot(chest, spot.x, spot.y))) return true;
+  return false;
+}
+
 export function tideClue(state: TideState): string {
-  if (!state.chart) return "Find the parrot.";
-  if (!state.light) return "The north light blinks.";
-  if (!state.cutlass) return "The ruins want heavy stones.";
-  if (!state.cave) return "Cut a path to the cave.";
-  if (!state.key) return "Cross the wreck. Mind the wash.";
-  if (!state.fort) return "The fort wants the iron key.";
-  if (!state.gold) return "The beach gate is open.";
+  if (state.phase === "playing" && lookHelps(state)) return "Tap Look.";
+  if (!state.chart) return "Walk to the parrot. Tap Look.";
+  if (!state.light) return "Lamps: 1, then 3, then 2.";
+  if (!state.cutlass) return "Push stones onto the plates.";
+  if (state.vines.some((vine) => !vine.cut)) return "Cut the vines, then the cave.";
+  if (!state.lantern) return "Take the lantern first.";
+  if (!state.cave) return "Tap the crystal.";
+  if (!state.key) return "Avoid wavy water. Turn the wheel.";
+  if (!state.fort) return "Marks: A, then C, then B.";
+  if (!state.gold) return "Open the beach chest.";
   return "The treasure is yours.";
 }
 
@@ -190,7 +221,7 @@ function finishMove(state: TideState): void {
     state.hero.y = spawn.y;
     state.hero.prevX = spawn.x;
     state.hero.prevY = spawn.y;
-    say(state, "The wash drags you back.");
+    say(state, "Stay off the wavy water.");
     return;
   }
   if (state.room !== "isle" && ROOMS[state.room].exit && sameSpot(ROOMS[state.room].exit as Spot, x, y)) {
@@ -230,8 +261,10 @@ function tryMove(state: TideState, dx: number, dy: number): void {
   }
   if (tideBlocks(state, nx, ny)) {
     const door = state.room === "isle" ? DOORS.find((item) => item.x === nx && item.y === ny) : undefined;
+    const vine = state.vines.find((item) => !item.cut && sameSpot(item, nx, ny));
     if (door && !hasFlag(state, door.need)) say(state, door.lock);
-    else if (state.room === "isle" && state.vines.some((vine) => !vine.cut && sameSpot(vine, nx, ny))) say(state, "The vines are too thick.");
+    else if (vine) say(state, state.cutlass ? "Tap Look to cut." : "Get a sword from the ruins.");
+    else if (canLook(state, { x: nx, y: ny })) say(state, "Tap Look.");
     state.hero.coolMs = 180;
     return;
   }
@@ -258,13 +291,13 @@ function act(state: TideState): void {
       state.chart = true;
       award(state, 100);
     }
-    say(state, "The north light blinks.");
+    say(state, "Lamps: 1, then 3, then 2.");
     return;
   }
   const vine = state.vines.find((item) => !item.cut && sameSpot(item, spot.x, spot.y));
   if (vine) {
     if (!state.cutlass) {
-      say(state, "The vines are too thick.");
+      say(state, "Get a sword from the ruins.");
       return;
     }
     vine.cut = true;
@@ -279,10 +312,10 @@ function act(state: TideState): void {
     }
     if (lamp.n === LAMP_ORDER[state.lamps]) {
       state.lamps += 1;
-      say(state, state.lamps >= LAMP_ORDER.length ? "The lamps are lit." : "The lamp catches.");
+      say(state, state.lamps >= LAMP_ORDER.length ? "The lamps are lit." : "Yes. Keep that order.");
     } else {
       state.lamps = 0;
-      say(state, "Not that order.");
+      say(state, "Lamps: 1, then 3, then 2.");
     }
     return;
   }
@@ -297,19 +330,19 @@ function act(state: TideState): void {
         state.light = true;
         award(state, 100);
       }
-      say(state, "The ruins want heavy stones.");
+      say(state, "Push stones onto the plates.");
       return;
     }
     if (chest.id === "ruins") {
       if (!platesFilled(state)) {
-        say(state, "The stones are not home.");
+        say(state, "Push both stones onto the plates.");
         return;
       }
       if (!state.cutlass) {
         state.cutlass = true;
         award(state, 150);
       }
-      say(state, "Cut a path to the cave.");
+      say(state, "Cut the vines, then the cave.");
       return;
     }
     if (chest.id === "lantern") {
@@ -317,7 +350,7 @@ function act(state: TideState): void {
         state.lantern = true;
         award(state, 50);
       }
-      say(state, "The dark pulls back.");
+      say(state, "Now tap the crystal.");
       return;
     }
     if (chest.id === "fort") {
@@ -329,7 +362,7 @@ function act(state: TideState): void {
         state.fort = true;
         award(state, 100);
       }
-      say(state, "The beach gate is open.");
+      say(state, "Open the beach chest.");
       return;
     }
     if (chest.id === "gold") {
@@ -344,14 +377,14 @@ function act(state: TideState): void {
   }
   if (room.crystal && sameSpot(room.crystal, spot.x, spot.y)) {
     if (!state.lantern) {
-      say(state, "Too dark to wake it.");
+      say(state, "Take the lantern first.");
       return;
     }
     if (!state.cave) {
       state.cave = true;
       award(state, 100);
     }
-    say(state, "Cross the wreck. Mind the wash.");
+    say(state, "Avoid wavy water. Turn the wheel.");
     return;
   }
   if (room.wheel && sameSpot(room.wheel, spot.x, spot.y)) {
@@ -363,7 +396,7 @@ function act(state: TideState): void {
     if (state.wheel >= WHEEL_TURNS) {
       state.key = true;
       award(state, 150);
-      say(state, "The fort wants the iron key.");
+      say(state, "Marks: A, then C, then B.");
     } else {
       say(state, `Turn ${state.wheel} of ${WHEEL_TURNS}.`);
     }
@@ -377,10 +410,10 @@ function act(state: TideState): void {
     }
     if (mark.id === MARK_ORDER[state.marks]) {
       state.marks += 1;
-      say(state, state.marks >= MARK_ORDER.length ? "The marks are set." : "The mark glows.");
+      say(state, state.marks >= MARK_ORDER.length ? "The marks are set." : "Yes. Keep that order.");
     } else {
       state.marks = 0;
-      say(state, "Not that order.");
+      say(state, "Marks: A, then C, then B.");
     }
   }
 }

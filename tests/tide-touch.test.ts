@@ -17,14 +17,16 @@ describe("treasure tide touch", () => {
     expect(tideFingerCommand(200, 300, 260, 300, true)).toEqual({ dx: 0, dy: 0, action: false });
   });
 
-  it("keeps Look, Chart, and Pause on the picture and leaves the island for the finger", () => {
+  it("puts directions, Look, Chart, and Pause on the picture", () => {
     expect(spotsInside(TIDE_SPOTS)).toBe(true);
-    expect(TIDE_SPOTS.map((spot) => spot.name)).toEqual(["look", "chart", "pause"]);
+    expect(TIDE_SPOTS.map((spot) => spot.name)).toEqual(["up", "left", "down", "right", "look", "chart", "pause"]);
     for (const spot of TIDE_SPOTS) {
-      expect(spot.y).toBeGreaterThanOrEqual(620);
+      expect(spot.y).toBeGreaterThanOrEqual(570);
       expect(spot.x + spot.w).toBeLessThanOrEqual(480);
     }
     const look = TIDE_SPOTS.find((spot) => spot.name === "look");
-    expect(look?.w).toBeGreaterThanOrEqual(160);
+    const up = TIDE_SPOTS.find((spot) => spot.name === "up");
+    expect(look?.w).toBeGreaterThanOrEqual(90);
+    expect(up?.hold).toBe(true);
   });
 });
