@@ -13,6 +13,10 @@
     <section id="menu">
       <p class="emery">Emery is awesome</p>
       <h1>Kids Games</h1>
+      <button type="button" id="play-escape" class="game-card">
+        Escape Room
+        <small>Five rooms. Each lock is harder.</small>
+      </button>
       <button type="button" id="play-tide" class="game-card">
         Treasure Tide
         <small>Five islands. Each mission is harder.</small>
@@ -258,6 +262,20 @@
         </div>
         <div id="tide-pad">
           <button type="button" id="tide-next" hidden>Play again</button>
+        </div>
+      </div>
+    </section>
+    <section id="escape" hidden>
+      <header class="slim-head">
+        <button type="button" id="escape-games">Games</button>
+        <p id="escape-heading">Escape Room</p>
+      </header>
+      <div id="escape-board">
+        <div id="escape-stage">
+          <canvas id="escape-canvas" width="480" height="720" aria-label="Escape Room"></canvas>
+        </div>
+        <div id="escape-pad">
+          <button type="button" id="escape-next" hidden>Next room</button>
         </div>
       </div>
     </section>
