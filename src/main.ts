@@ -33,6 +33,7 @@ import { drawSpot, drawSpotPick } from "./spot/draw";
 import { advanceSpot, blankSpotInput, startSpot, tickSpot, type SpotInput, type SpotState } from "./spot/sim";
 import { drawTide } from "./tide/draw";
 import { TIDE_SPOTS } from "./tide/pads";
+import { tideFingerCommand } from "./tide/touch";
 import { advanceTide, blankTideInput, createTide, tickTide, type TideInput, type TideState } from "./tide/sim";
 import { ROOMS } from "./tide/world";
 import { bindMenuCard } from "./game/menu";
@@ -283,6 +284,7 @@ const rascalFingers = new Map<number, RunnerFinger>();
 const axoFingers = new Map<number, RunnerFinger>();
 const capyFingers = new Map<number, RunnerFinger>();
 const waddleFingers = new Map<number, RunnerFinger>();
+const tideFingers = new Map<number, RunnerFinger>();
 const crabTouch = new TouchPad(CRAB_SPOTS, (name) => {
   if (name === "tuck") queue({ ...blankInput(), tuck: true });
   if (name === "pause") queue({ ...blankInput(), pause: true });
@@ -701,6 +703,7 @@ function openTide(): void {
   tideKeys.left = false;
   tideKeys.right = false;
   tideTouch.clear();
+  tideFingers.clear();
   syncTideChrome();
 }
 
@@ -715,11 +718,21 @@ function syncTideChrome(): void {
   }
 }
 
+function tideFingerWalk(): { dx: number; dy: number } {
+  if (!tideState || tideState.mapOpen || tideState.phase !== "playing") return { dx: 0, dy: 0 };
+  for (const finger of tideFingers.values()) {
+    const command = tideFingerCommand(finger.x0, finger.y0, finger.x, finger.y, false);
+    if (command.dx || command.dy) return command;
+  }
+  return { dx: 0, dy: 0 };
+}
+
 function tideInput(): TideInput {
-  const left = tideKeys.left || tideTouch.held("left");
-  const right = tideKeys.right || tideTouch.held("right");
-  const up = tideKeys.up || tideTouch.held("up");
-  const down = tideKeys.down || tideTouch.held("down");
+  const walk = tideFingerWalk();
+  const left = tideKeys.left || walk.dx < 0;
+  const right = tideKeys.right || walk.dx > 0;
+  const up = tideKeys.up || walk.dy < 0;
+  const down = tideKeys.down || walk.dy > 0;
   return {
     ...tideEdge,
     dx: (left ? -1 : 0) + (right ? 1 : 0),
@@ -1667,6 +1680,12 @@ bindPad(tideSurface, tideTouch, {
   armed: () => tideState?.phase === "playing",
   paused: () => tideState?.phase === "paused",
   resume: () => { tideEdge = { ...tideEdge, pause: true }; },
+  fingers: tideFingers,
+  allow: (_x, y) => y < 630,
+  onTap: () => {
+    if (!tideState || tideState.mapOpen || tideState.phase !== "playing") return;
+    tideEdge = { ...tideEdge, action: true };
+  },
 });
 bindPad(huntSurface, huntTouch, {
   active: () => mode === "hunt" && !!huntState,
