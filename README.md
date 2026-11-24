@@ -26,9 +26,9 @@ The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shu
 
 ## Treasure Tide
 
-A top-down treasure hunt. Tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Tap Look to talk, push, cut, and open. The line at the top says the next step. Chart shows the map once the parrot gives it to you. The red mark is the next place.
+A top-down treasure hunt with five islands. Each island is one mission, and the next island is harder. Tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Tap Look to talk, push, cut, and open. The line at the top says the next step. The heading names the island. Chart shows the map once the parrot gives it to you.
 
-Walk to the green parrot and tap Look. Then light lamps 1, then 3, then 2. Push the stones onto the plates for a sword. Cut the vines, take the lantern, and tap the crystal. Stay off the wavy water in the wreck, and turn the wheel three times. Touch marks A, then C, then B. The last chest is on the beach.
+Lamp Isle: talk to the parrot, then light lamps 1, then 3, then 2. Stone Isle: push three stones onto the plates. Vine Isle: cut the vines, take the lantern, and tap the crystal. Wreck Isle: stay off the wavy water and turn the wheel four times. Fort Isle: touch marks A, then C, then B, then D, and open the beach chest. When an island is done, the Sail boat turns green. Step on it to reach the next island. The score carries. Play again starts at Lamp Isle.
 
 ## Pattern Pals
 
@@ -106,7 +106,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Capy Swing, tap the picture to jump. Hold Left or Right, or hold the trail, to run. The Jump button works too. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
-- In Treasure Tide, tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Arrow keys walk too. Tap Look, or Space, to use what is in front of you. The top line says the next step. Chart, or M, opens the map. The red mark is the next clue.
+- In Treasure Tide, tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Arrow keys walk too. Tap Look, or Space, to use what is in front of you. The top line says the next step. A green Sail boat takes you to the next island. Chart, or M, opens the map. The red mark is the next clue.
 - In Pattern Pals, tap the picture that comes next. The three big pictures are the choices. 1, 2, and 3 pick them too. Pause sits on the picture.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.

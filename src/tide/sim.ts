@@ -1,10 +1,10 @@
 import {
   DOORS,
-  ISLE_VINES,
   LAMP_ORDER,
   MARK_ORDER,
   ROOMS,
   RUIN_BOULDERS,
+  TIDE_MISSIONS,
   WHEEL_TURNS,
   type Flag,
   type RoomId,
@@ -35,6 +35,7 @@ export type Hero = {
 
 export type TideState = {
   phase: TidePhase;
+  levelIndex: number;
   room: RoomId;
   hero: Hero;
   score: number;
@@ -68,29 +69,41 @@ function heroAt(room: RoomId): Hero {
   return { x: spawn.x, y: spawn.y, prevX: spawn.x, prevY: spawn.y, dirX: 0, dirY: -1, moveMs: 0, coolMs: 0 };
 }
 
-export function createTide(): TideState {
+const MISSION_ROOM: RoomId[] = ["isle", "ruins", "cave", "wreck", "fort"];
+
+function missionToast(level: number): string {
+  if (level === 0) return "Walk to the parrot. Tap Look.";
+  if (level === 1) return "Stone Isle. Push the stones.";
+  if (level === 2) return "Vine Isle. Cut the vines.";
+  if (level === 3) return "Wreck Isle. Mind the water.";
+  return "Fort Isle. Touch the marks.";
+}
+
+export function createTide(level = 0, score = 0): TideState {
+  const room = MISSION_ROOM[level] ?? "isle";
   return {
     phase: "playing",
-    room: "isle",
-    hero: heroAt("isle"),
-    score: 0,
-    toast: "Walk to the parrot. Tap Look.",
+    levelIndex: level,
+    room,
+    hero: heroAt(room),
+    score,
+    toast: missionToast(level),
     toastMs: 2400,
     mapOpen: false,
     elapsedMs: 0,
-    chart: false,
-    light: false,
-    cutlass: false,
-    lantern: false,
-    cave: false,
-    key: false,
+    chart: level > 0,
+    light: level > 0,
+    cutlass: level > 1,
+    lantern: level > 2,
+    cave: level > 2,
+    key: level > 3,
     fort: false,
     gold: false,
     lamps: 0,
     marks: 0,
     wheel: 0,
-    boulders: RUIN_BOULDERS.map((spot) => ({ ...spot })),
-    vines: ISLE_VINES.map((spot) => ({ ...spot, cut: false })),
+    boulders: room === "ruins" ? RUIN_BOULDERS.map((spot) => ({ ...spot })) : [],
+    vines: ROOMS[room].vineSpawns.map((spot) => ({ ...spot, cut: false })),
   };
 }
 
@@ -122,18 +135,32 @@ function lookHelps(state: TideState): boolean {
   return false;
 }
 
+export function tideExitOpen(state: TideState): boolean {
+  if (state.levelIndex === 0 && state.room === "isle") return state.light;
+  if (state.levelIndex === 1 && state.room === "ruins") return state.cutlass;
+  if (state.levelIndex === 2 && state.room === "cave") return state.cave;
+  if (state.levelIndex === 3 && state.room === "wreck") return state.key;
+  return false;
+}
+
+function missionTask(state: TideState): string {
+  if (state.levelIndex === 0) return state.chart ? "Lamps: 1, then 3, then 2." : "Walk to the parrot. Tap Look.";
+  if (state.levelIndex === 1) return "Push the stones onto the plates.";
+  if (state.levelIndex === 2) {
+    if (state.vines.some((vine) => !vine.cut) && !state.lantern) return "Cut the vines.";
+    if (!state.lantern) return "Take the lantern first.";
+    return "Tap the crystal.";
+  }
+  if (state.levelIndex === 3) return "Stay off wavy water. Turn the wheel.";
+  if (state.marks < MARK_ORDER.length) return "Marks: A, then C, then B, then D.";
+  return "Open the beach chest.";
+}
+
 export function tideClue(state: TideState): string {
   if (state.phase === "playing" && lookHelps(state)) return "Tap Look.";
-  if (!state.chart) return "Walk to the parrot. Tap Look.";
-  if (!state.light) return "Lamps: 1, then 3, then 2.";
-  if (!state.cutlass) return "Push stones onto the plates.";
-  if (state.vines.some((vine) => !vine.cut)) return "Cut the vines, then the cave.";
-  if (!state.lantern) return "Take the lantern first.";
-  if (!state.cave) return "Tap the crystal.";
-  if (!state.key) return "Avoid wavy water. Turn the wheel.";
-  if (!state.fort) return "Marks: A, then C, then B.";
-  if (!state.gold) return "Open the beach chest.";
-  return "The treasure is yours.";
+  if (state.phase === "playing" && tideExitOpen(state)) return "Step on the green Sail boat.";
+  if (state.gold) return "The treasure is yours.";
+  return missionTask(state);
 }
 
 export type TideGoal = "parrot" | "light" | "ruins" | "cave" | "wreck" | "fort" | "gold";
@@ -165,7 +192,7 @@ function sameSpot(spot: Spot, x: number, y: number): boolean {
 function occupied(state: TideState, x: number, y: number): boolean {
   const room = ROOMS[state.room];
   if (state.room === "ruins" && state.boulders.some((boulder) => sameSpot(boulder, x, y))) return true;
-  if (state.room === "isle" && state.vines.some((vine) => !vine.cut && sameSpot(vine, x, y))) return true;
+  if (state.vines.some((vine) => !vine.cut && sameSpot(vine, x, y))) return true;
   if (room.parrot && sameSpot(room.parrot, x, y)) return true;
   if (room.lamps.some((lamp) => sameSpot(lamp, x, y))) return true;
   if (room.marks.some((mark) => sameSpot(mark, x, y))) return true;
@@ -190,6 +217,8 @@ export function tideBlocks(state: TideState, x: number, y: number): boolean {
 }
 
 export function tideSafe(state: TideState, x: number, y: number): boolean {
+  const exit = ROOMS[state.room].exit;
+  if (exit && sameSpot(exit, x, y)) return false;
   if (wash(state, x, y)) return false;
   return !tideBlocks(state, x, y);
 }
@@ -210,26 +239,42 @@ function enter(state: TideState, room: RoomId): void {
   say(state, ROOMS[room].name, 1200);
 }
 
+function park(state: TideState, x: number, y: number, dirY = state.hero.dirY): void {
+  state.hero.x = x;
+  state.hero.y = y;
+  state.hero.prevX = x;
+  state.hero.prevY = y;
+  state.hero.dirX = 0;
+  state.hero.dirY = dirY;
+  state.hero.moveMs = 0;
+}
+
+function startMission(state: TideState, level: number): void {
+  const next = createTide(level, state.score);
+  Object.assign(state, next);
+}
+
 function finishMove(state: TideState): void {
+  const fromX = state.hero.prevX;
+  const fromY = state.hero.prevY;
   const { x, y } = state.hero;
   state.hero.moveMs = 0;
   state.hero.prevX = x;
   state.hero.prevY = y;
   if (wash(state, x, y)) {
     const spawn = ROOMS.wreck.spawn;
-    state.hero.x = spawn.x;
-    state.hero.y = spawn.y;
-    state.hero.prevX = spawn.x;
-    state.hero.prevY = spawn.y;
+    park(state, spawn.x, spawn.y, -1);
     say(state, "Stay off the wavy water.");
     return;
   }
-  if (state.room !== "isle" && ROOMS[state.room].exit && sameSpot(ROOMS[state.room].exit as Spot, x, y)) {
-    const link = DOORS.find((door) => door.to === state.room);
-    if (link) {
-      state.room = "isle";
-      state.hero = { ...heroAt("isle"), x: link.backX, y: link.backY, prevX: link.backX, prevY: link.backY, dirY: 1 };
+  const exit = ROOMS[state.room].exit;
+  if (exit && sameSpot(exit, x, y)) {
+    if (tideExitOpen(state) && state.levelIndex < TIDE_MISSIONS.length - 1) {
+      startMission(state, state.levelIndex + 1);
+      return;
     }
+    park(state, fromX, fromY);
+    say(state, missionTask(state));
     return;
   }
   const door = state.room === "isle" ? DOORS.find((item) => item.x === x && item.y === y) : undefined;
@@ -321,7 +366,11 @@ function act(state: TideState): void {
   }
   const chest = room.chests.find((item) => sameSpot(item, spot.x, spot.y));
   if (chest) {
-    if (chest.id === "light") {
+    if (chest.id === "light" || chest.id === "isle") {
+      if (!state.chart) {
+        say(state, "Walk to the parrot. Tap Look.");
+        return;
+      }
       if (state.lamps < LAMP_ORDER.length) {
         say(state, "Light the lamps first.");
         return;
@@ -330,19 +379,19 @@ function act(state: TideState): void {
         state.light = true;
         award(state, 100);
       }
-      say(state, "Push stones onto the plates.");
+      say(state, "Step on the green Sail boat.");
       return;
     }
     if (chest.id === "ruins") {
       if (!platesFilled(state)) {
-        say(state, "Push both stones onto the plates.");
+        say(state, "Push every stone onto a plate.");
         return;
       }
       if (!state.cutlass) {
         state.cutlass = true;
         award(state, 150);
       }
-      say(state, "Cut the vines, then the cave.");
+      say(state, "Step on the green Sail boat.");
       return;
     }
     if (chest.id === "lantern") {
@@ -358,11 +407,13 @@ function act(state: TideState): void {
         say(state, "Touch the marks in order.");
         return;
       }
-      if (!state.fort) {
+      if (!state.gold) {
         state.fort = true;
-        award(state, 100);
+        state.gold = true;
+        award(state, 500);
       }
-      say(state, "Open the beach chest.");
+      state.phase = "done";
+      say(state, "The treasure is yours.", 4000);
       return;
     }
     if (chest.id === "gold") {
@@ -384,7 +435,7 @@ function act(state: TideState): void {
       state.cave = true;
       award(state, 100);
     }
-    say(state, "Avoid wavy water. Turn the wheel.");
+    say(state, "Step on the green Sail boat.");
     return;
   }
   if (room.wheel && sameSpot(room.wheel, spot.x, spot.y)) {
@@ -396,7 +447,7 @@ function act(state: TideState): void {
     if (state.wheel >= WHEEL_TURNS) {
       state.key = true;
       award(state, 150);
-      say(state, "Marks: A, then C, then B.");
+      say(state, "Step on the green Sail boat.");
     } else {
       say(state, `Turn ${state.wheel} of ${WHEEL_TURNS}.`);
     }
@@ -410,10 +461,10 @@ function act(state: TideState): void {
     }
     if (mark.id === MARK_ORDER[state.marks]) {
       state.marks += 1;
-      say(state, state.marks >= MARK_ORDER.length ? "The marks are set." : "Yes. Keep that order.");
+      say(state, state.marks >= MARK_ORDER.length ? "Open the beach chest." : "Yes. Keep that order.");
     } else {
       state.marks = 0;
-      say(state, "Marks: A, then C, then B.");
+      say(state, "Marks: A, then C, then B, then D.");
     }
   }
 }

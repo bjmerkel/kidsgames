@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from "../game/constants";
-import { TIDE_STEP, tideClue, tideFloor, tideGoal, type TideState } from "./sim";
+import { TIDE_STEP, tideClue, tideExitOpen, tideFloor, tideGoal, type TideState } from "./sim";
 import { LAMP_ORDER, MARK_ORDER, ROOMS, type Spot } from "./world";
 
 const TILE = 32;
@@ -75,6 +75,24 @@ function paintFloor(ctx: CanvasRenderingContext2D, floor: string, x: number, y: 
   ctx.fillRect(x, y + TILE - 4, TILE, 4);
 }
 
+function paintSail(ctx: CanvasRenderingContext2D, ox: number, oy: number, x: number, y: number, open: boolean): void {
+  const px = ox + x * TILE;
+  const py = oy + y * TILE;
+  ctx.fillStyle = open ? "#2f9e44" : "#8d6a43";
+  ctx.fillRect(px + 4, py + 16, 24, 10);
+  ctx.fillStyle = open ? "#f7f1e6" : "#d7c39a";
+  ctx.beginPath();
+  ctx.moveTo(px + 16, py + 2);
+  ctx.lineTo(px + 26, py + 16);
+  ctx.lineTo(px + 16, py + 16);
+  ctx.fill();
+  ctx.fillStyle = INK;
+  ctx.font = "700 10px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Sail", px + 16, py + 25);
+  if (open) ring(ctx, px + 16, py + 16);
+}
+
 function ring(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   ctx.strokeStyle = "#c81d25";
   ctx.lineWidth = 3;
@@ -113,7 +131,9 @@ export function drawTide(ctx: CanvasRenderingContext2D, state: TideState, now: n
     }
   });
 
-  if (state.room === "isle") {
+  if (room.exit) paintSail(ctx, ox, oy, room.exit.x, room.exit.y, tideExitOpen(state));
+
+  if (state.vines.length > 0) {
     for (const vine of state.vines) {
       if (vine.cut) continue;
       ctx.strokeStyle = "#1d6b32";
@@ -149,7 +169,7 @@ export function drawTide(ctx: CanvasRenderingContext2D, state: TideState, now: n
   }
   const nextMark = state.marks < MARK_ORDER.length ? MARK_ORDER[state.marks] : "";
   for (const mark of room.marks) {
-    const names: Record<string, string> = { a: "A", b: "B", c: "C" };
+    const names: Record<string, string> = { a: "A", b: "B", c: "C", d: "D" };
     const x = ox + mark.x * TILE + 16;
     const y = oy + mark.y * TILE + 16;
     paintActor(ctx, x, y, mark.id === nextMark ? "#f2c14e" : "#24357a", names[mark.id] ?? mark.id);
@@ -203,16 +223,6 @@ export function drawTide(ctx: CanvasRenderingContext2D, state: TideState, now: n
   ctx.beginPath();
   ctx.arc(hero.x, hero.y, 11, 0, Math.PI * 2);
   ctx.stroke();
-
-  if (state.room === "cave" && !state.lantern) {
-    ctx.save();
-    ctx.fillStyle = "rgba(8, 10, 18, 0.92)";
-    ctx.beginPath();
-    ctx.rect(0, 0, VIEW_W, 560);
-    ctx.arc(hero.x, hero.y, 78, 0, Math.PI * 2, true);
-    ctx.fill("evenodd");
-    ctx.restore();
-  }
 
   ctx.fillStyle = "rgba(247, 241, 230, 0.94)";
   roundRect(ctx, 12, 10, VIEW_W - 24, 36, 12);
