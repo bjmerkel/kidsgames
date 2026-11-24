@@ -26,7 +26,7 @@ The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shu
 
 ## Treasure Tide
 
-A top-down treasure hunt. You walk Gull Isle with the arrows, or with Up, Down, Left, and Right on the picture. Look talks, pushes, cuts, and opens. Chart shows the map once the parrot gives it to you. The red mark is the next place.
+A top-down treasure hunt. Slide a finger across the picture to walk. Lift a still finger, or tap Look, to talk, push, cut, and open. Chart shows the map once the parrot gives it to you. The red mark is the next place.
 
 The parrot's chart sends you north. Light the lamps in the right order. In the ruins, push the stones onto the plates to earn a cutlass. Cut the vines, take the lantern through the dark cave, and wake the crystal. Cross the wreck without stepping in the wash, and turn the wheel three times for the iron key. In the fort, touch the marks in order, then open the beach gate. The last chest is the treasure.
 
@@ -106,7 +106,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Capy Swing, tap the picture to jump. Hold Left or Right, or hold the trail, to run. The Jump button works too. Jump into a vine to swing across a river, and jump over the rolling logs.
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
-- In Treasure Tide, hold Up, Down, Left, or Right, or the arrow keys, to walk. Look, or Space, uses what is in front of you. Chart, or M, opens the map. The red mark is the next clue.
+- In Treasure Tide, slide a finger across the picture to walk. Arrow keys still walk. Lift a still finger, or tap Look or Space, to use what is in front of you. Chart, or M, opens the map. The red mark is the next clue.
 - In Pattern Pals, tap the picture that comes next. The three big pictures are the choices. 1, 2, and 3 pick them too. Pause sits on the picture.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.
