@@ -1,6 +1,6 @@
 # Kids Games
 
-Thirteen games live here. From the first screen, pick one.
+Fourteen games live here. From the first screen, pick one.
 
 Emery is awesome.
 
@@ -29,6 +29,18 @@ The score carries from puzzle to puzzle. There are 20 puzzles. Each new game shu
 A top-down treasure hunt with five islands. Each island is one mission, and the next island is harder. Tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Tap Look to talk, push, cut, and open. The line at the top says the next step. The heading names the island. Chart shows the map once the parrot gives it to you.
 
 Lamp Isle: talk to the parrot, then light lamps 1, then 3, then 2. Stone Isle: push three stones onto the plates. Vine Isle: cut the vines, take the lantern, and tap the crystal. Wreck Isle: stay off the wavy water and turn the wheel four times. Fort Isle: touch marks A, then C, then B, then D, and open the beach chest. When an island is done, the Sail boat turns green. Step on it to reach the next island. The score carries. Play again starts at Lamp Isle.
+
+## Escape Room
+
+Five locked rooms. Tap a note to read it, then type the three numbers and tap Open. A wrong code says "Look again." and the lock stays. The score carries. A clean room is 150. A room you missed first is 80.
+
+1. Desk Room, for a fourth grader. The notes say the three numbers.
+2. Library, for a seventh grader. Divide, subtract, and count the letters in LOCK.
+3. Science Lab, for a freshman. Solve for a number, finish 2, 4, 6, and use the sides of a hexagon.
+4. Study, for a senior. Only one code fits every rule on the notes.
+5. Archive, for a college student. Use a remainder, a power of 7, and the primes smaller than 10.
+
+Number keys type the lock. Backspace erases one number. Enter opens the lock. Pause sits on the picture.
 
 ## Pattern Pals
 
@@ -107,6 +119,7 @@ Then open the local address Vite prints. `npm test` runs the rules. `npm run bui
 - In Ice Waddle, slide a finger across the maze to waddle. Arrow keys still work. Eat every fish. A big fish makes the seals sleepy.
 - In Silk Spot, tap a change in either picture. Hint and Pause sit on the picture. H or Hint circles one change you still need.
 - In Treasure Tide, tap Up, Down, Left, or Right, or slide a finger on the picture, to walk. Arrow keys walk too. Tap Look, or Space, to use what is in front of you. The top line says the next step. A green Sail boat takes you to the next island. Chart, or M, opens the map. The red mark is the next clue.
+- In Escape Room, tap a note to read it. Tap the numbers, then Open. Number keys type too. Backspace erases one. Enter opens the lock. Pause sits on the picture.
 - In Pattern Pals, tap the picture that comes next. The three big pictures are the choices. 1, 2, and 3 pick them too. Pause sits on the picture.
 - In Berry Burst, tap a berry and then a neighbor to swap. Hint and Pause sit on the picture. H or Hint glows a pair that matches.
 - In Word Hunt, tap the first letter and then the last letter, or drag between them. The line snaps to the letters, so a drag can be a little off. Hint and Pause sit on the picture. H or Hint glows a starting letter.

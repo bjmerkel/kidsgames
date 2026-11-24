@@ -40,6 +40,9 @@ import { bindMenuCard } from "./game/menu";
 import { drawPattern } from "./pattern/draw";
 import { choiceAt, pauseAt } from "./pattern/levels";
 import { advancePattern, blankPatternInput, startPattern, tickPattern, type PatternInput, type PatternState } from "./pattern/sim";
+import { drawEscape } from "./escape/draw";
+import { ESCAPE_ROOMS } from "./escape/rooms";
+import { advanceEscape, blankEscapeInput, createEscape, tickEscape, type EscapeInput, type EscapeState } from "./escape/sim";
 import { drawBurst } from "./burst/draw";
 import { BURST_LEVELS } from "./burst/levels";
 import { advanceBurst, blankBurstInput, createBurst, tickBurst, type BurstInput, type BurstState } from "./burst/sim";
@@ -176,6 +179,17 @@ const patternSection = document.querySelector<HTMLElement>("#pattern");
 const patternHeading = document.querySelector<HTMLElement>("#pattern-heading");
 const patternNext = document.querySelector<HTMLButtonElement>("#pattern-next");
 const patternPad = document.querySelector<HTMLElement>("#pattern-pad");
+const escapeCanvas = document.querySelector<HTMLCanvasElement>("#escape-canvas");
+if (!escapeCanvas) throw new Error("missing escape canvas");
+const escapeSurface: HTMLCanvasElement = escapeCanvas;
+const escapeContext = escapeCanvas.getContext("2d");
+if (!escapeContext) throw new Error("missing escape context");
+const escapeGfx: CanvasRenderingContext2D = escapeContext;
+const escapeStage = document.querySelector<HTMLElement>("#escape-stage");
+const escapeSection = document.querySelector<HTMLElement>("#escape");
+const escapeHeading = document.querySelector<HTMLElement>("#escape-heading");
+const escapeNext = document.querySelector<HTMLButtonElement>("#escape-next");
+const escapePad = document.querySelector<HTMLElement>("#escape-pad");
 const burstCanvas = document.querySelector<HTMLCanvasElement>("#burst-canvas");
 if (!burstCanvas) throw new Error("missing burst canvas");
 const burstSurface: HTMLCanvasElement = burstCanvas;
@@ -225,7 +239,7 @@ let cam = cameraTop(state.crab.y, state.level.height, VIEW_H);
 let last = performance.now();
 let acc = 0;
 
-type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "pattern" | "tide" | "settings";
+type Mode = "menu" | "crab" | "race" | "fish" | "axo" | "rascal" | "capy" | "waddle" | "spot" | "burst" | "hunt" | "skate" | "pattern" | "tide" | "escape" | "settings";
 let mode: Mode = "menu";
 let raceScreen: "select" | "play" = "select";
 let selectedId = "woody";
@@ -262,6 +276,9 @@ let tideAcc = 0;
 let tideEdge = blankTideInput();
 const tideKeys = { up: false, down: false, left: false, right: false };
 let patternState: PatternState | null = null;
+let escapeState: EscapeState | null = null;
+let escapeAcc = 0;
+let escapeQueue: EscapeInput[] = [];
 let patternAcc = 0;
 let patternEdge = blankPatternInput();
 let burstState: BurstState | null = null;
@@ -359,6 +376,7 @@ function fit(): void {
   fitBox(waddleStage, waddleSurface);
   fitBox(spotStage, spotSurface);
   fitBox(patternStage, patternSurface);
+  fitBox(escapeStage, escapeSurface);
   fitBox(tideStage, tideSurface);
   fitBox(burstStage, burstSurface);
   fitBox(huntStage, huntSurface);
@@ -378,6 +396,7 @@ if (capyStage) new ResizeObserver(() => fitBox(capyStage, capySurface)).observe(
 if (waddleStage) new ResizeObserver(() => fitBox(waddleStage, waddleSurface)).observe(waddleStage);
 if (spotStage) new ResizeObserver(() => fitBox(spotStage, spotSurface)).observe(spotStage);
 if (patternStage) new ResizeObserver(() => fitBox(patternStage, patternSurface)).observe(patternStage);
+if (escapeStage) new ResizeObserver(() => fitBox(escapeStage, escapeSurface)).observe(escapeStage);
 if (tideStage) new ResizeObserver(() => fitBox(tideStage, tideSurface)).observe(tideStage);
 if (burstStage) new ResizeObserver(() => fitBox(burstStage, burstSurface)).observe(burstStage);
 if (huntStage) new ResizeObserver(() => fitBox(huntStage, huntSurface)).observe(huntStage);
@@ -395,6 +414,7 @@ function show(next: Mode): void {
   if (waddleSection) waddleSection.hidden = next !== "waddle";
   if (spotSection) spotSection.hidden = next !== "spot";
   if (patternSection) patternSection.hidden = next !== "pattern";
+  if (escapeSection) escapeSection.hidden = next !== "escape";
   if (tideSection) tideSection.hidden = next !== "tide";
   if (burstSection) burstSection.hidden = next !== "burst";
   if (huntSection) huntSection.hidden = next !== "hunt";
@@ -411,6 +431,7 @@ function show(next: Mode): void {
     waddle: "Ice Waddle",
     spot: "Silk Spot",
     pattern: "Pattern Pals",
+    escape: "Escape Room",
     tide: "Treasure Tide",
     burst: "Berry Burst",
     hunt: "Word Hunt",
@@ -433,6 +454,7 @@ function show(next: Mode): void {
   if (next === "waddle") openWaddle();
   if (next === "spot") openSpot();
   if (next === "pattern") openPattern();
+  if (next === "escape") openEscape();
   if (next === "tide") openTide();
   if (next === "burst") openBurst();
   if (next === "hunt") openHunt();
@@ -766,6 +788,29 @@ function patternInput(): PatternInput {
   return patternEdge;
 }
 
+function openEscape(): void {
+  escapeState = createEscape();
+  escapeAcc = 0;
+  escapeQueue = [];
+  syncEscapeChrome();
+}
+
+function syncEscapeChrome(): void {
+  if (!escapeState) return;
+  const room = ESCAPE_ROOMS[escapeState.levelIndex];
+  if (escapeHeading) escapeHeading.textContent = escapeState.phase === "done" ? "Escape Room" : `${escapeState.levelIndex + 1}. ${room.name}`;
+  const live = escapeState.phase === "playing" || escapeState.phase === "paused";
+  if (escapePad) escapePad.hidden = live;
+  if (escapeNext) {
+    escapeNext.hidden = live;
+    escapeNext.textContent = escapeState.phase === "done" ? "Play again" : "Next room";
+  }
+}
+
+function queueEscape(partial: Partial<EscapeInput>): void {
+  escapeQueue.push({ ...blankEscapeInput(), ...partial });
+}
+
 function openBurst(): void {
   burstState = createBurst(0);
   burstAcc = 0;
@@ -967,6 +1012,7 @@ function menuCard(id: string, next: Mode): void {
   if (button) bindMenuCard(button, () => show(next));
 }
 menuCard("#play-pattern", "pattern");
+menuCard("#play-escape", "escape");
 menuCard("#play-tide", "tide");
 menuCard("#play-crab", "crab");
 menuCard("#play-race", "race");
@@ -1029,6 +1075,10 @@ document.querySelector("#tide-games")?.addEventListener("pointerdown", (event) =
   show("menu");
 });
 document.querySelector("#pattern-games")?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  show("menu");
+});
+document.querySelector("#escape-games")?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   show("menu");
 });
@@ -1107,6 +1157,12 @@ patternNext?.addEventListener("pointerdown", (event) => {
   patternState = advancePattern(patternState);
   syncPatternChrome();
 });
+escapeNext?.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!escapeState) return;
+  escapeState = advanceEscape(escapeState);
+  syncEscapeChrome();
+});
 burstNext?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   if (!burstState) return;
@@ -1146,6 +1202,15 @@ window.addEventListener("keydown", (event) => {
     if (event.code === "Escape") tideEdge = { ...tideEdge, pause: true };
     if (event.code === "Enter") tideEdge = { ...tideEdge, confirm: true };
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS", "Space"].includes(event.code)) event.preventDefault();
+    return;
+  }
+  if (mode === "escape") {
+    const digit = event.code.startsWith("Digit") ? Number(event.code.slice(5)) : event.code.startsWith("Numpad") && event.code.length === 7 ? Number(event.code.slice(6)) : null;
+    if (digit != null && digit >= 0 && digit <= 9) queueEscape({ digit });
+    if (event.code === "Backspace") queueEscape({ back: true });
+    if (event.code === "Escape") queueEscape({ pause: true });
+    if (event.code === "Enter" || event.code === "NumpadEnter") queueEscape({ open: true, confirm: true });
+    if (event.code.startsWith("Digit") || event.code.startsWith("Numpad") || event.code === "Backspace" || event.code === "Enter") event.preventDefault();
     return;
   }
   if (mode === "pattern") {
@@ -1760,6 +1825,24 @@ patternSurface.addEventListener("pointerdown", (event) => {
   const choice = choiceAt(x, y);
   if (choice != null) patternEdge = { ...patternEdge, choice };
 });
+escapeSurface.addEventListener("pointerdown", (event) => {
+  if (touchClaims.has(event.pointerId)) return;
+  if (mode !== "escape" || !escapeState) return;
+  if (escapeState.phase === "paused") {
+    queueEscape({ pause: true });
+    return;
+  }
+  if (escapeState.phase === "clear" || escapeState.phase === "done") {
+    escapeState = advanceEscape(escapeState);
+    syncEscapeChrome();
+    return;
+  }
+  const rect = escapeSurface.getBoundingClientRect();
+  queueEscape({
+    x: ((event.clientX - rect.left) * escapeSurface.width) / rect.width,
+    y: ((event.clientY - rect.top) * escapeSurface.height) / rect.height,
+  });
+});
 burstSurface.addEventListener("pointerdown", (event) => {
   if (touchClaims.has(event.pointerId)) return;
   if (mode !== "burst" || !burstState) return;
@@ -2048,6 +2131,19 @@ function frame(now: number): void {
     }
     drawPattern(patternGfx, patternState, now);
     syncPatternChrome();
+  }
+  if (mode === "escape" && escapeState) {
+    escapeAcc += delta;
+    let steps = 0;
+    while (escapeAcc >= STEP_MS && steps < 5) {
+      const input = escapeQueue.shift() ?? blankEscapeInput();
+      if (input.confirm && (escapeState.phase === "clear" || escapeState.phase === "done")) escapeState = advanceEscape(escapeState);
+      else escapeState = tickEscape(escapeState, input, STEP_MS);
+      escapeAcc -= STEP_MS;
+      steps += 1;
+    }
+    drawEscape(escapeGfx, escapeState);
+    syncEscapeChrome();
   }
   if (mode === "burst" && burstState) {
     burstAcc += delta;
